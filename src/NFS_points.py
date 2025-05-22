@@ -2,7 +2,7 @@
 # NFS_points.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Create points that can be used to calculate distance from NFS roads to sawmills
+# Purpose: Create points that can be used to calculate distance from NFS roads to sawmills.
 # Usage: <Workspace> <public Roads Shapefile> <NFS Roads Shapefile> <Sawmills>
 ########################################################################################################################
 
