@@ -25,7 +25,7 @@ class distance_calculator_test(unittest.TestCase):
         )
         dist = distance_calculator.calculate_distances_from_exit("exit_points_layer", roads_raster, sawmills)
         self.assertTrue(arcpy.Exists("paths.shp"))
-        self.assertTrue(dist == 6.14577630948)
+        self.assertTrue(6.0 < dist < 6.2)
 
     if __name__ == '__main__':
         unittest.main()

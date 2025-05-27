@@ -21,8 +21,8 @@ def calculate_distances_from_exit(starting_point, roads, sawmills):
         road_backlink,
         "BEST_SINGLE"
     )
-    paths_shp = "paths.shp"
-    arcpy.conversion.RasterToPolyline(cost_path, paths_shp)
+    paths_shp = "path.shp"
+    arcpy.conversion.RasterToPolyline(cost_path, paths_shp, simplify="SIMPLIFY")
     arcpy.management.AddField(paths_shp, "distance", "double")
     arcpy.management.CalculateGeometryAttributes(
         paths_shp, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
