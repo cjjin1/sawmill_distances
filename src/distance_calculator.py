@@ -9,7 +9,7 @@
 import arcpy, sys, os
 from arcpy.sa import *
 
-def calculate_distances_from_exit(starting_point, roads, sawmills):
+def calculate_distance_from_exit(starting_point, roads, sawmills):
     """Takes in a starting point, roads raster, and multiple sawmill destinations
        Finds the distances to each sawmill destination
        Returns a feature class containing paths and distances"""
