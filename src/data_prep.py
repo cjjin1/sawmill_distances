@@ -78,5 +78,5 @@ arcpy.conversion.PolylineToRaster(
     out_rasterdataset=roads_raster,
     cell_assignment="MAXIMUM_LENGTH",
     priority_field="DISTANCE",
-    cellsize=0.0001
+    cellsize=0.0005
 )

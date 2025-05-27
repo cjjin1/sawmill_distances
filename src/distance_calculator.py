@@ -19,7 +19,7 @@ def calculate_distances_from_exit(starting_point, roads, sawmills):
         sawmills,
         road_cost,
         road_backlink,
-        "EACH_CELL"
+        "BEST_SINGLE"
     )
     paths_shp = "paths.shp"
     arcpy.conversion.RasterToPolyline(cost_path, paths_shp)
@@ -27,3 +27,9 @@ def calculate_distances_from_exit(starting_point, roads, sawmills):
     arcpy.management.CalculateGeometryAttributes(
         paths_shp, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
     )
+    distance = 0
+    sc = arcpy.da.SearchCursor(paths_shp, ["distance"], "FID = 0")
+    for row in sc:
+        distance = row[0]
+    del row, sc
+    return distance
