@@ -39,8 +39,16 @@ if len(sys.argv) == 6:
         arcpy.Project_management(boundary_shp, os.path.basename(boundary_shp), SR)
     boundary_shp = scratch_dir + os.path.basename(boundary_shp)
     #Clip the NFS roads  to the state
-    arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_MS")
-    NFS_roads = scratch_dir + "NFS_MS.shp"
+    arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_bounded.shp")
+    NFS_roads = scratch_dir + "NFS_bounded.shp"
+    #keep only the sawmills within Mississippi
+    arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+    arcpy.management.SelectLayerByLocation(
+        "sawmill_layer", "WITHIN", boundary_shp, selection_type="NEW_SELECTION"
+    )
+    arcpy.management.CopyFeatures("sawmill_layer", "sawmills_bounded.shp")
+    sawmills = scratch_dir + "sawmills_bounded.shp"
+    arcpy.management.Delete("sawmill_layer")
 
 #Create a feature class to contain the end point of each polyline in the NFS_roads shapefile
 NFS_points = os.path.basename(NFS_roads).split(".")[0] + "_points.shp"
@@ -53,6 +61,7 @@ result = arcpy.management.SelectLayerByLocation(
     "temp_layer","WITHIN_A_DISTANCE",roads_shp,"150 feet","NEW_SELECTION"
 )
 arcpy.management.CopyFeatures("temp_layer", exit_points)
+arcpy.management.Delete("temp_layer")
 
 #Create the closest points from the NFS roads to the roads dataset
 adjusted_exit_points = "NFS_adjusted_exit_points.shp"
@@ -65,7 +74,7 @@ arcpy.analysis.Near(sawmills, roads_shp, location="LOCATION")
 arcpy.management.XYTableToPoint(sawmills, adjusted_sawmills, "NEAR_X", "NEAR_Y")
 
 #Add a distance field to the roads shapefile
-arcpy.management.AddField(roads_shp, "distance", "double")
+arcpy.management.AddField(roads_shp, "distance", "DOUBLE")
 arcpy.management.CalculateGeometryAttributes(
     roads_shp, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
 )
