@@ -30,7 +30,7 @@ class TestStraightLineDistance(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        dist = euclidean_distance_haversine("exit_points_layer", "sawmill_layer")
+        dist = euclidean_distance_haversine("exit_points_layer", "sawmill_layer", 3955.7439)
         print("Test 1 result: " + str(dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")
@@ -52,7 +52,7 @@ class TestStraightLineDistance(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 10"
         )
 
-        dist = euclidean_distance_haversine("exit_points_layer", "sawmill_layer")
+        dist = euclidean_distance_haversine("exit_points_layer", "sawmill_layer", 3955.7439)
         print("Test 2 result: " + str(dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")

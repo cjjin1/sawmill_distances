@@ -36,7 +36,7 @@ def calculate_road_distance(starting_point, roads, sawmill, output_path):
     del row, sc
     return distance
 
-def euclidean_distance_haversine(point_1, point_2):
+def euclidean_distance_haversine(point_1, point_2, radius = 3958.7610477):
     """Calculates the Euclidean distance between two points using Haversine formula"""
     point_1_x, point_1_y, point_2_x, point_2_y = 0, 0 ,0 ,0
     sc = arcpy.da.SearchCursor(point_1, ["SHAPE@XY"])
@@ -59,8 +59,7 @@ def euclidean_distance_haversine(point_1, point_2):
     a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.pow(math.sin(delta_lambda / 2), 2)
 
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    r = 3958.76104
-    return r * c
+    return radius * c
 
 def euclidean_distance_near(point_1, point_2):
     """Calculates the Euclidean distance between two points using near tool, converts meters into miles"""
