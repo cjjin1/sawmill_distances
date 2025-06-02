@@ -12,13 +12,13 @@ import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
     def test_calculate_distances_from_exit_1(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         roads_raster = "roads_raster.tif"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/test_path_1.shp"
+        output_path = "F:/timber_project/outputs/MS_test/test_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -39,13 +39,13 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(6.0 < dist < 6.2)
 
     def test_calculate_distances_from_exit_2(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         roads_raster = "roads_raster.tif"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/test_path_2.shp"
+        output_path = "F:/timber_project/outputs/MS_test/test_path_2.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -66,13 +66,13 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(13.5 < dist < 13.7)
 
     def test_calculate_distances_from_exit_3(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         roads_raster = "roads_raster.tif"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/test_path_3.shp"
+        output_path = "F:/timber_project/outputs/MS_test/test_path_3.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -93,13 +93,13 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(19.4 < dist < 19.6)
 
     def test_calculate_distances_from_exit_4(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         roads_raster = "roads_raster.tif"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/test_path_4.shp"
+        output_path = "F:/timber_project/outputs/MS_test/test_path_4.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(

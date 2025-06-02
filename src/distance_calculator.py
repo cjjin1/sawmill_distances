@@ -23,14 +23,57 @@ def calculate_road_distance(starting_point, roads, sawmill, output_path):
         road_backlink,
         "BEST_SINGLE"
     )
-    path_shp = output_path
-    arcpy.conversion.RasterToPolyline(cost_path, path_shp, simplify="SIMPLIFY")
-    arcpy.management.AddField(path_shp, "distance", "DOUBLE")
+    arcpy.conversion.RasterToPolyline(cost_path, output_path, simplify="SIMPLIFY")
+    distance = _calculate_distance_for_shp(output_path)
+    return distance
+
+def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
+    arcpy.CheckOutExtension("Network")
+    route_layer_name = "sawmill_route"
+    result = arcpy.na.MakeRouteLayer(
+        network_dataset,
+        route_layer_name,
+        "Length",
+    )
+    route_layer = result.getOutput(0)
+    sub_layers = arcpy.na.GetNAClassNames(route_layer)
+    stops_layer_name = sub_layers["Stops"]
+
+    arcpy.na.AddLocations(
+        in_network_analysis_layer=route_layer,
+        sub_layer=stops_layer_name,
+        in_table=starting_point,
+        search_tolerance="5000 Meters",
+        append="CLEAR",
+        snap_to_position_along_network="SNAP",
+        search_criteria=[["streets", "SHAPE"]],
+        exclude_restricted_elements="INCLUDE"
+    )
+
+    arcpy.na.AddLocations(
+        in_network_analysis_layer=route_layer,
+        sub_layer=stops_layer_name,
+        in_table=sawmill,
+        search_tolerance="5000 Meters",
+        append="APPEND",
+        snap_to_position_along_network="SNAP",
+        search_criteria=[["streets", "SHAPE"]],
+        exclude_restricted_elements="INCLUDE"
+    )
+
+    arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
+    arcpy.management.CopyFeatures(route_layer.listLayers(sub_layers["Routes"])[0], output_path)
+    distance = _calculate_distance_for_shp(output_path)
+    arcpy.CheckInExtension("Network")
+    return distance
+
+def _calculate_distance_for_shp(shapefile_path):
+    arcpy.management.AddField(shapefile_path, "distance", "DOUBLE")
     arcpy.management.CalculateGeometryAttributes(
-        path_shp, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
+        shapefile_path, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
     )
     distance = 0
-    sc = arcpy.da.SearchCursor(path_shp, ["distance"])
+    sc = arcpy.da.SearchCursor(shapefile_path, ["distance"])
     for row in sc:
         distance += row[0]
     del row, sc

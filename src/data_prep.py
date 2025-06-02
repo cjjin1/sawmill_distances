@@ -80,12 +80,13 @@ arcpy.management.CalculateGeometryAttributes(
 )
 
 #convert road shapefile to raster
-roads_raster = "roads_raster.tif"
-arcpy.conversion.PolylineToRaster(
-    in_features=roads_shp,
-    value_field="distance",
-    out_rasterdataset=roads_raster,
-    cell_assignment="MAXIMUM_LENGTH",
-    priority_field="DISTANCE",
-    cellsize=0.0004
-)
+#Uncomment if needed for Cost Distance tool
+# roads_raster = "roads_raster.tif"
+# arcpy.conversion.PolylineToRaster(
+#     in_features=roads_shp,
+#     value_field="distance",
+#     out_rasterdataset=roads_raster,
+#     cell_assignment="MAXIMUM_LENGTH",
+#     priority_field="DISTANCE",
+#     cellsize=0.0004
+# )

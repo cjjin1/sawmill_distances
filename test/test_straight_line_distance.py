@@ -15,7 +15,7 @@ import distance_calculator
 
 class TestStraightLineDistance(unittest.TestCase):
     def test_euclidean_distance_haversine_1(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         sawmills = "sawmills_adjusted.shp"
@@ -37,7 +37,7 @@ class TestStraightLineDistance(unittest.TestCase):
         self.assertTrue(4.92 < dist < 4.94)
 
     def test_euclidean_distance_haversine_2(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         sawmills = "sawmills_adjusted.shp"
@@ -59,7 +59,7 @@ class TestStraightLineDistance(unittest.TestCase):
         self.assertTrue(276 < dist < 277)
 
     def test_euclidean_distance_near_1(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         sawmills = "sawmills_adjusted.shp"
@@ -74,8 +74,8 @@ class TestStraightLineDistance(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        point_1 = "F:/timber_project/outputs/test_point_1_near1.shp"
-        point_2 = "F:/timber_project/outputs/test_point_2_near1.shp"
+        point_1 = "F:/timber_project/outputs/MS_test/test_point_1_near1.shp"
+        point_2 = "F:/timber_project/outputs/MS_test/test_point_2_near1.shp"
         arcpy.CopyFeatures_management("exit_points_layer", point_1)
         arcpy.CopyFeatures_management("sawmill_layer", point_2)
 
@@ -83,10 +83,12 @@ class TestStraightLineDistance(unittest.TestCase):
         print("Test 3 result: " + str(dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")
+        arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_1_near1.shp")
+        arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_2_near1.shp")
         self.assertTrue(4.92 < dist < 4.93)
 
     def test_euclidean_distance_near_2(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/"
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_test"
         arcpy.env.overwriteOutput = True
 
         sawmills = "sawmills_adjusted.shp"
@@ -101,8 +103,8 @@ class TestStraightLineDistance(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 10"
         )
 
-        point_1 = "F:/timber_project/outputs/test_point_1_near2.shp"
-        point_2 = "F:/timber_project/outputs/test_point_2_near2.shp"
+        point_1 = "F:/timber_project/outputs/MS_test/test_point_1_near2.shp"
+        point_2 = "F:/timber_project/outputs/MS_test/test_point_2_near2.shp"
         arcpy.CopyFeatures_management("exit_points_layer", point_1)
         arcpy.CopyFeatures_management("sawmill_layer", point_2)
 
@@ -110,4 +112,6 @@ class TestStraightLineDistance(unittest.TestCase):
         print("Test 4 result: " + str(dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")
+        arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_1_near2.shp")
+        arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_2_near2.shp")
         self.assertTrue(276.2 < dist < 276.3)
