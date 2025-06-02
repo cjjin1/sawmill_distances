@@ -3,7 +3,6 @@
 # Author: James Jin
 # unity ID: cjjin
 # Purpose: Calculates distance from a point on a public road to the nearest sawmill
-# Usage: <Workspace> <Public Roads Shapefile> <NFS exit points> <sawmills>
 ########################################################################################################################
 
 import arcpy, sys, os, math
