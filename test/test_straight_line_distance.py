@@ -115,3 +115,6 @@ class TestStraightLineDistance(unittest.TestCase):
         arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_1_near2.shp")
         arcpy.management.Delete("F:/timber_project/outputs/MS_test/test_point_2_near2.shp")
         self.assertTrue(276.2 < dist < 276.3)
+
+    if __name__ == '__main__':
+        unittest.main()

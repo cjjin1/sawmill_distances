@@ -42,22 +42,14 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         in_network_analysis_layer=route_layer,
         sub_layer=stops_layer_name,
         in_table=starting_point,
-        search_tolerance="5000 Meters",
         append="CLEAR",
-        snap_to_position_along_network="SNAP",
-        search_criteria=[["streets", "SHAPE"]],
-        exclude_restricted_elements="INCLUDE"
     )
 
     arcpy.na.AddLocations(
         in_network_analysis_layer=route_layer,
         sub_layer=stops_layer_name,
         in_table=sawmill,
-        search_tolerance="5000 Meters",
         append="APPEND",
-        snap_to_position_along_network="SNAP",
-        search_criteria=[["streets", "SHAPE"]],
-        exclude_restricted_elements="INCLUDE"
     )
 
     arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
