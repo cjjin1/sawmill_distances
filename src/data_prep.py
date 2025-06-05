@@ -5,7 +5,7 @@
 # Purpose: Prepares data for distance calculations. Filters exit points for NFS roads that connect to public roads.
 #          Projects all data to WGS1984. Snaps sawmills and exit points to roads dataset. Makes a raster from roads
 #          dataset.
-# Usage: <Workspace> <Feature Dataset> <Public Roads Shapefile> <NFS Roads Shapefile> <sawmill shapefile>
+# Usage: <Workspace> <Feature Dataset> <Roads Dataset> <NFS Roads Shapefile> <sawmill shapefile>
 #        <[optional] Boundary Shapefile>
 ########################################################################################################################
 
