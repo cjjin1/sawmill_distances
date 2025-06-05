@@ -27,6 +27,7 @@ def calculate_road_distance(starting_point, roads, sawmill, output_path):
     return distance
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
+    """Finds the distance from a starting point to a sawmill destination using network analyst"""
     arcpy.CheckOutExtension("Network")
     route_layer_name = "sawmill_route"
     result = arcpy.na.MakeRouteLayer(
@@ -59,6 +60,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
     return distance
 
 def _calculate_distance_for_shp(shapefile_path):
+    """Calculates distance for a given polyline shapefile"""
     arcpy.management.AddField(shapefile_path, "distance", "DOUBLE")
     arcpy.management.CalculateGeometryAttributes(
         shapefile_path, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
