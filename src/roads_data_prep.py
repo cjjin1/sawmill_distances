@@ -8,7 +8,7 @@
 ########################################################################################################################
 
 import osmnx as ox
-import sys
+import sys, arcpy, os
 
 #read in area of interest
 aoi = sys.argv[3]
@@ -16,25 +16,44 @@ aoi = sys.argv[3]
 #if there are 4 input arguments, read in arguments as coordinates for bbox
 #otherwise, read in the first argument as the name of place for aoi
 graph = None
+cf = (
+    '[highway~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|service|track|road"]'
+)
 if len(sys.argv) == 7:
-    north = float(sys.argv[3])
-    south = float(sys.argv[4])
-    east = float(sys.argv[5])
-    west = float(sys.argv[6])
-    graph = ox.graph_from_bbox((north, south, east, west), network_type = "drive")
+    north, south, east, west = float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6])
+    graph = ox.graph_from_bbox((north, south, east, west), custom_filter=cf, simplify=False, retain_all=True)
 else:
-    graph = ox.graph_from_place(aoi, network_type='drive')
+    graph = ox.graph_from_place(aoi, custom_filter=cf, simplify=False, retain_all=True)
 
 #get nodes and edges from graph
 nodes, edges = ox.graph_to_gdfs(graph)
 
-#copy the edges
-truck_roads = edges.copy()
+# #copy the edges
+# truck_roads = edges.copy()
+#
+# #remove roads explicitly restricted for heavy goods vehicles
+# if 'hgv' in truck_roads.columns:
+#     truck_roads = truck_roads[~truck_roads['hgv'].isin(['no'])]
 
-#remove roads explicitly restricted for heavy goods vehicles
-if 'hgv' in truck_roads.columns:
-    truck_roads = truck_roads[~truck_roads['hgv'].isin(['no'])]
+#save the roads and nodes to scratch folder as gpkg files
+#nodes are commented out as they are not necessary at this time
+edges.to_file("F:/timber_project/scratch/temp_roads.gpkg", layer = "roads", driver = "GPKG")
+#nodes.to_file("F:/timber_project/scratch/temp_nodes.gpkg", layer = "nodes", driver = "GPKG")
 
-#save the roads and nodes to data folder
-truck_roads.to_file(sys.argv[1])
-nodes.to_file(sys.argv[2])
+#convert gpkg files to feature class in File GDB
+arcpy.conversion.FeatureClassToFeatureClass(
+    in_features = os.path.join("F:/timber_project/scratch/temp_roads.gpkg", "roads"),
+    out_path = sys.argv[1],
+    out_name = "roads"
+)
+#delete fields with type big integer
+arcpy.management.DeleteField(os.path.join(sys.argv[1], "roads"), ["u", "v", "key", "osmid"])
+# arcpy.conversion.FeatureClassToFeatureClass(
+#     in_features = os.path.join("F:/timber_project/scratch/temp_nodes.gpkg", "nodes"),
+#     out_path = sys.argv[2],
+#     out_name = "nodes"
+# )
+
+#delete temporary gpkg files
+arcpy.management.Delete("F:/timber_project/scratch/temp_roads.gpkg")
+#.management.Delete("F:/timber_project/scratch/temp_nodes.gpkg")

@@ -15,14 +15,14 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "MS_OSM_ND.gdb/Transportation/ms_streets_nd"
+        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 841"
+            "exit_points_layer", "NEW_SELECTION", "FID = 1190"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -42,7 +42,7 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "MS_OSM_ND.gdb/Transportation/ms_streets_nd"
+        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_2.shp"
@@ -69,14 +69,14 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "MS_OSM_ND.gdb/Transportation/ms_streets_nd"
+        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_3.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 1436"
+            "exit_points_layer", "NEW_SELECTION", "FID = 2119"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -96,14 +96,14 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "MS_OSM_ND.gdb/Transportation/ms_streets_nd"
+        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_4.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 1594"
+            "exit_points_layer", "NEW_SELECTION", "FID = 2325"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
