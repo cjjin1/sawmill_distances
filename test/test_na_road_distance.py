@@ -3,6 +3,7 @@
 # Author: James Jin
 # unity ID: cjjin
 # Purpose: Tests the calculate_road_distance_nd function in distance_calculator.py
+#          Outputs into F:/timber_project/outputs/MS_test/
 ########################################################################################################################
 
 import unittest
