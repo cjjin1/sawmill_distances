@@ -13,7 +13,7 @@ import sys, arcpy, os
 #read in area of interest
 aoi = sys.argv[3]
 #create graph
-#if there are 4 input arguments, read in arguments as coordinates for bbox
+#if there are 6 input arguments, read in arguments as coordinates for bbox
 #otherwise, read in the first argument as the name of place for aoi
 graph = None
 cf = (

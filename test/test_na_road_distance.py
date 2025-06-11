@@ -19,6 +19,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_1.shp"
+        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -32,11 +33,16 @@ class TestDistanceCalculator(unittest.TestCase):
         dist = distance_calculator.calculate_road_distance_nd(
             "exit_points_layer", network_dataset, "sawmill_layer", output_path
         )
-        print("Test 1 result: " + str(dist))
+        closest_dist = distance_calculator.calculate_closest_road_distance_nd(
+            "exit_points_layer", network_dataset, sawmills, closest_output_path
+        )
+        print("Test 1 result: " + str(dist) + "        Test 1 closest result: " + str(closest_dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 6.1 miles
         self.assertTrue(dist <= 6.3)
+        self.assertTrue(closest_dist <= 6.3)
+        self.assertEquals(dist, closest_dist)
 
     def test_calculate_road_distance_nd_2(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
@@ -46,6 +52,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_adjusted.shp"
         exit_points = "NFS_adjusted_exit_points.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_2.shp"
+        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_2.shp"
 
         arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -59,11 +66,16 @@ class TestDistanceCalculator(unittest.TestCase):
         dist = distance_calculator.calculate_road_distance_nd(
             "exit_points_layer", network_dataset, "sawmill_layer", output_path
         )
-        print("Test 2 result: " + str(dist))
+        closest_dist = distance_calculator.calculate_closest_road_distance_nd(
+            "exit_points_layer", network_dataset, sawmills, closest_output_path
+        )
+        print("Test 2 result: " + str(dist) + "        Test 2 closest result: " + str(closest_dist))
         arcpy.management.Delete("exit_points_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 13.6
         self.assertTrue(dist <= 13.8)
+        self.assertTrue(closest_dist <= 13.8)
+        self.assertEquals(dist, closest_dist)
 
     def test_calculate_road_distance_nd_3(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"

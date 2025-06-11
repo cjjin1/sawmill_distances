@@ -5,7 +5,7 @@
 # Purpose: Calculates distance from a point on a public road to the nearest sawmill
 ########################################################################################################################
 
-import arcpy, sys, os, math
+import arcpy, math
 from arcpy.sa import *
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
@@ -36,7 +36,30 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
     )
 
     arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
-    arcpy.management.CopyFeatures(route_layer.listLayers(sub_layers["Routes"])[0], output_path)
+    arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
+    distance = _calculate_distance_for_shp(output_path)
+    arcpy.CheckInExtension("Network")
+    return distance
+
+def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills, output_path):
+    """Finds the distance from a starting point to the nearest sawmill destination using network analyst"""
+    arcpy.CheckOutExtension("Network")
+    cf_layer_name = "closest_sawmill"
+    arcpy.na.MakeClosestFacilityAnalysisLayer(
+        network_dataset,
+        cf_layer_name,
+        travel_mode = "Driving Distance"
+    )
+
+    sub_layers = arcpy.na.GetNAClassNames(cf_layer_name)
+    facilities = sub_layers["Facilities"]
+    incidents = sub_layers["Incidents"]
+
+    arcpy.na.AddLocations(cf_layer_name, facilities, sawmills)
+    arcpy.na.AddLocations(cf_layer_name, incidents, starting_point)
+
+    arcpy.na.Solve(cf_layer_name)
+    arcpy.management.CopyFeatures(sub_layers["CFRoutes"], output_path)
     distance = _calculate_distance_for_shp(output_path)
     arcpy.CheckInExtension("Network")
     return distance
