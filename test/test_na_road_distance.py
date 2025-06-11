@@ -16,65 +16,67 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
+        roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
+        harvest_sites = "TimberHarvestBienville.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_1.shp"
         closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_1.shp"
 
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 1190"
+            "harvest_site_layer", "NEW_SELECTION", "FID = 62"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
             "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
+        dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_closest_road_distance_nd(
-            "exit_points_layer", network_dataset, sawmills, closest_output_path
+        closest_dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
         print("Test 1 result: " + str(dist) + "        Test 1 closest result: " + str(closest_dist))
-        arcpy.management.Delete("exit_points_layer")
+        arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 6.1 miles
-        self.assertTrue(dist <= 6.3)
-        self.assertTrue(closest_dist <= 6.3)
+        # actual road distance: 9.4 miles
         self.assertEquals(dist, closest_dist)
+        self.assertTrue(9.1 <= dist <= 9.5)
+        self.assertTrue(9.1 <= closest_dist <= 9.5)
 
     def test_calculate_road_distance_nd_2(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
+        roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
+        harvest_sites = "TimberHarvestBienville.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_2.shp"
         closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_2.shp"
 
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 0"
+            "harvest_site_layer", "NEW_SELECTION", "FID = 78"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 3"
+            "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
+        dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_closest_road_distance_nd(
-            "exit_points_layer", network_dataset, sawmills, closest_output_path
+        closest_dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
         print("Test 2 result: " + str(dist) + "        Test 2 closest result: " + str(closest_dist))
-        arcpy.management.Delete("exit_points_layer")
+        arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 13.6
-        self.assertTrue(dist <= 13.8)
-        self.assertTrue(closest_dist <= 13.8)
+        # actual road distance: 4.8
+        self.assertTrue(4.6 <= dist <= 4.8)
+        self.assertTrue(4.6 <= closest_dist <= 4.8)
         self.assertEquals(dist, closest_dist)
 
     def test_calculate_road_distance_nd_3(self):
@@ -82,162 +84,68 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
+        roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
+        harvest_sites = "TimberHarvestBienville.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_3.shp"
+        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_3.shp"
 
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 2119"
+            "harvest_site_layer", "NEW_SELECTION", "FID = 101"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 21"
+            "sawmill_layer", "NEW_SELECTION", "FID = 24"
         )
 
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
+        dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        print("Test 3 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
+        closest_dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+        )
+        print("Test 3 result: " + str(dist) + "        Test 3 closest result: " + str(closest_dist))
+        arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 19.5 miles
-        self.assertTrue(dist <= 19.7)
+        # actual road distance: 17.95
+        self.assertTrue(17.4 <= dist <= 18.1)
+        self.assertTrue(17.4 <= closest_dist <= 18.1)
+        self.assertEquals(dist, closest_dist)
 
     def test_calculate_road_distance_nd_4(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
+        roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
+        harvest_sites = "TimberHarvestBienville.shp"
         output_path = "F:/timber_project/outputs/MS_test/test_nd_path_4.shp"
+        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_4.shp"
 
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 2325"
+            "harvest_site_layer", "NEW_SELECTION", "FID = 69"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 10"
+            "sawmill_layer", "NEW_SELECTION", "FID = 24"
         )
 
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
+        dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        print("Test 4 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
+        closest_dist = distance_calculator.calculate_total_road_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+        )
+        print("Test 4 result: " + str(dist) + "        Test 4 closest result: " + str(closest_dist))
+        arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        #actual road distance: 339 miles
-        self.assertTrue(dist <= 340)
-
-    def test_calculate_road_distance_nd_5(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
-        sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_5.shp"
-
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 3297"
-        )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 20"
-        )
-
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
-        )
-        print("Test 5 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
-        arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 153 miles
-        self.assertTrue(dist <= 154)
-
-    def test_calculate_road_distance_nd_6(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
-        sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_6.shp"
-
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 737"
-        )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 11"
-        )
-
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
-        )
-        print("Test 6 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
-        arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 45.0 miles
-        self.assertTrue(dist <= 45.2)
-
-    def test_calculate_road_distance_nd_7(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
-        sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_7.shp"
-
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 609"
-        )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 	36"
-        )
-
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
-        )
-        print("Test 7 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
-        arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 30.5 miles
-        self.assertTrue(dist <= 30.7)
-
-    def test_calculate_road_distance_nd_8(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
-        sawmills = "sawmills_adjusted.shp"
-        exit_points = "NFS_adjusted_exit_points.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_8.shp"
-
-        arcpy.management.MakeFeatureLayer(exit_points, "exit_points_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "exit_points_layer", "NEW_SELECTION", "FID = 450"
-        )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 2"
-        )
-
-        dist = distance_calculator.calculate_road_distance_nd(
-            "exit_points_layer", network_dataset, "sawmill_layer", output_path
-        )
-        print("Test 8 result: " + str(dist))
-        arcpy.management.Delete("exit_points_layer")
-        arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 71.4 miles
-        self.assertTrue(dist <= 71.6)
+        # actual road distance: 23.6
+        self.assertTrue(23.3 <= dist <= 23.6)
+        self.assertTrue(23.3 <= closest_dist <= 23.6)
+        self.assertEquals(dist, closest_dist)
 
     if __name__ == '__main__':
         unittest.main()
