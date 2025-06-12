@@ -31,17 +31,19 @@ class TestDistanceCalculator(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        dist = distance_calculator.calculate_total_road_distance(
+        dist, euclidean_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_total_road_distance(
+        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
-        print("Test 1 result: " + str(dist) + "        Test 1 closest result: " + str(closest_dist))
+        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
+              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 9.4 miles
         self.assertEquals(dist, closest_dist)
+        self.assertEquals(euclidean_dist, euclidean_closest_dist)
         self.assertTrue(9.1 <= dist <= 9.5)
         self.assertTrue(9.1 <= closest_dist <= 9.5)
 
@@ -65,19 +67,21 @@ class TestDistanceCalculator(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 0"
         )
 
-        dist = distance_calculator.calculate_total_road_distance(
+        dist, euclidean_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_total_road_distance(
+        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
-        print("Test 2 result: " + str(dist) + "        Test 2 closest result: " + str(closest_dist))
+        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
+              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 4.8
         self.assertTrue(4.6 <= dist <= 4.8)
         self.assertTrue(4.6 <= closest_dist <= 4.8)
         self.assertEquals(dist, closest_dist)
+        self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_3(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
@@ -99,19 +103,21 @@ class TestDistanceCalculator(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 24"
         )
 
-        dist = distance_calculator.calculate_total_road_distance(
+        dist, euclidean_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_total_road_distance(
+        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
-        print("Test 3 result: " + str(dist) + "        Test 3 closest result: " + str(closest_dist))
+        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
+              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 17.95
         self.assertTrue(17.4 <= dist <= 18.1)
         self.assertTrue(17.4 <= closest_dist <= 18.1)
         self.assertEquals(dist, closest_dist)
+        self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_4(self):
         arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
@@ -133,19 +139,21 @@ class TestDistanceCalculator(unittest.TestCase):
             "sawmill_layer", "NEW_SELECTION", "FID = 24"
         )
 
-        dist = distance_calculator.calculate_total_road_distance(
+        dist, euclidean_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
         )
-        closest_dist = distance_calculator.calculate_total_road_distance(
+        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
         )
-        print("Test 4 result: " + str(dist) + "        Test 4 closest result: " + str(closest_dist))
+        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
+              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 23.6
         self.assertTrue(23.3 <= dist <= 23.6)
         self.assertTrue(23.3 <= closest_dist <= 23.6)
         self.assertEquals(dist, closest_dist)
+        self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     if __name__ == '__main__':
         unittest.main()

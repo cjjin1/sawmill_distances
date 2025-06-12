@@ -5,8 +5,57 @@
 # Purpose: Calculates distance from a harvest site to a sawmill
 ########################################################################################################################
 
-import arcpy, math
-from arcpy.sa import *
+import arcpy
+
+def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_path):
+    """Finds the total road distance from a harvest site to a sawmill destination.
+       Harvest site input must be a singular point.
+       If multiple sawmills are inputted, then the nearest sawmill will be the destination.
+       Returns both total road distance and Euclidean distance, in that order"""
+    centroid_fc = "harvest_site_centroid.shp"
+    arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
+
+    sr = arcpy.Describe(harvest_site).spatialReference
+    arcpy.CreateFeatureclass_management(
+        arcpy.env.workspace, "nearest_point", "POINT", spatial_reference=sr
+    )
+    arcpy.analysis.Near(centroid_fc, roads, location = "LOCATION", distance_unit = "Miles")
+    nearest_point = None
+    near_line = None
+    near_distance = 0
+    i = 0
+    sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
+    ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
+    for shape, near_dist, near_x, near_y in sc:
+        if i != 0:
+            raise arcpy.ExecuteError("Harvest site feature class includes more than one point")
+        nearest_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), shape.spatialReference)
+        near_line = arcpy.Polyline(arcpy.Array([shape.firstPoint, arcpy.Point(near_x, near_y)]), sr)
+        near_distance = near_dist
+        i += 1
+    ic.insertRow([nearest_point])
+    del near_x, near_y, shape, near_dist, sc, ic
+
+    if int(arcpy.management.GetCount(sawmills)[0]) == 1:
+        road_distance = calculate_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
+        euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
+    elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
+        road_distance = calculate_closest_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
+        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_destination")
+        arcpy.management.SelectLayerByLocation(
+            "sawmill_destination", "INTERSECT", output_path
+        )
+        euclidean_distance = euclidean_distance_near(centroid_fc, "sawmill_destination")
+        arcpy.management.Delete("sawmill_destination")
+    else:
+        raise arcpy.ExecuteError("No valid sawmill input")
+    ic = arcpy.da.InsertCursor(output_path, ["SHAPE@", "Shape_Leng"])
+    ic.insertRow([near_line, near_distance * 5280])
+    del ic
+
+    arcpy.management.Delete(centroid_fc)
+    arcpy.management.Delete("nearest_point")
+    return road_distance + near_distance, euclidean_distance
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
     """Finds the distance from a starting point to a sawmill destination using network analyst"""
@@ -64,46 +113,6 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     arcpy.CheckInExtension("Network")
     return distance
 
-def calculate_total_road_distance(harvest_site, roads, network_dataset, sawmills, output_path):
-    """Finds the total road distance from a harvest site to a sawmill destination.
-       Harvest site input must be a singular point.
-       If multiple sawmills are inputted, then the nearest sawmill will be the destination."""
-    centroid_fc = "harvest_site_centroid.shp"
-    arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
-
-    sr = arcpy.Describe(harvest_site).spatialReference
-    arcpy.CreateFeatureclass_management(
-        arcpy.env.workspace, "nearest_point", "POINT", spatial_reference=sr
-    )
-    arcpy.analysis.Near(centroid_fc, roads, location = "LOCATION", distance_unit = "Miles")
-    nearest_point = None
-    near_line = None
-    near_distance = 0
-    i = 0
-    sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
-    ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
-    for shape, near_dist, near_x, near_y in sc:
-        if i != 0:
-            raise arcpy.ExecuteError("Harvest site feature class includes more than one point")
-        nearest_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), shape.spatialReference)
-        near_line = arcpy.Polyline(arcpy.Array([shape.firstPoint, arcpy.Point(near_x, near_y)]), sr)
-        near_distance = near_dist
-        i += 1
-    ic.insertRow([nearest_point])
-    del near_x, near_y, shape, near_dist, sc, ic
-
-    if int(arcpy.management.GetCount(sawmills)[0]) == 1:
-        road_distance = calculate_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
-    else:
-        road_distance = calculate_closest_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
-    ic = arcpy.da.InsertCursor(output_path, ["SHAPE@"])
-    ic.insertRow([near_line])
-    del ic
-
-    arcpy.management.Delete(centroid_fc)
-    arcpy.management.Delete("nearest_point")
-    return road_distance + near_distance
-
 def calculate_distance_for_shp(shapefile_path):
     """Calculates distance for a given polyline shapefile"""
     arcpy.management.AddField(shapefile_path, "distance", "DOUBLE")
@@ -118,57 +127,63 @@ def calculate_distance_for_shp(shapefile_path):
     return distance
 
 def euclidean_distance_near(point_1, point_2):
-    """Calculates the Euclidean distance between two points using near tool, converts meters into miles"""
-    arcpy.analysis.Near(point_1, point_2, method="GEODESIC")
-    distance = 6.213711922 * 10**-4
+    """Calculates the Euclidean distance between two points using near tool"""
+    arcpy.analysis.Near(point_1, point_2, distance_unit = "Miles", method="GEODESIC")
+    distance = 0
     sc = arcpy.da.SearchCursor(point_1, ["NEAR_DIST"])
     for row in sc:
-        distance *= row[0]
+        distance = row[0]
         break
     del row, sc
+    if int(arcpy.management.GetCount(point_1)[0]) > 1 or int(arcpy.management.GetCount(point_2)[0]) > 1:
+        raise arcpy.ExecuteError("Euclidean distance: one or both point feature classes contain more than one point")
     return distance
 
-def euclidean_distance_haversine(point_1, point_2, radius = 3958.7610477):
-    """Calculates the Euclidean distance between two points using Haversine formula"""
-    #NOT CURRENTLY MEANT FOR USE
-    point_1_x, point_1_y, point_2_x, point_2_y = 0, 0 ,0 ,0
-    sc = arcpy.da.SearchCursor(point_1, ["SHAPE@XY"])
-    for row in sc:
-        point_1_x, point_1_y = row[0]
-        break
-    del row, sc
+################################################ NOT IN USE ############################################################
+# def euclidean_distance_haversine(point_1, point_2, radius = 3958.7610477):
+#     """Calculates the Euclidean distance between two points using Haversine formula"""
+#     #NOT CURRENTLY MEANT FOR USE
+#     point_1_x, point_1_y, point_2_x, point_2_y = 0, 0 ,0 ,0
+#     sc = arcpy.da.SearchCursor(point_1, ["SHAPE@XY"])
+#     for row in sc:
+#         point_1_x, point_1_y = row[0]
+#         break
+#     del row, sc
+#
+#     sc = arcpy.da.SearchCursor(point_2, ["SHAPE@XY"])
+#     for row in sc:
+#         point_2_x, point_2_y = row[0]
+#         break
+#     del row, sc
+#
+#     phi1 = math.radians(point_1_y)
+#     phi2 = math.radians(point_2_y)
+#     delta_phi = math.radians(point_2_y - point_1_y)
+#     delta_lambda = math.radians(point_2_x - point_1_x)
+#
+#     a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.pow(math.sin(delta_lambda / 2), 2)
+#
+#     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+#     return radius * c
+################################################ NOT IN USE ############################################################
 
-    sc = arcpy.da.SearchCursor(point_2, ["SHAPE@XY"])
-    for row in sc:
-        point_2_x, point_2_y = row[0]
-        break
-    del row, sc
-
-    phi1 = math.radians(point_1_y)
-    phi2 = math.radians(point_2_y)
-    delta_phi = math.radians(point_2_y - point_1_y)
-    delta_lambda = math.radians(point_2_x - point_1_x)
-
-    a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.pow(math.sin(delta_lambda / 2), 2)
-
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return radius * c
-
-def calculate_road_distance(starting_point, roads, sawmill, output_path):
-    """Takes in a starting point, roads raster, and a sawmill destination
-       Finds the distance from the starting point to the sawmill destination
-       Returns a feature class containing a path and distance
-       Can accommodate multiple destinations if destination is unknown, will find
-       the closest destination out of the entire sawmill feature class"""
-    #NOT CURRENTLY MEANT FOR USE
-    road_cost = CostDistance(starting_point, roads)
-    road_backlink = CostBackLink(starting_point, roads)
-    cost_path = CostPath(
-        sawmill,
-        road_cost,
-        road_backlink,
-        "BEST_SINGLE"
-    )
-    arcpy.conversion.RasterToPolyline(cost_path, output_path, simplify="SIMPLIFY")
-    distance = calculate_distance_for_shp(output_path)
-    return distance
+################################################ NOT IN USE ############################################################
+# def calculate_road_distance(starting_point, roads, sawmill, output_path):
+#     """Takes in a starting point, roads raster, and a sawmill destination
+#        Finds the distance from the starting point to the sawmill destination
+#        Returns a feature class containing a path and distance
+#        Can accommodate multiple destinations if destination is unknown, will find
+#        the closest destination out of the entire sawmill feature class"""
+#     #NOT CURRENTLY MEANT FOR USE
+#     road_cost = CostDistance(starting_point, roads)
+#     road_backlink = CostBackLink(starting_point, roads)
+#     cost_path = CostPath(
+#         sawmill,
+#         road_cost,
+#         road_backlink,
+#         "BEST_SINGLE"
+#     )
+#     arcpy.conversion.RasterToPolyline(cost_path, output_path, simplify="SIMPLIFY")
+#     distance = calculate_distance_for_shp(output_path)
+#     return distance
+################################################ NOT IN USE ############################################################
