@@ -155,5 +155,31 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(dist, closest_dist)
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
+    def test_concerns(self):
+        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.overwriteOutput = True
+
+        network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
+        roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
+        sawmills = "sawmills_adjusted.shp"
+        harvest_sites = "TimberHarvestBienville.shp"
+        output_path_1 = "F:/timber_project/outputs/MS_test/test_concerns_1.shp"
+        output_path_2 = "F:/timber_project/outputs/MS_test/test_concerns_2.shp"
+
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "FID = 100"
+        )
+        distance_calculator.calculate_distance(
+            "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_1
+        )
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "FID = 74"
+        )
+        distance_calculator.calculate_distance(
+            "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_2
+        )
+        self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2))
+
     if __name__ == '__main__':
         unittest.main()
