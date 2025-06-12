@@ -2,7 +2,7 @@
 # distance_calculator.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Calculates distance from a point on a public road to the nearest sawmill
+# Purpose: Calculates distance from a harvest site to a sawmill
 ########################################################################################################################
 
 import arcpy, math
@@ -37,7 +37,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
 
     arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
-    distance = _calculate_distance_for_shp(output_path)
+    distance = calculate_distance_for_shp(output_path)
     arcpy.CheckInExtension("Network")
     return distance
 
@@ -60,13 +60,14 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
 
     arcpy.na.Solve(cf_layer_name)
     arcpy.management.CopyFeatures(sub_layers["CFRoutes"], output_path)
-    distance = _calculate_distance_for_shp(output_path)
+    distance = calculate_distance_for_shp(output_path)
     arcpy.CheckInExtension("Network")
     return distance
 
 def calculate_total_road_distance(harvest_site, roads, network_dataset, sawmills, output_path):
-    """Finds the total road distance from a harvest site to a sawmill destination
-       Harvest site input must be a singular point"""
+    """Finds the total road distance from a harvest site to a sawmill destination.
+       Harvest site input must be a singular point.
+       If multiple sawmills are inputted, then the nearest sawmill will be the destination."""
     centroid_fc = "harvest_site_centroid.shp"
     arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
 
@@ -103,7 +104,7 @@ def calculate_total_road_distance(harvest_site, roads, network_dataset, sawmills
     arcpy.management.Delete("nearest_point")
     return road_distance + near_distance
 
-def _calculate_distance_for_shp(shapefile_path):
+def calculate_distance_for_shp(shapefile_path):
     """Calculates distance for a given polyline shapefile"""
     arcpy.management.AddField(shapefile_path, "distance", "DOUBLE")
     arcpy.management.CalculateGeometryAttributes(
@@ -169,5 +170,5 @@ def calculate_road_distance(starting_point, roads, sawmill, output_path):
         "BEST_SINGLE"
     )
     arcpy.conversion.RasterToPolyline(cost_path, output_path, simplify="SIMPLIFY")
-    distance = _calculate_distance_for_shp(output_path)
+    distance = calculate_distance_for_shp(output_path)
     return distance
