@@ -12,15 +12,15 @@ import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
     def test_calculate_road_distance_nd_1(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
         harvest_sites = "TimberHarvestBienville.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_1.shp"
-        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_1.shp"
+        output_path = "E:/timber_project/outputs/MS_test/test_nd_path_1.shp"
+        closest_output_path = "E:/timber_project/outputs/MS_test/test_closest_nd_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -48,15 +48,15 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(9.1 <= closest_dist <= 9.5)
 
     def test_calculate_road_distance_nd_2(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
         harvest_sites = "TimberHarvestBienville.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_2.shp"
-        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_2.shp"
+        output_path = "E:/timber_project/outputs/MS_test/test_nd_path_2.shp"
+        closest_output_path = "E:/timber_project/outputs/MS_test/test_closest_nd_path_2.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -84,15 +84,15 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_3(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
         harvest_sites = "TimberHarvestBienville.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_3.shp"
-        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_3.shp"
+        output_path = "E:/timber_project/outputs/MS_test/test_nd_path_3.shp"
+        closest_output_path = "E:/timber_project/outputs/MS_test/test_closest_nd_path_3.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -120,15 +120,15 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_4(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
         harvest_sites = "TimberHarvestBienville.shp"
-        output_path = "F:/timber_project/outputs/MS_test/test_nd_path_4.shp"
-        closest_output_path = "F:/timber_project/outputs/MS_test/test_closest_nd_path_4.shp"
+        output_path = "E:/timber_project/outputs/MS_test/test_nd_path_4.shp"
+        closest_output_path = "E:/timber_project/outputs/MS_test/test_closest_nd_path_4.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -156,15 +156,15 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_concerns(self):
-        arcpy.env.workspace = "F:/timber_project/scratch/MS_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/MS_OSM_test"
         arcpy.env.overwriteOutput = True
 
         network_dataset = "MS_OSM_ND.gdb/Transportation/streets_nd"
         roads_dataset = "MS_OSM_ND.gdb/Transportation/all_roads"
         sawmills = "sawmills_adjusted.shp"
         harvest_sites = "TimberHarvestBienville.shp"
-        output_path_1 = "F:/timber_project/outputs/MS_test/test_concerns_1.shp"
-        output_path_2 = "F:/timber_project/outputs/MS_test/test_concerns_2.shp"
+        output_path_1 = "E:/timber_project/outputs/MS_test/test_concerns_1.shp"
+        output_path_2 = "E:/timber_project/outputs/MS_test/test_concerns_2.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
