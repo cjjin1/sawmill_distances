@@ -72,7 +72,7 @@ arcpy.management.CalculateField(
 
 #use Near on points to check for proximity to public roads
 #add a field to indicate if a point is near or not
-arcpy.analysis.Near(points, roads, search_radius="100 Meters")
+arcpy.analysis.Near(points, roads, search_radius="150 Feet")
 arcpy.management.AddField(points, "IS_NEAR", "SHORT")
 arcpy.management.CalculateField(
     points, "IS_NEAR", "0 if !NEAR_DIST! == -1 else 1", "PYTHON3"
@@ -107,6 +107,9 @@ arcpy.edit.Snap(NFS_roads, [[roads, "VERTEX", "100 Feet"]])
 
 #merge the two roads datasets
 output_roads = os.path.join(transportation_dataset, "all_roads")
+if arcpy.Exists(os.path.join(transportation_dataset, "streets_nd")):
+    arcpy.management.Delete(os.path.join(transportation_dataset, "streets_nd"))
+    arcpy.management.Delete(os.path.join(transportation_dataset, "streets_nd_Junctions"))
 arcpy.management.Merge([roads, NFS_roads], output_roads)
 
 #Add a distance field to the roads shapefile
