@@ -32,7 +32,7 @@ Data prep:
       - creating network dataset
   - Building the network dataset is done within ArcGIS Pro manually, not in the script
   - Inputs: 
-      - Workspace (directory to store data)
+      - Workspace (FileGDB to store data)
       - Feature Dataset (Feature Dataset within a File GDB, must be created beforehand)
       - Roads Dataset (path to roads dataset created in roads_data_prep.py)
       - NFS Roads Shapefile (dataset of NFS roads)
@@ -40,8 +40,8 @@ Data prep:
       - harvest sites (dataset of harvest sites)
       - [optional] Boundary Shapefile (if any dataset extends past the desired area of interest)
   - Example Input:
-      - E:/timber_project/scratch/MS_OSM_test
-      - E:/timber_project/scratch/MS_OSM_test/MS_OSM_ND.gdb/Transportation
+      - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb
+      - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/Transportation
       - E:/timber_project/data/ms_roads.gdb/roads 
       - E:/timber_project/data/RoadCore_FS.shp
       - E:/timber_project/data/sawmill_geocoded.shp

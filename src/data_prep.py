@@ -27,26 +27,26 @@ harvest_sites = sys.argv[6]
 SR = arcpy.SpatialReference(2899)
 if not arcpy.Exists(os.path.join(transportation_dataset, os.path.basename(roads))):
     arcpy.Project_management(roads, os.path.join(transportation_dataset, os.path.basename(roads)), SR)
-if not arcpy.Exists(os.path.basename(NFS_roads)):
-    arcpy.Project_management(NFS_roads, os.path.basename(NFS_roads), SR)
-if not arcpy.Exists(os.path.basename(sawmills)):
-    arcpy.Project_management(sawmills, os.path.basename(sawmills), SR)
-if not arcpy.Exists(os.path.basename(harvest_sites)):
-    arcpy.Project_management(harvest_sites, os.path.basename(harvest_sites), SR)
-sawmills = os.path.join(scratch_dir, os.path.basename(sawmills))
+if not arcpy.Exists(os.path.splitext(os.path.basename(NFS_roads))[0]):
+    arcpy.Project_management(NFS_roads, os.path.splitext(os.path.basename(NFS_roads))[0], SR)
+if not arcpy.Exists(os.path.splitext(os.path.basename(sawmills))[0]):
+    arcpy.Project_management(sawmills, os.path.splitext(os.path.basename(sawmills))[0], SR)
+if not arcpy.Exists(os.path.splitext(os.path.basename(harvest_sites))[0]):
+    arcpy.Project_management(harvest_sites, os.path.splitext(os.path.basename(harvest_sites))[0], SR)
 roads = os.path.join(transportation_dataset, os.path.basename(roads))
-NFS_roads = os.path.join(scratch_dir, os.path.basename(NFS_roads))
-harvest_sites = os.path.join(scratch_dir, os.path.basename(harvest_sites))
+sawmills = os.path.splitext(os.path.basename(sawmills))[0]
+NFS_roads = os.path.splitext(os.path.basename(NFS_roads))[0]
+harvest_sites = os.path.splitext(os.path.basename(harvest_sites))[0]
 
 #if a boundary shapefile is included
 if len(sys.argv) == 8:
     boundary_shp = sys.argv[7]
-    if not arcpy.Exists(os.path.basename(boundary_shp)):
-        arcpy.Project_management(boundary_shp, os.path.basename(boundary_shp), SR)
-    boundary_shp = os.path.basename(boundary_shp)
+    if not arcpy.Exists(os.path.basename(boundary_shp).split(".")[0]):
+        arcpy.Project_management(boundary_shp, os.path.basename(boundary_shp).split(".")[0], SR)
+    boundary_shp = os.path.basename(boundary_shp).split(".")[0]
     #Clip the NFS roads  to the state
-    arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_bounded.shp")
-    NFS_roads = os.path.join(scratch_dir, "NFS_bounded.shp")
+    arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_bounded")
+    NFS_roads = "NFS_bounded"
     #keep only the sawmills within Mississippi
     arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
     arcpy.management.SelectLayerByLocation(
@@ -57,7 +57,7 @@ if len(sys.argv) == 8:
     arcpy.management.Delete("sawmill_layer")
 
 #generate points along each NFS road
-points = "NFS_points.shp"
+points = "NFS_points"
 arcpy.management.GeneratePointsAlongLines(
     NFS_roads, points, "PERCENTAGE", Percentage = 4, Include_End_Points = "END_POINTS"
 )
@@ -82,7 +82,7 @@ arcpy.management.CalculateField(
 dup_dict = {}
 arcpy.management.AddField(NFS_roads, "DUPLICATE", "SHORT")
 sc = arcpy.da.SearchCursor(points, ["ORIG_FID", "IS_NEAR"])
-uc = arcpy.da.UpdateCursor(NFS_roads, ["FID","DUPLICATE"])
+uc = arcpy.da.UpdateCursor(NFS_roads, ["OBJECTID","DUPLICATE"])
 for row in sc:
     if not dup_dict.get(row[0]):
         dup_dict[row[0]] = row[1]
@@ -99,8 +99,8 @@ for row in uc:
 del row, uc
 
 #export all NFS roads that are not flagged as duplicates
-arcpy.conversion.ExportFeatures(NFS_roads, "NFS_cleaned.shp", "DUPLICATE = 0")
-NFS_roads = "NFS_cleaned.shp"
+arcpy.conversion.ExportFeatures(NFS_roads, "NFS_cleaned", "DUPLICATE = 0")
+NFS_roads = "NFS_cleaned"
 
 #snap the NFS roads to the public roads
 arcpy.edit.Snap(NFS_roads, [[roads, "VERTEX", "100 Feet"]])
