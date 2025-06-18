@@ -109,26 +109,6 @@ arcpy.edit.Snap(NFS_roads, [[roads, "VERTEX", "100 Feet"]])
 output_roads = os.path.join(transportation_dataset, "all_roads")
 arcpy.management.Merge([roads, NFS_roads], output_roads)
 
-################################################ NOT IN USE ############################################################
-#Create a feature class to contain the end point of each polyline in the NFS_roads shapefile
-# NFS_points = os.path.basename(NFS_roads).split(".")[0] + "_points.shp"
-# arcpy.management.FeatureVerticesToPoints(NFS_roads, NFS_points, "BOTH_ENDS")
-#
-# #Select and export points within 150 feet of a public road
-# exit_points = "NFS_exit_points.shp"
-# arcpy.management.MakeFeatureLayer(NFS_points, "temp_layer")
-# result = arcpy.management.SelectLayerByLocation(
-#     "temp_layer","WITHIN_A_DISTANCE",roads, "150 feet", "NEW_SELECTION"
-# )
-# arcpy.management.CopyFeatures("temp_layer", exit_points)
-# arcpy.management.Delete("temp_layer")
-#
-# #Create the closest points from the NFS roads to the roads dataset
-# adjusted_exit_points = "NFS_adjusted_exit_points.shp"
-# arcpy.analysis.Near(exit_points, roads, location="LOCATION")
-# arcpy.management.XYTableToPoint(exit_points, adjusted_exit_points, "NEAR_X", "NEAR_Y")
-################################################ NOT IN USE ############################################################
-
 #Snap the sawmills to the nearest point on a road
 adjusted_sawmills = "sawmills_adjusted"
 arcpy.analysis.Near(sawmills, output_roads, location="LOCATION")
@@ -147,17 +127,3 @@ arcpy.na.CreateNetworkDataset(
     [os.path.basename(output_roads)],
     "NO_ELEVATION"
 )
-
-################################################ NOT IN USE ############################################################
-#convert road shapefile to raster
-#Uncomment if needed for Cost Distance tool
-# roads_raster = "roads_raster.tif"
-# arcpy.conversion.PolylineToRaster(
-#     in_features=roads_shp,
-#     value_field="distance",
-#     out_rasterdataset=roads_raster,
-#     cell_assignment="MAXIMUM_LENGTH",
-#     priority_field="DISTANCE",
-#     cellsize=0.0004
-# )
-################################################ NOT IN USE ############################################################
