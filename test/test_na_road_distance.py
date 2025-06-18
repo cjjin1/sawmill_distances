@@ -78,8 +78,8 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 4.8
-        self.assertTrue(5.0 <= dist <= 5.4)
-        self.assertTrue(5.0 <= closest_dist <= 5.4)
+        self.assertTrue(4.6 <= dist <= 5.0)
+        self.assertTrue(4.6 <= closest_dist <= 5.0)
         self.assertEquals(dist, closest_dist)
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
