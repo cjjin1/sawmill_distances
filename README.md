@@ -10,16 +10,18 @@ Data prep:
 1. roads_data_prep.py
   - Uses OSM data to retrieve road data for network analyst
   - Depending on size of location chosen, may take several minutes
-  - Inputs: <output_roads_file> <output_nodes_files> <aoi>   OR    <output_roads_file> <output_nodes_files> <north> <south> <east> <west>
+  - Inputs:
       - output roads File GDB (must be created beforehand)
       - output nodes File GDB (must be created beforehand, currently not used in script)
       - aoi (string of place to gather data for, eg. "Mississippi, USA")
         - or -
       - North, South, East, West coordinates for a bounding box
-  - Example Input:
-      F:/timber_project/data/ms_roads.gdb
-      F:/timber_project/data/ms_nodes.gdb
-      "Mississippi, USA"
+      - [optional] select a single road type to export as a feature class
+    - Example Input:
+      - E:/timber_project/data/ms_roads.gdb 
+      - E:/timber_project/data/ms_nodes.gdb
+      - "Mississippi, USA"
+      - Residential
 
 2. data_prep.py
   - Prepares data with various operations:
@@ -38,15 +40,24 @@ Data prep:
       - harvest sites (dataset of harvest sites)
       - [optional] Boundary Shapefile (if any dataset extends past the desired area of interest)
   - Example Input:
-      - F:/timber_project/scratch/MS_OSM_test
-      - F:/timber_project/scratch/MS_OSM_test/MS_OSM_ND.gdb/Transportation
-      - F:/timber_project/data/ms_roads.gdb/roads 
-      - F:/timber_project/data/RoadCore_FS.shp
-      - F:/timber_project/data/sawmill_geocoded.shp
-      - F:/timber_project/data/TimberHarvestBienville.shp
-      - F:/timber_project/data/GOVTUNIT_Mississippi_State_Shape/Shape/GU_StateOrTerritory.shp
+      - E:/timber_project/scratch/MS_OSM_test
+      - E:/timber_project/scratch/MS_OSM_test/MS_OSM_ND.gdb/Transportation
+      - E:/timber_project/data/ms_roads.gdb/roads 
+      - E:/timber_project/data/RoadCore_FS.shp
+      - E:/timber_project/data/sawmill_geocoded.shp
+      - E:/timber_project/data/TimberHarvestBienville.shp
+      - E:/timber_project/data/GOVTUNIT_Mississippi_State_Shape/Shape/GU_StateOrTerritory.shp
 
 To run distance calculations:
+- Ensure network dataset is built
 - Create a script and import the distance_calculator.py script
 - Call on specific distance calculation function with input files produced by data prep scripts
-- Will need to input only one start and end point when using network analyst based distance calculations, only designed for one start and end point
+- The calculate_distance() function will calculate road distance and Euclidean distance from harvest site
+  centroid to sawmill destination
+- Needs 5 inputs:
+  - harvest site (singular harvest site to act as starting point)
+  - roads (roads dataset (featureclass/shapefile, not network dataset))
+  - network dataset (network dataset of roads)
+  - sawmills (can be a single sawmill or multiple sawmills)
+    - if multiple sawmills, will find the nearest sawmill
+  - output path (user designated file path for output route feature class)
