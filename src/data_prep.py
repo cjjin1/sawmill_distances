@@ -109,11 +109,6 @@ arcpy.edit.Snap(NFS_roads, [[roads, "VERTEX", "100 Feet"]])
 output_roads = os.path.join(transportation_dataset, "all_roads")
 arcpy.management.Merge([roads, NFS_roads], output_roads)
 
-#Snap the sawmills to the nearest point on a road
-adjusted_sawmills = "sawmills_adjusted"
-arcpy.analysis.Near(sawmills, output_roads, location="LOCATION")
-arcpy.management.XYTableToPoint(sawmills, adjusted_sawmills, "NEAR_X", "NEAR_Y", coordinate_system = 2899)
-
 #Add a distance field to the roads shapefile
 arcpy.management.AddField(output_roads, "distance", "DOUBLE")
 arcpy.management.CalculateGeometryAttributes(

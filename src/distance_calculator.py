@@ -43,7 +43,7 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_pa
         road_distance = calculate_closest_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_destination")
         arcpy.management.SelectLayerByLocation(
-            "sawmill_destination", "INTERSECT", output_path
+            "sawmill_destination", "WITHIN_A_DISTANCE", output_path, search_distance="100 feet"
         )
         euclidean_distance = euclidean_distance_near(centroid_fc, "sawmill_destination")
         arcpy.management.Delete("sawmill_destination")
@@ -82,6 +82,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=sawmill,
         append="APPEND",
+        search_tolerance="100 feet"
     )
 
     arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
@@ -104,7 +105,7 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     facilities = sub_layers["Facilities"]
     incidents = sub_layers["Incidents"]
 
-    arcpy.na.AddLocations(cf_layer_name, facilities, sawmills)
+    arcpy.na.AddLocations(cf_layer_name, facilities, sawmills, search_tolerance="100 feet")
     arcpy.na.AddLocations(cf_layer_name, incidents, starting_point)
 
     arcpy.na.Solve(cf_layer_name)

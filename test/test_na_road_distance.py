@@ -17,7 +17,7 @@ class TestDistanceCalculator(unittest.TestCase):
 
         network_dataset = "BV_ND.gdb/Transportation/streets_nd"
         roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_adjusted.shp"
+        sawmills = "sawmills_bounded.shp"
         harvest_sites = "TimberHarvestBienville.shp"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_1.shp"
@@ -53,7 +53,7 @@ class TestDistanceCalculator(unittest.TestCase):
 
         network_dataset = "BV_ND.gdb/Transportation/streets_nd"
         roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_adjusted.shp"
+        sawmills = "sawmills_bounded.shp"
         harvest_sites = "TimberHarvestBienville.shp"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_2.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_2.shp"
@@ -89,7 +89,7 @@ class TestDistanceCalculator(unittest.TestCase):
 
         network_dataset = "BV_ND.gdb/Transportation/streets_nd"
         roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_adjusted.shp"
+        sawmills = "sawmills_bounded.shp"
         harvest_sites = "TimberHarvestBienville.shp"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_3.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_3.shp"
@@ -125,7 +125,7 @@ class TestDistanceCalculator(unittest.TestCase):
 
         network_dataset = "BV_ND.gdb/Transportation/streets_nd"
         roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_adjusted.shp"
+        sawmills = "sawmills_bounded.shp"
         harvest_sites = "TimberHarvestBienville.shp"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_4.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_4.shp"
@@ -161,7 +161,7 @@ class TestDistanceCalculator(unittest.TestCase):
 
         network_dataset = "BV_ND.gdb/Transportation/streets_nd"
         roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_adjusted.shp"
+        sawmills = "sawmills_bounded.shp"
         harvest_sites = "TimberHarvestBienville.shp"
         output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
         output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
