@@ -12,7 +12,7 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_pa
        Harvest site input must be a singular point.
        If multiple sawmills are inputted, then the nearest sawmill will be the destination.
        Returns both total road distance and Euclidean distance, in that order"""
-    centroid_fc = "harvest_site_centroid.shp"
+    centroid_fc = "harvest_site_centroid"
     arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
 
     sr = arcpy.Describe(harvest_site).spatialReference

@@ -12,23 +12,23 @@ import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
     def test_calculate_road_distance_nd_1(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "BV_ND.gdb/Transportation/streets_nd"
-        roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_bounded.shp"
-        harvest_sites = "TimberHarvestBienville.shp"
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 62"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 63"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 0"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 1"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
@@ -48,23 +48,23 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(9.1 <= closest_dist <= 9.5)
 
     def test_calculate_road_distance_nd_2(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "BV_ND.gdb/Transportation/streets_nd"
-        roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_bounded.shp"
-        harvest_sites = "TimberHarvestBienville.shp"
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_2.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_2.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 78"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 79"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 0"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 1"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
@@ -84,23 +84,23 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_3(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "BV_ND.gdb/Transportation/streets_nd"
-        roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_bounded.shp"
-        harvest_sites = "TimberHarvestBienville.shp"
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_3.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_3.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 101"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 102"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 24"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 25"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
@@ -120,23 +120,23 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_calculate_road_distance_nd_4(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "BV_ND.gdb/Transportation/streets_nd"
-        roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_bounded.shp"
-        harvest_sites = "TimberHarvestBienville.shp"
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_4.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_4.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 69"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 70"
         )
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "FID = 24"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 25"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
@@ -156,25 +156,25 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
 
     def test_concerns(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test"
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "BV_ND.gdb/Transportation/streets_nd"
-        roads_dataset = "BV_ND.gdb/Transportation/all_roads"
-        sawmills = "sawmills_bounded.shp"
-        harvest_sites = "TimberHarvestBienville.shp"
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
         output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
         output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
 
         arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 100"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 101"
         )
         distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_1
         )
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "FID = 74"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 75"
         )
         distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_2
