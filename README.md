@@ -48,6 +48,28 @@ Data prep:
       - E:/timber_project/data/TimberHarvestBienville.shp
       - E:/timber_project/data/GOVTUNIT_Mississippi_State_Shape/Shape/GU_StateOrTerritory.shp
 
+3. slope_raster.py
+  - Creates a slope raster for least cost distance from centroid to road
+    - Takes in several polygon and polyline feature classes for roadless areas
+    - Takes in DEM for slope
+    - Creates slope raster then removes roadless areas from said raster
+  - Inputs:
+    - Workspace (to store files)
+    - Stream feature dataset (to store projected and clipped streams)
+    - Stream directory (directory that holds original streams data)
+    - Roadless area (feature class of areas deemed roadless)
+    - Roads dataset (dataset of roads)
+    - DEM raster (original DEM of study area)
+    - [optional] Boundary Shapefile (if any dataset extends past the desired area of interest)
+  - Example Input:
+    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb
+    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/streams
+    - E:/timber_project/data/streams
+    - E:/timber_project/data/roadless_areas
+    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/Transportation/all_roads
+    - E:/timber_project/data/USGS_13_n33w090_20221121.tif
+    - E:/timber_project/data/BienvilleBoundary
+
 To run distance calculations:
 - Ensure network dataset is built
 - Create a script and import the distance_calculator.py script
