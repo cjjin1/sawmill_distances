@@ -6,8 +6,9 @@
 ########################################################################################################################
 
 import arcpy
+from arcpy.sa import *
 
-def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_path):
+def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, output_path):
     """Finds the total road distance from a harvest site to a sawmill destination.
        Harvest site input must be a singular point.
        If multiple sawmills are inputted, then the nearest sawmill will be the destination.
@@ -21,20 +22,18 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_pa
     )
     arcpy.analysis.Near(centroid_fc, roads, location = "LOCATION", distance_unit = "Miles")
     nearest_point = None
-    near_line = None
-    near_distance = 0
     i = 0
-    sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
+    sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_X", "NEAR_Y"])
     ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
-    for shape, near_dist, near_x, near_y in sc:
+    for shape, near_x, near_y in sc:
         if i != 0:
             raise arcpy.ExecuteError("Harvest site feature class includes more than one point")
         nearest_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), shape.spatialReference)
-        near_line = arcpy.Polyline(arcpy.Array([shape.firstPoint, arcpy.Point(near_x, near_y)]), sr)
-        near_distance = near_dist
         i += 1
     ic.insertRow([nearest_point])
-    del near_x, near_y, shape, near_dist, sc, ic
+    del near_x, near_y, shape, sc, ic
+
+    lcp_dist = calculate_least_cost_path(centroid_fc, "nearest_point", slope, "least_cost_path")
 
     if int(arcpy.management.GetCount(sawmills)[0]) == 1:
         road_distance = calculate_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
@@ -50,12 +49,33 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, output_pa
     else:
         raise arcpy.ExecuteError("No valid sawmill input")
     ic = arcpy.da.InsertCursor(output_path, ["SHAPE@", "Shape_Leng"])
-    ic.insertRow([near_line, near_distance * 5280])
-    del ic
+    sc = arcpy.da.SearchCursor("least_cost_path", ["SHAPE@"])
+    for row in sc:
+        ic.insertRow([row[0], lcp_dist])
+    del ic, sc, row
 
     arcpy.management.Delete(centroid_fc)
     arcpy.management.Delete("nearest_point")
-    return road_distance + near_distance, euclidean_distance
+    return road_distance + lcp_dist, euclidean_distance
+
+def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
+    """Takes in a starting point, roads raster, and a sawmill destination
+       Finds the distance from the starting point to the sawmill destination
+       Returns a feature class containing a path and distance
+       Can accommodate multiple destinations if destination is unknown, will find
+       the closest destination out of the entire sawmill feature class"""
+    #NOT CURRENTLY MEANT FOR USE
+    cost = CostDistance(starting_point, cost_raster)
+    backlink = CostBackLink(starting_point, cost_raster)
+    cost_path = CostPath(
+        dest,
+        cost,
+        backlink,
+        "BEST_SINGLE"
+    )
+    arcpy.conversion.RasterToPolyline(cost_path, output_path)
+    distance = calculate_distance_for_shp(output_path)
+    return distance
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
     """Finds the distance from a starting point to a sawmill destination using network analyst"""
@@ -88,6 +108,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
     arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     distance = calculate_distance_for_shp(output_path)
+    arcpy.management.Delete(route_layer_name)
     arcpy.CheckInExtension("Network")
     return distance
 
@@ -111,6 +132,7 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     arcpy.na.Solve(cf_layer_name)
     arcpy.management.CopyFeatures(sub_layers["CFRoutes"], output_path)
     distance = calculate_distance_for_shp(output_path)
+    arcpy.management.Delete(cf_layer_name)
     arcpy.CheckInExtension("Network")
     return distance
 

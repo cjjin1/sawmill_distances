@@ -19,6 +19,7 @@ class TestDistanceCalculator(unittest.TestCase):
         roads_dataset = "Transportation/all_roads"
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_1.shp"
 
@@ -32,16 +33,18 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 9.4 miles
+        # original tested distance: 9.2127
+        # with slope: 9.4084
         self.assertEquals(dist, closest_dist)
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
         self.assertTrue(9.1 <= dist <= 9.5)
@@ -55,6 +58,7 @@ class TestDistanceCalculator(unittest.TestCase):
         roads_dataset = "Transportation/all_roads"
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_2.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_2.shp"
 
@@ -68,16 +72,18 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 4.8
+        # original tested distance: 4.7566
+        # with slope: 4.7594
         self.assertTrue(4.6 <= dist <= 5.0)
         self.assertTrue(4.6 <= closest_dist <= 5.0)
         self.assertEquals(dist, closest_dist)
@@ -91,6 +97,7 @@ class TestDistanceCalculator(unittest.TestCase):
         roads_dataset = "Transportation/all_roads"
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_3.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_3.shp"
 
@@ -104,16 +111,18 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 17.95
+        # original tested distance: 18.0467
+        # with slope: 18.0578
         self.assertTrue(17.4 <= dist <= 18.1)
         self.assertTrue(17.4 <= closest_dist <= 18.1)
         self.assertEquals(dist, closest_dist)
@@ -127,6 +136,7 @@ class TestDistanceCalculator(unittest.TestCase):
         roads_dataset = "Transportation/all_roads"
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_4.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_4.shp"
 
@@ -140,16 +150,18 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 23.6
+        # original tested distance: 23.5254
+        # with slope: 23.5540
         self.assertTrue(23.3 <= dist <= 23.6)
         self.assertTrue(23.3 <= closest_dist <= 23.6)
         self.assertEquals(dist, closest_dist)
@@ -163,6 +175,7 @@ class TestDistanceCalculator(unittest.TestCase):
         roads_dataset = "Transportation/all_roads"
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
         output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
         output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
 
@@ -171,13 +184,13 @@ class TestDistanceCalculator(unittest.TestCase):
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 101"
         )
         distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_1
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, output_path_1
         )
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 75"
         )
         distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset,sawmills, output_path_2
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, output_path_2
         )
         self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2))
 
