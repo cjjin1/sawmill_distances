@@ -5,7 +5,7 @@
 # Purpose: Calculates distance from a harvest site to a sawmill
 ########################################################################################################################
 
-import arcpy
+import arcpy, os
 from arcpy.sa import *
 
 def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, output_path):
@@ -16,30 +16,28 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
     centroid_fc = "harvest_site_centroid"
     arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
 
-    sr = arcpy.Describe(harvest_site).spatialReference
-    arcpy.CreateFeatureclass_management(
-        arcpy.env.workspace, "nearest_point", "POINT", spatial_reference=sr
+    lc_path = "least_cost_path"
+    roads_raster = os.path.basename(roads) + "_raster"
+    if not arcpy.Exists(roads_raster):
+        arcpy.conversion.PolylineToRaster(
+            roads, "OBJECTID", roads_raster, cellsize=slope
+        )
+    lcp_dist = calculate_least_cost_path(centroid_fc, roads_raster, slope, roads, lc_path)
+
+    intersect_point = "intersect_point"
+    arcpy.analysis.Intersect([lc_path, roads], intersect_point, output_type="POINT")
+    starting_point = "starting_point"
+    arcpy.management.MakeFeatureLayer(intersect_point, starting_point)
+    arcpy.management.SelectLayerByAttribute(
+        starting_point, "NEW_SELECTION", "OBJECTID = 1"
     )
-    arcpy.analysis.Near(centroid_fc, roads, location = "LOCATION", distance_unit = "Miles")
-    nearest_point = None
-    i = 0
-    sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_X", "NEAR_Y"])
-    ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
-    for shape, near_x, near_y in sc:
-        if i != 0:
-            raise arcpy.ExecuteError("Harvest site feature class includes more than one point")
-        nearest_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), shape.spatialReference)
-        i += 1
-    ic.insertRow([nearest_point])
-    del near_x, near_y, shape, sc, ic
 
-    lcp_dist = calculate_least_cost_path(centroid_fc, "nearest_point", slope, "least_cost_path")
-
+    temp_path = "network_path"
     if int(arcpy.management.GetCount(sawmills)[0]) == 1:
-        road_distance = calculate_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
+        road_distance = calculate_road_distance_nd(starting_point, network_dataset, sawmills, temp_path)
         euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
     elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
-        road_distance = calculate_closest_road_distance_nd(nearest_point, network_dataset, sawmills, output_path)
+        road_distance = calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills, temp_path)
         arcpy.management.MakeFeatureLayer(sawmills, "sawmill_destination")
         arcpy.management.SelectLayerByLocation(
             "sawmill_destination", "WITHIN_A_DISTANCE", output_path, search_distance="100 feet"
@@ -48,23 +46,23 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
         arcpy.management.Delete("sawmill_destination")
     else:
         raise arcpy.ExecuteError("No valid sawmill input")
-    ic = arcpy.da.InsertCursor(output_path, ["SHAPE@", "Shape_Leng"])
-    sc = arcpy.da.SearchCursor("least_cost_path", ["SHAPE@"])
-    for row in sc:
-        ic.insertRow([row[0], lcp_dist])
-    del ic, sc, row
+    arcpy.management.Merge([temp_path, lc_path], output_path)
 
+    arcpy.management.Delete(temp_path)
+    arcpy.management.Delete("least_cost_path")
     arcpy.management.Delete(centroid_fc)
-    arcpy.management.Delete("nearest_point")
+    arcpy.management.Delete(intersect_point)
+    arcpy.management.Delete(starting_point)
+    for name in arcpy.ListDatasets("*Solver*"):
+        arcpy.management.Delete(name)
     return road_distance + lcp_dist, euclidean_distance
 
-def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
+def calculate_least_cost_path(starting_point, dest, cost_raster, road_dataset, output_path):
     """Takes in a starting point, roads raster, and a sawmill destination
        Finds the distance from the starting point to the sawmill destination
        Returns a feature class containing a path and distance
        Can accommodate multiple destinations if destination is unknown, will find
        the closest destination out of the entire sawmill feature class"""
-    #NOT CURRENTLY MEANT FOR USE
     cost = CostDistance(starting_point, cost_raster)
     backlink = CostBackLink(starting_point, cost_raster)
     cost_path = CostPath(
@@ -74,7 +72,14 @@ def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
         "BEST_SINGLE"
     )
     arcpy.conversion.RasterToPolyline(cost_path, output_path)
+    arcpy.edit.Snap(
+        in_features=output_path,
+        snap_environment=[[road_dataset, "EDGE", "500 Feet"]]
+    )
     distance = calculate_distance_for_shp(output_path)
+    arcpy.management.Delete(cost_path)
+    arcpy.management.Delete(cost)
+    arcpy.management.Delete(backlink)
     return distance
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
