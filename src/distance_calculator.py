@@ -55,6 +55,8 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
     arcpy.management.Delete(starting_point)
     for name in arcpy.ListDatasets("*Solver*"):
         arcpy.management.Delete(name)
+    for name in arcpy.ListRasters("*Cost*"):
+        arcpy.management.Delete(name)
     return road_distance + lcp_dist, euclidean_distance
 
 def calculate_least_cost_path(starting_point, dest, cost_raster, road_dataset, output_path):
@@ -74,7 +76,7 @@ def calculate_least_cost_path(starting_point, dest, cost_raster, road_dataset, o
     arcpy.conversion.RasterToPolyline(cost_path, output_path)
     arcpy.edit.Snap(
         in_features=output_path,
-        snap_environment=[[road_dataset, "EDGE", "500 Feet"]]
+        snap_environment=[[road_dataset, "EDGE", "100 Feet"]]
     )
     distance = calculate_distance_for_shp(output_path)
     arcpy.management.Delete(cost_path)
