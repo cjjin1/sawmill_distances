@@ -38,13 +38,13 @@ class TestDistanceCalculator(unittest.TestCase):
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
             "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
         )
-        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
-              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
+        print(f"Test 1 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
+              f"Test 1 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 9.4 miles
         # original tested distance: 9.2127
-        # with slope: 9.4084
+        # with slope: 9.2894
         self.assertEquals(dist, closest_dist)
         self.assertEquals(euclidean_dist, euclidean_closest_dist)
         self.assertTrue(9.1 <= dist <= 9.5)
@@ -83,7 +83,7 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 4.8
         # original tested distance: 4.7566
-        # with slope: 4.7594
+        # with slope: 4.7479
         self.assertTrue(4.6 <= dist <= 5.0)
         self.assertTrue(4.6 <= closest_dist <= 5.0)
         self.assertEquals(dist, closest_dist)
