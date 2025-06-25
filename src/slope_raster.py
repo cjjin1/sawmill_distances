@@ -11,7 +11,7 @@ import arcpy, sys, os
 arcpy.CheckOutExtension("Spatial")
 from arcpy.sa import *
 
-def strip_z_and_project(stream_input, streams_dir_input, stream_dataset_input, spatial_ref):
+def strip_z_and_project(stream_input, streams_dir_input, stream_dataset_output, spatial_ref):
     """Removes the z value from stream data to allow for projection to 2899"""
     shapefile_temp = os.path.join(streams_dir_input, "stream_temp.shp")
     sr = arcpy.Describe(stream_input).spatialReference
@@ -42,7 +42,7 @@ def strip_z_and_project(stream_input, streams_dir_input, stream_dataset_input, s
 
     arcpy.management.Project(
         shapefile_temp,
-        os.path.join(stream_dataset_input, os.path.splitext(os.path.basename(stream_input))[0]),
+        os.path.join(stream_dataset_output, os.path.splitext(os.path.basename(stream_input))[0]),
         spatial_ref
     )
     arcpy.management.Delete(shapefile_temp)
@@ -60,7 +60,7 @@ def stream_setup(ws, str_ds, str_dir, spat_ref, bd=None):
     # merge the stream feature classes, clip if boundary is provided
     arcpy.env.workspace = str_ds
     streams_list = arcpy.ListFeatureClasses("*", "Line")
-    if bd and len(streams_list) > 1:
+    if bd:
         merge_list = []
         for stream in streams_list:
             if "_bounded" in stream:
@@ -70,28 +70,28 @@ def stream_setup(ws, str_ds, str_dir, spat_ref, bd=None):
                 merge_list.append(stream + "_bounded")
         arcpy.management.Merge(merge_list, os.path.join(workspace, "streams"))
         del merge_list
-    elif bd and len(streams_list) == 1:
-        arcpy.management.Clip(streams_list[0], bd, os.path.join(workspace, "streams"))
     else:
         arcpy.management.Merge(streams_list, os.path.join(workspace, "streams"))
 
     # create a buffer of the streams
     arcpy.env.workspace = ws
-    arcpy.analysis.Buffer("streams", "streams_buffer", "50 Feet")
+    arcpy.analysis.Buffer("streams", "streams_buffer", "100 Feet")
     return "streams_buffer"
 
 def roadless_area_setup(ws, rl_a, spat_ref, bd=None):
     """Project and clip (if boundary is provided) roadless areas"""
     arcpy.env.workspace = ws
+    new_polygon = os.path.splitext(os.path.basename(rl_a))[0]
 
     # project roadless areas to 2899
-    arcpy.management.Project(rl_a, "roadless_area", spat_ref)
+    arcpy.management.Project(rl_a, new_polygon, spat_ref)
 
     # clip if boundary is provided
     if boundary:
-        arcpy.management.Clip(rl_a, bd, rl_a + "_bounded")
+        arcpy.management.Clip(new_polygon, bd, new_polygon + "_bounded")
+        return os.path.join(ws, new_polygon + "_bounded")
 
-    return rl_a + "_bounded"
+    return os.path.join(ws, new_polygon)
 
 def create_off_limit_areas(ws, merge_list, roads):
     """Merge polygons of off limit areas into one polygon feature class"""
@@ -107,7 +107,7 @@ def create_off_limit_areas(ws, merge_list, roads):
     arcpy.analysis.Erase("off_limit_temp", roads + "_buffer", "off_limit_areas")
     return "off_limit_areas"
 
-def create_slope_raster(ws, elev_data, ofa, bd, spat_ref):
+def create_slope_raster(ws, elev_data, ofa, spat_ref, bd=None):
     """Create the slope raster for use in least cost path analysis"""
     arcpy.env.workspace = ws
     elev_proj = "dem_proj"

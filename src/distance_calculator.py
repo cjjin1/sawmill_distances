@@ -57,15 +57,16 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
         arcpy.management.Delete("sawmill_destination")
     else:
         raise arcpy.ExecuteError("No valid sawmill input")
+
     arcpy.edit.Snap(
         in_features=lc_path,
         snap_environment=[[temp_path, "END", "100 Feet"]]
     )
     arcpy.management.Merge([temp_path, lc_path], output_path)
-    road_distance = calculate_distance_for_shp(output_path)
+    road_distance = calculate_distance_for_fc(output_path)
 
-    arcpy.management.Delete(temp_path)
-    arcpy.management.Delete("least_cost_path")
+    # arcpy.management.Delete(temp_path)
+    # arcpy.management.Delete("least_cost_path")
     arcpy.management.Delete(centroid_fc)
     arcpy.management.Delete(starting_point)
     for name in arcpy.ListDatasets("*Solver*"):
@@ -148,14 +149,14 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     arcpy.management.Delete(cf_layer_name)
     arcpy.CheckInExtension("Network")
 
-def calculate_distance_for_shp(shapefile_path):
+def calculate_distance_for_fc(fc_path):
     """Calculates distance for a given polyline shapefile"""
-    arcpy.management.AddField(shapefile_path, "distance", "DOUBLE")
+    arcpy.management.AddField(fc_path, "distance", "DOUBLE")
     arcpy.management.CalculateGeometryAttributes(
-        shapefile_path, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
+        fc_path, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
     )
     distance = 0
-    sc = arcpy.da.SearchCursor(shapefile_path, ["distance"])
+    sc = arcpy.da.SearchCursor(fc_path, ["distance"])
     for row in sc:
         distance += row[0]
     del row, sc

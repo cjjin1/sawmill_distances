@@ -62,14 +62,6 @@ arcpy.management.GeneratePointsAlongLines(
     NFS_roads, points, "PERCENTAGE", Percentage = 4, Include_End_Points = "END_POINTS"
 )
 
-#create a field for the points that contains the original FID of the NFS road
-arcpy.management.AddField(points, "ORIG_FID", "LONG")
-arcpy.management.CalculateField(
-    points,
-    "ORIG_FID", "!ORIG_FID!" if "ORIG_FID" in [f.name for f in arcpy.ListFields(points)] else "!FID!",
-    "PYTHON3"
-)
-
 #use Near on points to check for proximity to public roads
 #add a field to indicate if a point is near or not
 arcpy.analysis.Near(points, roads, search_radius="150 Feet")

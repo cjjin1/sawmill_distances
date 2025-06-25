@@ -122,7 +122,7 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 17.95
         # original tested distance: 18.0467
-        # with slope: 18.0578
+        # with slope: 18.0748
         self.assertTrue(17.4 <= dist <= 18.1)
         self.assertTrue(17.4 <= closest_dist <= 18.1)
         self.assertEquals(dist, closest_dist)
@@ -161,7 +161,7 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.management.Delete("sawmill_layer")
         # actual road distance: 23.6
         # original tested distance: 23.5254
-        # with slope: 23.5540
+        # with slope: 23.5535
         self.assertTrue(23.3 <= dist <= 23.6)
         self.assertTrue(23.3 <= closest_dist <= 23.6)
         self.assertEquals(dist, closest_dist)

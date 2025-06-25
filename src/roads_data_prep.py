@@ -57,9 +57,9 @@ elif len(sys.argv) <= 4:
 nodes_main, edges_main = ox.graph_to_gdfs(g_main)
 
 #save the roads to scratch folder as gpkg files, then export to feature class in File GDB
-file = "E:/timber_project/scratch/temp_roads.gpkg"
+temp_file = "E:/timber_project/scratch/temp_roads.gpkg"
 layer_name = "truck_only_roads"
-export_to_arcgis(edges_main, file, layer_name)
+export_to_arcgis(edges_main, temp_file, layer_name)
 if single_road_type:
     nodes_single, edges_single = ox.graph_to_gdfs(g_single)
-    export_to_arcgis(edges_single, file, f"{single_road_type}s")
+    export_to_arcgis(edges_single, temp_file, f"{single_road_type}s")
