@@ -20,6 +20,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
         slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_1.shp"
 
@@ -33,10 +34,10 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
         )
         print(f"Test 1 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 1 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
@@ -59,6 +60,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
         slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_2.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_2.shp"
 
@@ -72,10 +74,10 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
@@ -98,6 +100,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
         slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_3.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_3.shp"
 
@@ -111,10 +114,10 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
@@ -137,6 +140,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
         slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_4.shp"
         closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_4.shp"
 
@@ -150,10 +154,10 @@ class TestDistanceCalculator(unittest.TestCase):
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, output_path
+            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
         )
         closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, closest_output_path
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
         )
         print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
               f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
@@ -176,6 +180,7 @@ class TestDistanceCalculator(unittest.TestCase):
         sawmills = "sawmills_bounded"
         harvest_sites = "TimberHarvestBienville"
         slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
         output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
         output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
 
@@ -184,15 +189,36 @@ class TestDistanceCalculator(unittest.TestCase):
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 101"
         )
         distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, output_path_1
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_1
         )
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 75"
         )
         distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, output_path_2
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_2
         )
         self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2))
+
+    def test_off_limit_overlap(self):
+        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
+        arcpy.env.overwriteOutput = True
+
+        network_dataset = "Transportation/streets_nd"
+        roads_dataset = "Transportation/all_roads"
+        sawmills = "sawmills_bounded"
+        harvest_sites = "TimberHarvestBienville"
+        slope_raster = "slope_raster"
+        ofa = "off_limit_areas"
+        output_path_1 = "E:/timber_project/outputs/BV_test/test_overlap_1.shp"
+
+        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 30"
+        )
+        distance_calculator.calculate_distance(
+            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_1
+        )
+        self.assertTrue(arcpy.Exists(output_path_1))
 
     if __name__ == '__main__':
         unittest.main()

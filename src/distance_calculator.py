@@ -8,13 +8,13 @@
 import arcpy, os
 from arcpy.sa import *
 
-def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, output_path):
+def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, off_limit_areas, output_path):
     """Finds the total road distance from a harvest site to a sawmill destination.
        Harvest site input must be a singular point.
        If multiple sawmills are inputted, then the nearest sawmill will be the destination.
        Returns both total road distance and Euclidean distance, in that order"""
     centroid_fc = "harvest_site_centroid"
-    arcpy.management.FeatureToPoint(harvest_site, centroid_fc)
+    centroid_handler(harvest_site, off_limit_areas, centroid_fc)
 
     lc_path = "least_cost_path"
     roads_raster = os.path.basename(roads) + "_raster"
@@ -65,8 +65,8 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
     arcpy.management.Merge([temp_path, lc_path], output_path)
     road_distance = calculate_distance_for_fc(output_path)
 
-    # arcpy.management.Delete(temp_path)
-    # arcpy.management.Delete("least_cost_path")
+    arcpy.management.Delete(temp_path)
+    arcpy.management.Delete("least_cost_path")
     arcpy.management.Delete(centroid_fc)
     arcpy.management.Delete(starting_point)
     for name in arcpy.ListDatasets("*Solver*"):
@@ -74,6 +74,41 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, ou
     for name in arcpy.ListRasters("*Cost*"):
         arcpy.management.Delete(name)
     return road_distance, euclidean_distance
+
+def centroid_handler(site, ofa, output):
+    """Finds the centroid off a harvest site. Determines if the centroid overlaps with off limit areas
+       where roads cannot be built. If so, handles the overlap by finding a new point elsewhere in the polygon."""
+    arcpy.management.FeatureToPoint(site, output)
+    arcpy.management.MakeFeatureLayer(output, "overlap_point")
+    arcpy.management.SelectLayerByLocation(
+        "overlap_point", "WITHIN", ofa, selection_type="NEW_SELECTION"
+    )
+    overlapping = int(arcpy.management.GetCount("overlap_point")[0])
+    if overlapping == 0:
+        arcpy.management.Delete("overlap_point")
+        return
+    arcpy.management.Delete("overlap_point")
+    arcpy.management.Delete(output)
+
+    arcpy.analysis.Erase(site, ofa, "site_erased")
+    arcpy.management.MultipartToSinglepart("site_erased", "site_singlepart")
+    arcpy.management.AddField("site_singlepart", "area", "DOUBLE")
+    arcpy.management.CalculateGeometryAttributes(
+        "site_singlepart", [["area", "AREA_GEODESIC"]], area_unit="SQUARE_MILES_US"
+    )
+    max_area, max_id = 0, 0
+    sc = arcpy.da.SearchCursor("site_singlepart", ["OBJECTID", "area"])
+    for oid, area in sc:
+        if area > max_area:
+            max_area = area
+            max_id = oid
+    del oid, area, sc
+
+    arcpy.management.FeatureToPoint("site_singlepart", "singlepart_centroid")
+    arcpy.conversion.ExportFeatures("singlepart_centroid", output, where_clause=f"OBJECTID = {max_id}")
+    arcpy.management.Delete("singlepart_centroid")
+    arcpy.management.Delete("site_singlepart")
+    arcpy.management.Delete("site_erased")
 
 def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
     """Takes in a starting point, roads raster, and a sawmill destination
