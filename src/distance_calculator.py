@@ -8,7 +8,7 @@
 import arcpy, os
 from arcpy.sa import *
 
-def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, off_limit_areas, output_path):
+def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_limit_areas, output_path, sm_type=None):
     """Finds the total road distance from a harvest site to a sawmill destination.
        Harvest site input must be a singular point.
        If multiple sawmills are inputted, then the nearest sawmill will be the destination.
@@ -47,11 +47,20 @@ def calculate_distance(harvest_site, roads, network_dataset, sawmills, slope, of
 
     temp_path = "network_path"
     if int(arcpy.management.GetCount(sawmills)[0]) == 1:
-        calculate_road_distance_nd(starting_point, network_dataset, sawmills, temp_path)
+        calculate_road_distance_nd(starting_point, network_ds, sawmills, temp_path)
         euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
     elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
-        calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills, temp_path)
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_destination")
+        sm_input = sawmills
+        if sm_type: #UNTESTED AND UNUSED CODE
+            arcpy.management.MakeFeatureLayer(sawmills, "sawmills_filtered")
+            arcpy.management.SelectLayerByAttribute(
+                "sawmills_filtered", "NEW_SELECTION", f"TYPE={sm_type}"
+            )
+            sm_input = "sawmills_filtered"
+            if int(arcpy.management.GetCount(sawmills)[0]) == 0:
+                raise arcpy.ExecuteError(f"No sawmills of type {sm_type} exit in the provided sawmills data")
+        calculate_closest_road_distance_nd(starting_point, network_ds, sm_input, temp_path)
+        arcpy.management.MakeFeatureLayer(sm_input, "sawmill_destination")
         arcpy.management.SelectLayerByLocation(
             "sawmill_destination", "WITHIN_A_DISTANCE", temp_path, search_distance="100 feet"
         )

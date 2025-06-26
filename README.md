@@ -73,13 +73,16 @@ Data prep:
 To run distance calculations:
 - Ensure network dataset is built
 - Create a script and import the distance_calculator.py script
-- Call on specific distance calculation function with input files produced by data prep scripts
+- Call on main distance calculation function with input files produced by data prep scripts
 - The calculate_distance() function will calculate road distance and Euclidean distance from harvest site
   centroid to sawmill destination
-- Needs 5 inputs:
+- Needs 7 inputs:
   - harvest site (singular harvest site to act as starting point)
   - roads (roads dataset (featureclass/shapefile, not network dataset))
   - network dataset (network dataset of roads)
   - sawmills (can be a single sawmill or multiple sawmills)
     - if multiple sawmills, will find the nearest sawmill
+  - slope raster
+  - off-limit areas feature class
   - output path (user designated file path for output route feature class)
+  - [optional] sawmill type (only works with multiple sawmill inputs)
