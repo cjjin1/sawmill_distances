@@ -76,6 +76,7 @@ def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_lim
     arcpy.management.Merge([temp_path, lc_path], output_path)
     road_distance = calculate_distance_for_fc(output_path)
 
+    arcpy.management.Delete(lcp_points)
     arcpy.management.Delete(temp_path)
     arcpy.management.Delete("least_cost_path")
     arcpy.management.Delete(centroid_fc)

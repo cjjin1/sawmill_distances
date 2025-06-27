@@ -55,6 +55,13 @@ if len(sys.argv) == 8:
     arcpy.management.CopyFeatures("sawmill_layer", "sawmills_bounded")
     sawmills = "sawmills_bounded"
     arcpy.management.Delete("sawmill_layer")
+    #extract the timber harvest feature class inside the boundary
+    arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_layer")
+    arcpy.management.SelectLayerByLocation(
+        "harvest_layer", "WITHIN", boundary_shp, selection_type="NEW_SELECTION"
+    )
+    arcpy.management.CopyFeatures("harvest_layer", "harvest_sites_bounded")
+    arcpy.management.Delete("harvest_layer")
 
 #generate points along each NFS road
 points = "NFS_points"
