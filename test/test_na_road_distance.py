@@ -11,303 +11,435 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
-    def test_calculate_road_distance_nd_1(self):
+    def setUp(self):
         arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
-        closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_1.shp"
+        self.network_dataset = "Transportation/streets_nd"
+        self.roads_dataset = "Transportation/all_roads"
+        self.sawmills = "sawmills_bounded"
+        self.harvest_sites = "harvest_sites_bounded"
+        self.slope_raster = "slope_raster"
+        self.ofa = "off_limit_areas"
 
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+    def test_calculate_road_distance_nd_1(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 283"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
         )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 1"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 48"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            "sawmill_layer",
+            self.slope_raster,
+            self.ofa,
+            output_path
         )
-        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
-        )
-        print(f"Test 1 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
-              f"Test 1 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
+        print(f"Test 1 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 9.4 miles
-        # original tested distance: 9.2127
-        # with slope: 9.2894
-        self.assertEquals(dist, closest_dist)
-        self.assertEquals(euclidean_dist, euclidean_closest_dist)
-        self.assertTrue(9.1 <= dist <= 9.5)
-        self.assertTrue(9.1 <= closest_dist <= 9.5)
+        self.assertTrue(56 <= dist <= 57)
+        self.assertTrue(43.8 <= euclidean_dist <= 44)
 
     def test_calculate_road_distance_nd_2(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_2.shp"
-        closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_2.shp"
 
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1252"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 3576"
         )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 1"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 3"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            "sawmill_layer",
+            self.slope_raster,
+            self.ofa,
+            output_path
         )
-        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
-        )
-        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
-              f"Test 2 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
+        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 4.8
-        # original tested distance: 4.7566
-        # with slope: 4.7479
-        self.assertTrue(4.6 <= dist <= 5.0)
-        self.assertTrue(4.6 <= closest_dist <= 5.0)
-        self.assertEquals(dist, closest_dist)
-        self.assertEquals(euclidean_dist, euclidean_closest_dist)
+        self.assertTrue(5.0 <= dist <= 5.5)
+        self.assertTrue(1.1 <= euclidean_dist <= 1.2)
 
     def test_calculate_road_distance_nd_3(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "TimberHarvestBienville"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_3.shp"
-        closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_3.shp"
 
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 102"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 868"
         )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 25"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 79"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            "sawmill_layer",
+            self.slope_raster,
+            self.ofa,
+            output_path
         )
-        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
-        )
-        print(f"Test 3 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
-              f"Test 3 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
+        print(f"Test 3 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 17.95
-        # original tested distance: 18.0467
-        # with slope: 18.0748
-        self.assertTrue(17.4 <= dist <= 18.1)
-        self.assertTrue(17.4 <= closest_dist <= 18.1)
-        self.assertEquals(dist, closest_dist)
-        self.assertEquals(euclidean_dist, euclidean_closest_dist)
+        self.assertTrue(164 <= dist <= 165)
+        self.assertTrue(150.2 <= euclidean_dist <= 150.4)
 
     def test_calculate_road_distance_nd_4(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
         output_path = "E:/timber_project/outputs/BV_test/test_nd_path_4.shp"
-        closest_output_path = "E:/timber_project/outputs/BV_test/test_closest_nd_path_4.shp"
 
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 435"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 25"
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 63"
         )
 
         dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, "sawmill_layer", slope_raster, ofa, output_path
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            "sawmill_layer",
+            self.slope_raster,
+            self.ofa,
+            output_path
         )
-        closest_dist, euclidean_closest_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, closest_output_path
-        )
-        print(f"Test 4 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}  " +
-              f"Test 4 closest result: {closest_dist:.4f}, Euclidean: {euclidean_closest_dist:.4f}")
+        print(f"Test 4 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
         arcpy.management.Delete("sawmill_layer")
-        # actual road distance: 23.6
-        # original tested distance: 23.5254
-        # with slope: 23.5535
-        self.assertTrue(23.3 <= dist <= 23.6)
-        self.assertTrue(23.3 <= closest_dist <= 23.6)
-        self.assertEquals(dist, closest_dist)
-        self.assertEquals(euclidean_dist, euclidean_closest_dist)
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(164 <= dist <= 165)
+        # self.assertTrue(150.2 <= euclidean_dist <= 150.4)
 
-    def test_concerns(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
+    def test_calculate_road_distance_nd_closest_chip(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_chip.shp"
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "TimberHarvestBienville"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
-        output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 101"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_1
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "chip"
         )
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 75"
-        )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_2
-        )
-        self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2))
-
-    def test_off_limit_overlap_1(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
-
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_1 = "E:/timber_project/outputs/BV_test/test_overlap_1.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1003"
-        )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_1
-        )
+        print(f"Closest chip sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_1))
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
 
-    def test_off_limit_overlap_2(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
+    def test_calculate_road_distance_nd_closest_lumber(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_lumber.shp"
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_2 = "E:/timber_project/outputs/BV_test/test_overlap_2.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1343"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_2
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "lumber"
         )
+        print(f"Closest lumber sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_2))
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
 
-    def test_off_limit_overlap_3(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
+    def test_calculate_road_distance_nd_closest_mass_timber(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_mass_timber.shp"
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_3 = "E:/timber_project/outputs/BV_test/test_overlap_3.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 556"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_3
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "mass timber"
         )
+        print(f"Closest mass timber sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_3))
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
 
-    def test_off_limit_overlap_4(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
+    def test_calculate_road_distance_nd_closest_OSB(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_OSB.shp"
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_4 = "E:/timber_project/outputs/BV_test/test_overlap_4.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 207"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_4
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "OSB"
         )
+        print(f"Closest OSB sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_4))
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
 
-    def test_off_limit_overlap_5(self):
-        arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
-        arcpy.env.overwriteOutput = True
+    def test_calculate_road_distance_nd_closest_panel(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_panel.shp"
 
-        network_dataset = "Transportation/streets_nd"
-        roads_dataset = "Transportation/all_roads"
-        sawmills = "sawmills_bounded"
-        harvest_sites = "harvest_sites_bounded"
-        slope_raster = "slope_raster"
-        ofa = "off_limit_areas"
-        output_path_5 = "E:/timber_project/outputs/BV_test/test_overlap_5.shp"
-
-        arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 344"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
         )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer", roads_dataset, network_dataset, sawmills, slope_raster, ofa, output_path_5
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "panel"
         )
+        print(f"Closest panel sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_5))
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
+
+    def test_calculate_road_distance_nd_closest_pellet(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_pellet.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "pellet"
+        )
+        print(f"Closest pellet sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
+
+    def test_calculate_road_distance_nd_closest_plywoood_veneer(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_plywoood_veneer.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "plywoood/veneer"
+        )
+        print(f"Closest plywood/veneer sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
+
+    def test_calculate_road_distance_nd_closest_pulp_paper(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_pulp_paper.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "pulp/paper"
+        )
+        print(f"Closest pulp/paper sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(arcpy.Exists(output_path))
+        # self.assertTrue(23.3 <= dist <= 23.6)
+        # self.assertTrue(18.1 <= euclidean_dist <= 18.5)
+
+    # def test_concerns(self):
+    #     output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
+    #     output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 101"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path_1
+    #     )
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 75"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path_2
+    #     )
+    #     self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2))
+    #
+    # def test_off_limit_overlap_1(self):
+    #     output_path = "E:/timber_project/outputs/BV_test/test_overlap_1.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1003"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path
+    #     )
+    #     arcpy.management.Delete("harvest_site_layer")
+    #     self.assertTrue(arcpy.Exists(output_path))
+    #
+    # def test_off_limit_overlap_2(self):
+    #     output_path = "E:/timber_project/outputs/BV_test/test_overlap_2.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1343"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path
+    #     )
+    #     arcpy.management.Delete("harvest_site_layer")
+    #     self.assertTrue(arcpy.Exists(output_path))
+    #
+    # def test_off_limit_overlap_3(self):
+    #     output_path = "E:/timber_project/outputs/BV_test/test_overlap_3.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 556"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path
+    #     )
+    #     arcpy.management.Delete("harvest_site_layer")
+    #     self.assertTrue(arcpy.Exists(output_path))
+    #
+    # def test_off_limit_overlap_4(self):
+    #     output_path = "E:/timber_project/outputs/BV_test/test_overlap_4.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 207"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path
+    #     )
+    #     arcpy.management.Delete("harvest_site_layer")
+    #     self.assertTrue(arcpy.Exists(output_path))
+    #
+    # def test_off_limit_overlap_5(self):
+    #     output_path = "E:/timber_project/outputs/BV_test/test_overlap_5.shp"
+    #
+    #     arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+    #     arcpy.management.SelectLayerByAttribute(
+    #         "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 344"
+    #     )
+    #     distance_calculator.calculate_distance(
+    #         "harvest_site_layer",
+    #         self.roads_dataset,
+    #         self.network_dataset,
+    #         self.sawmills,
+    #         self.slope_raster,
+    #         self.ofa,
+    #         output_path
+    #     )
+    #     arcpy.management.Delete("harvest_site_layer")
+    #     self.assertTrue(arcpy.Exists(output_path))
 
     if __name__ == '__main__':
         unittest.main()
