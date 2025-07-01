@@ -35,6 +35,11 @@ def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_lim
     near_y_min = 0
     spat_ref = None
     sc = arcpy.da.SearchCursor(lcp_points, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
+    sr = arcpy.Describe(harvest_site).spatialReference
+    arcpy.CreateFeatureclass_management(
+        arcpy.env.workspace, "nearest_point", "POINT", spatial_reference=sr
+    )
+    ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
     for shape, near_dist, near_x, near_y in sc:
         if near_dist != -1 and near_dist < near_dist_min:
             near_dist_min = near_dist
@@ -44,28 +49,42 @@ def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_lim
     if not spat_ref:
         raise arcpy.ExecuteError("No nearby roads to harvest site")
     starting_point = arcpy.PointGeometry(arcpy.Point(near_x_min, near_y_min), spat_ref)
+    ic.insertRow([starting_point])
+    del sc, ic, shape, near_dist, near_x, near_y
 
     temp_path = "network_path"
     if int(arcpy.management.GetCount(sawmills)[0]) == 1:
-        calculate_road_distance_nd(starting_point, network_ds, sawmills, temp_path)
+        calculate_road_distance_nd("nearest_point", network_ds, sawmills, temp_path)
         euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
     elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
         sm_input = sawmills
-        if sm_type: #UNTESTED AND UNUSED CODE
+        if sm_type:
             arcpy.management.MakeFeatureLayer(sawmills, "sawmills_filtered")
             arcpy.management.SelectLayerByAttribute(
-                "sawmills_filtered", "NEW_SELECTION", f"TYPE={sm_type}"
+                "sawmills_filtered", "NEW_SELECTION", f"Mill_Type='{sm_type}'"
             )
             sm_input = "sawmills_filtered"
-            if int(arcpy.management.GetCount(sawmills)[0]) == 0:
+            if int(arcpy.management.GetCount(sm_input)[0]) == 0:
                 raise arcpy.ExecuteError(f"No sawmills of type {sm_type} exit in the provided sawmills data")
-        calculate_closest_road_distance_nd(starting_point, network_ds, sm_input, temp_path)
+        calculate_closest_road_distance_nd("nearest_point", network_ds, sm_input, temp_path)
+        arcpy.management.GeneratePointsAlongLines(
+            temp_path,
+            "temp_path_points",
+            Point_Placement="PERCENTAGE",
+            Percentage=100,
+            Include_End_Points="END_POINTS"
+        )
         arcpy.management.MakeFeatureLayer(sm_input, "sawmill_destination")
         arcpy.management.SelectLayerByLocation(
-            "sawmill_destination", "WITHIN_A_DISTANCE", temp_path, search_distance="100 feet"
+            "sawmill_destination",
+            "WITHIN_A_DISTANCE",
+            "temp_path_points",
+            search_distance="2000 feet"
         )
         euclidean_distance = euclidean_distance_near(centroid_fc, "sawmill_destination")
         arcpy.management.Delete("sawmill_destination")
+        arcpy.management.Delete("temp_path_points")
+        arcpy.management.Delete("sawmills_filtered")
     else:
         raise arcpy.ExecuteError("No valid sawmill input")
 
@@ -81,6 +100,7 @@ def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_lim
     arcpy.management.Delete("least_cost_path")
     arcpy.management.Delete(centroid_fc)
     arcpy.management.Delete(starting_point)
+    arcpy.management.Delete("nearest_point")
     arcpy.management.Delete(temp_site)
     for name in arcpy.ListDatasets("*Solver*"):
         arcpy.management.Delete(name)
@@ -125,6 +145,8 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=starting_point,
         append="CLEAR",
+        search_tolerance="2000 Feet",
+        search_criteria=[["all_roads_fixed", "SHAPE"]]
     )
 
     arcpy.na.AddLocations(
@@ -132,10 +154,10 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=sawmill,
         append="APPEND",
-        search_tolerance="100 feet"
+        search_tolerance="2000 Feet",
+        search_criteria=[["all_roads_fixed", "SHAPE"]]
     )
-
-    arcpy.na.Solve(route_layer, terminate_on_solve_error="TERMINATE")
+    arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     arcpy.management.Delete(route_layer_name)
     arcpy.CheckInExtension("Network")
@@ -147,17 +169,34 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     arcpy.na.MakeClosestFacilityAnalysisLayer(
         network_dataset,
         cf_layer_name,
-        travel_mode = "Driving Distance"
+        travel_mode = "Driving Distance",
+        travel_direction = "TO_FACILITIES",
+        cutoff=10000000000,
+        number_of_facilities_to_find=1,
     )
 
     sub_layers = arcpy.na.GetNAClassNames(cf_layer_name)
     facilities = sub_layers["Facilities"]
     incidents = sub_layers["Incidents"]
 
-    arcpy.na.AddLocations(cf_layer_name, facilities, sawmills, search_tolerance="100 feet")
-    arcpy.na.AddLocations(cf_layer_name, incidents, starting_point)
+    arcpy.na.AddLocations(
+        cf_layer_name,
+        facilities,
+        sawmills,
+        append="CLEAR",
+        search_tolerance="2000 Feet",
+        search_criteria=[["all_roads_fixed", "SHAPE"]]
+    )
+    arcpy.na.AddLocations(
+        cf_layer_name,
+        incidents,
+        starting_point,
+        append="APPEND",
+        search_tolerance="2000 Feet",
+        search_criteria=[["all_roads_fixed", "SHAPE"]]
+    )
 
-    arcpy.na.Solve(cf_layer_name)
+    arcpy.na.Solve(cf_layer_name, ignore_invalids="SKIP")
     arcpy.management.CopyFeatures(sub_layers["CFRoutes"], output_path)
     arcpy.management.Delete(cf_layer_name)
     arcpy.CheckInExtension("Network")

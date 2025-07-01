@@ -44,8 +44,8 @@ Data prep:
       - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/Transportation
       - E:/timber_project/data/ms_roads.gdb/roads 
       - E:/timber_project/data/RoadCore_FS.shp
-      - E:/timber_project/data/sawmill_geocoded.shp
-      - E:/timber_project/data/TimberHarvestBienville.shp
+      - E:/timber_project/data/sawmill_forisk.shp
+      - E:/timber_project/data/Activity_TimberHarvest.shp
       - E:/timber_project/data/GOVTUNIT_Mississippi_State_Shape/Shape/GU_StateOrTerritory.shp
 
 3. slope_raster.py

@@ -163,4 +163,4 @@ if len(sys.argv) == 8:
 #add in roadless area dataset when available
 m_list = [stream_setup(workspace, stream_dataset, streams_dir, SR, boundary)]
 off_limit_areas = create_off_limit_areas(workspace, m_list, road_data)
-create_slope_raster(workspace, dem, "off_limit_areas", boundary, SR)
+create_slope_raster(workspace, dem, "off_limit_areas", SR, boundary)

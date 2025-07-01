@@ -63,6 +63,13 @@ if len(sys.argv) == 8:
     arcpy.management.CopyFeatures("harvest_layer", "harvest_sites_bounded")
     arcpy.management.Delete("harvest_layer")
 
+#remove closed and announced sawmills from sawmill fc
+uc = arcpy.da.UpdateCursor(sawmills, ["Status"])
+for row in uc:
+    if row[0] == "Closed" or row[0] == "Announced":
+        uc.deleteRow()
+del row, uc
+
 #generate points along each NFS road
 points = "NFS_points"
 arcpy.management.GeneratePointsAlongLines(
@@ -71,7 +78,7 @@ arcpy.management.GeneratePointsAlongLines(
 
 #use Near on points to check for proximity to public roads
 #add a field to indicate if a point is near or not
-arcpy.analysis.Near(points, roads, search_radius="150 Feet")
+arcpy.analysis.Near(points, roads, search_radius="170 Feet")
 arcpy.management.AddField(points, "IS_NEAR", "SHORT")
 arcpy.management.CalculateField(
     points, "IS_NEAR", "0 if !NEAR_DIST! == -1 else 1", "PYTHON3"
@@ -102,7 +109,21 @@ arcpy.conversion.ExportFeatures(NFS_roads, "NFS_cleaned", "DUPLICATE = 0")
 NFS_roads = "NFS_cleaned"
 
 #snap the NFS roads to the public roads
-arcpy.edit.Snap(NFS_roads, [[roads, "VERTEX", "100 Feet"]])
+end_points = "end_points"
+arcpy.management.GeneratePointsAlongLines(
+    NFS_roads, end_points, Point_Placement="PERCENTAGE", Percentage=100, Include_End_Points="END_POINTS"
+)
+arcpy.analysis.Near(end_points, roads, search_radius="100 Feet", location="LOCATION", distance_unit="Miles")
+arcpy.CreateFeatureclass_management(
+    arcpy.env.workspace, "road_points", "POINT", spatial_reference=SR
+)
+sc = arcpy.da.SearchCursor(end_points, ["SHAPE@", "NEAR_X", "NEAR_Y"])
+ic = arcpy.da.InsertCursor("road_points", ["SHAPE@"])
+for shape, near_x, near_y in sc:
+    road_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), SR)
+    ic.insertRow([road_point])
+del sc, ic, shape, near_x, near_y
+arcpy.edit.Snap(NFS_roads, [["road_points", "VERTEX", "100 Feet"]])
 
 #merge the two roads datasets
 output_roads = os.path.join(transportation_dataset, "all_roads")
@@ -110,6 +131,11 @@ if arcpy.Exists(os.path.join(transportation_dataset, "streets_nd")):
     arcpy.management.Delete(os.path.join(transportation_dataset, "streets_nd"))
     arcpy.management.Delete(os.path.join(transportation_dataset, "streets_nd_Junctions"))
 arcpy.management.Merge([roads, NFS_roads], output_roads)
+
+#integreate the roads dataset then convert to line so that each line ends at an intersection
+arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
+arcpy.management.FeatureToLine(output_roads, os.path.join(transportation_dataset, "all_roads_fixed"))
+output_roads = os.path.join(transportation_dataset, "all_roads_fixed")
 
 #Add a distance field to the roads shapefile
 arcpy.management.AddField(output_roads, "distance", "DOUBLE")
@@ -124,3 +150,4 @@ arcpy.na.CreateNetworkDataset(
     [os.path.basename(output_roads)],
     "NO_ELEVATION"
 )
+arcpy.na.BuildNetwork(os.path.join(transportation_dataset, "streets_nd"))
