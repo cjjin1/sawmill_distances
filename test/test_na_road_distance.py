@@ -362,5 +362,26 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(arcpy.Exists(output_path))
         self.assertTrue(8.5 <= dist <= 9)
 
+    def test_calculate_road_distance_nd_custom(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_custom.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 155"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            self.sawmills,
+            self.slope_raster,
+            self.ofa,
+            output_path,
+            "pulp/paper"
+        )
+        print(f"Custom sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(arcpy.Exists(output_path))
+
     if __name__ == '__main__':
         unittest.main()

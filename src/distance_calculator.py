@@ -221,7 +221,10 @@ def calculate_distance_for_fc(fc_path):
     distance = 0
     sc = arcpy.da.SearchCursor(fc_path, ["distance"])
     for row in sc:
-        distance += row[0]
+        try:
+            distance += row[0]
+        except TypeError:
+            continue
     del row, sc
     return distance
 

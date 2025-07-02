@@ -78,17 +78,18 @@ Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follo
 - Under the costs tab at the top, ensure the distance field is used for the evaluators
 - Under the restrictions tab, create a new restriction called "Oneway"
   - usage Type: prohibited (-1)
-  - under evaluators, for the Along source, use this value and code block
+  - under evaluators, for the Along source, set the type to field script and use this value and code block
     - Value=evaluator(!oneway!, !reversed!)
     - Code Block:
       def evaluator(oneway, reversed):
         return oneway == 1 and reversed == 1
-  - under evaluators, for the Against source, use this value and code block
+  - under evaluators, for the Against source, set the type to field script and use this value and code block
     - Value=evaluator(!oneway!, !reversed!)
     - Code Block:
       def evaluator(oneway, reversed):
         return oneway == 1 and reversed == 0
 - Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
+- Build one more time before calculating
 
 To run distance calculations:
 - Ensure network dataset is built

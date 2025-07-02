@@ -108,7 +108,7 @@ del row, uc
 arcpy.conversion.ExportFeatures(NFS_roads, "NFS_cleaned", "DUPLICATE = 0")
 NFS_roads = "NFS_cleaned"
 
-#snap the NFS roads to the public roads
+#get points to snap the NFS roads to
 end_points = "end_points"
 arcpy.management.GeneratePointsAlongLines(
     NFS_roads, end_points, Point_Placement="PERCENTAGE", Percentage=100, Include_End_Points="END_POINTS"
@@ -121,8 +121,60 @@ sc = arcpy.da.SearchCursor(end_points, ["SHAPE@", "NEAR_X", "NEAR_Y"])
 ic = arcpy.da.InsertCursor("road_points", ["SHAPE@"])
 for shape, near_x, near_y in sc:
     road_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), SR)
-    ic.insertRow([road_point])
+    if near_x != -1 and near_y != -1:
+        ic.insertRow([road_point])
 del sc, ic, shape, near_x, near_y
+
+#remove NFS_roads that won't snap to any public road
+remove_count = 1
+while remove_count > 0:
+    remove_count = 0
+    arcpy.management.MakeFeatureLayer(end_points, "end_points_neg")
+    arcpy.management.SelectLayerByAttribute(
+        "end_points_neg", "NEW_SELECTION", "NEAR_DIST = -1"
+    )
+    arcpy.analysis.SpatialJoin(
+        target_features=end_points,
+        join_features=NFS_roads,
+        out_feature_class="spatial_join_output",
+        join_operation="JOIN_ONE_TO_ONE",
+        join_type="KEEP_ALL",
+        match_option="INTERSECT",
+        field_mapping="",
+        search_radius=None,
+        distance_field_name=""
+    )
+    arcpy.management.MakeFeatureLayer("spatial_join_output", "joined_lyr")
+    arcpy.management.SelectLayerByAttribute(
+        "joined_lyr", "NEW_SELECTION", '"Join_Count" >= 2'
+    )
+
+    orig_fid_dict = {}
+    sc = arcpy.da.SearchCursor("end_points_neg", ["ORIG_FID"])
+    for row in sc:
+        if orig_fid_dict.get(row[0]):
+            orig_fid_dict[row[0]] += 1
+        else:
+            orig_fid_dict[row[0]] = 1
+    del row, sc
+
+    sc = arcpy.da.SearchCursor("joined_lyr", ["ORIG_FID"])
+    for row in sc:
+        if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+            orig_fid_dict[row[0]] -= 1
+    del row, sc
+
+    uc = arcpy.da.UpdateCursor(NFS_roads, ["OBJECTID"])
+    for row in uc:
+        if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+            uc.deleteRow()
+            remove_count += 1
+    del row, uc
+    arcpy.management.Delete("joined_lyr")
+    arcpy.management.Delete("spatial_join_output")
+    arcpy.management.Delete("end_points_neg")
+
+#snap the cleaned NFS roads to the points on the public roads
 arcpy.edit.Snap(NFS_roads, [["road_points", "VERTEX", "100 Feet"]])
 
 #merge the two roads datasets
