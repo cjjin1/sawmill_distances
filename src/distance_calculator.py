@@ -137,6 +137,11 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         "Length",
     )
     route_layer = result.getOutput(0)
+    try:
+        solver = arcpy.na.GetSolverProperties(route_layer)
+        solver.restrictions = ["Oneway"]
+    except arcpy.ExecuteError:
+        print("No oneway restriction implemented, solution will not include oneway functionality")
     sub_layers = arcpy.na.GetNAClassNames(route_layer)
     stops_layer_name = sub_layers["Stops"]
 
@@ -166,7 +171,7 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
     """Finds the distance from a starting point to the nearest sawmill destination using network analyst"""
     arcpy.CheckOutExtension("Network")
     cf_layer_name = "closest_sawmill"
-    arcpy.na.MakeClosestFacilityAnalysisLayer(
+    cf_layer = arcpy.na.MakeClosestFacilityAnalysisLayer(
         network_dataset,
         cf_layer_name,
         travel_mode = "Driving Distance",
@@ -174,6 +179,12 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
         cutoff=10000000000,
         number_of_facilities_to_find=1,
     )
+
+    try:
+        solver = arcpy.na.GetSolverProperties(cf_layer.getOutput(0))
+        solver.restrictions = ["Oneway"]
+    except arcpy.ExecuteError:
+        print("No oneway restriction implemented, solution will not include oneway functionality")
 
     sub_layers = arcpy.na.GetNAClassNames(cf_layer_name)
     facilities = sub_layers["Facilities"]

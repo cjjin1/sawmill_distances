@@ -315,50 +315,52 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(65.5 <= dist <= 66.5)
         self.assertTrue(55.5 <= euclidean_dist <= 56.5)
 
-    def test_concerns(self):
-        output_path_1 = "E:/timber_project/outputs/BV_test/test_concerns_1.shp"
-        output_path_2 = "E:/timber_project/outputs/BV_test/test_concerns_2.shp"
-        output_path_3 = "E:/timber_project/outputs/BV_test/test_concerns_3.shp"
+    def test_oneway_1(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_oneway_closest.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 395"
         )
-        distance_calculator.calculate_distance(
+        dist, euclidean_dist = distance_calculator.calculate_distance(
             "harvest_site_layer",
             self.roads_dataset,
             self.network_dataset,
             self.sawmills,
             self.slope_raster,
             self.ofa,
-            output_path_1
-        )
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 3192"
-        )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path_2
-        )
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 3195"
-        )
-        distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path_3
+            output_path
         )
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path_1) and arcpy.Exists(output_path_2) and arcpy.Exists(output_path_3))
+        print(f"Oneway test result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        self.assertTrue(arcpy.Exists(output_path))
+        self.assertTrue(8.5 <= dist <= 9)
+
+    def test_oneway_2(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_oneway_set.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 395"
+        )
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 63"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_distance(
+            "harvest_site_layer",
+            self.roads_dataset,
+            self.network_dataset,
+            "sawmill_layer",
+            self.slope_raster,
+            self.ofa,
+            output_path
+        )
+        arcpy.management.Delete("harvest_site_layer")
+        arcpy.management.Delete("sawmill_layer")
+        print(f"Oneway test result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        self.assertTrue(arcpy.Exists(output_path))
+        self.assertTrue(8.5 <= dist <= 9)
 
     if __name__ == '__main__':
         unittest.main()

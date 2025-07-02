@@ -70,6 +70,26 @@ Data prep:
     - E:/timber_project/data/USGS_13_n33w090_20221121.tif
     - E:/timber_project/data/BienvilleBoundary
 
+BEFORE CALCULATIONS:
+Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follow these steps:
+- Open the streets_nd network dataset properties in the catalog
+- Create a new travel mode called "Driving Distance"
+  - Under costs, ensure length is used for impedance
+- Under the costs tab at the top, ensure the distance field is used for the evaluators
+- Under the restrictions tab, create a new restriction called "Oneway"
+  - usage Type: prohibited (-1)
+  - under evaluators, for the Along source, use this value and code block
+    - Value=evaluator(!oneway!, !reversed!)
+    - Code Block:
+      def evaluator(oneway, reversed):
+        return oneway == 1 and reversed == 1
+  - under evaluators, for the Against source, use this value and code block
+    - Value=evaluator(!oneway!, !reversed!)
+    - Code Block:
+      def evaluator(oneway, reversed):
+        return oneway == 1 and reversed == 0
+- Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
+
 To run distance calculations:
 - Ensure network dataset is built
 - Create a script and import the distance_calculator.py script
