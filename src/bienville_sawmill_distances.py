@@ -12,7 +12,7 @@ arcpy.env.workspace = "E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
 arcpy.env.overwriteOutput = True
 
 network_dataset = "Transportation/streets_nd"
-roads_dataset = "Transportation/all_roads"
+roads_dataset = "Transportation/all_roads_fixed"
 sawmills = "sawmills_bounded"
 harvest_sites = "harvest_sites_bienville"
 slope_raster = "slope_raster"

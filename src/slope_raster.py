@@ -115,9 +115,11 @@ def create_slope_raster(ws, elev_data, ofa, spat_ref, bd=None):
         arcpy.management.ProjectRaster(elev_data, elev_proj, spat_ref)
 
     if bd:
+        bd_buffer = "boundary_buffer"
+        arcpy.analysis.Buffer(bd, bd_buffer, "1 Mile")
         bd_raster = "boundary_raster"
         arcpy.conversion.PolygonToRaster(
-            bd,
+            bd_buffer,
             "OBJECTID",
             bd_raster,
             "CELL_CENTER",
