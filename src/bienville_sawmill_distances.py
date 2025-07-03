@@ -19,14 +19,30 @@ slope_raster = "slope_raster"
 ofa = "off_limit_areas"
 
 random.seed(20)
-id_list = random.sample(range(1, 725), 50)
+id_list = random.sample(range(1, 725), 200)
+id_list = id_list[:50]
+id_list_2 = [320, 184, 232] #623,320,232,460,184,11,470
 result_dict = {}
-output_path = "temp_path"
+output_path = "test_path"
 
-for id in id_list:
+# arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+# arcpy.management.SelectLayerByAttribute(
+#     "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {320}"
+# )
+# dist, euclidean_dist = distance_calculator.calculate_distance(
+#     "harvest_site_layer",
+#     roads_dataset,
+#     network_dataset,
+#     sawmills,
+#     slope_raster,
+#     ofa,
+#     output_path
+# )
+
+for fid in id_list_2:
     arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
     arcpy.management.SelectLayerByAttribute(
-        "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {id}"
+        "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {fid}"
     )
     try:
         dist, euclidean_dist = distance_calculator.calculate_distance(
@@ -39,8 +55,8 @@ for id in id_list:
             output_path
         )
         result_dict[id] = [dist, euclidean_dist]
-        print(f"Harvest site {id}: {dist}, {euclidean_dist}")
+        print(f"Harvest site {fid}: {dist}, {euclidean_dist}")
     except arcpy.ExecuteError:
-        print(f"Harvest site {id} could not find a path to a sawmill")
+        print(f"Harvest site {fid} could not find a path to a sawmill")
     arcpy.management.Delete("harvest_site_layer")
 arcpy.management.Delete("temp_path")
