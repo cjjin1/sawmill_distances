@@ -62,6 +62,18 @@ if len(sys.argv) == 8:
     )
     arcpy.management.CopyFeatures("harvest_layer", "harvest_sites_bounded")
     arcpy.management.Delete("harvest_layer")
+    harvest_sites = "harvest_sites_bounded"
+
+#remove all harvest sites under 100 square feet
+arcpy.management.AddField(harvest_sites, "area", "DOUBLE")
+arcpy.management.CalculateGeometryAttributes(
+    harvest_sites, [["area", "AREA_GEODESIC"]], area_unit="SQUARE_FEET_US"
+)
+uc = arcpy.da.UpdateCursor(harvest_sites, ["area"])
+for row in uc:
+    if row[0] < 100:
+        uc.deleteRow()
+del uc, row
 
 #remove closed and announced sawmills from sawmill fc
 uc = arcpy.da.UpdateCursor(sawmills, ["Status"])

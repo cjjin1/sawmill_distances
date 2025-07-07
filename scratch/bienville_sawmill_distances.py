@@ -14,14 +14,14 @@ arcpy.env.overwriteOutput = True
 network_dataset = "Transportation/streets_nd"
 roads_dataset = "Transportation/all_roads_fixed"
 sawmills = "sawmills_bounded"
-harvest_sites = "harvest_sites_bienville"
+harvest_sites = "harvest_sites_bienville_alt"
 slope_raster = "slope_raster"
 ofa = "off_limit_areas"
 
 random.seed(20)
-id_list = random.sample(range(1, 725), 200)
-id_list = id_list[:50]
-id_list_2 = [320, 184, 232] #623,320,232,460,184,11,470
+id_list = random.sample(range(1, 703), 100)
+# id_list = id_list[:50]
+# id_list_2 = [320, 184, 232] #623,320,232,460,184,11,470
 result_dict = {}
 output_path = "test_path"
 
@@ -39,7 +39,7 @@ output_path = "test_path"
 #     output_path
 # )
 
-for fid in id_list_2:
+for fid in id_list:
     arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
     arcpy.management.SelectLayerByAttribute(
         "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {fid}"
