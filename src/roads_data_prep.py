@@ -35,7 +35,7 @@ single_road_type = None
 cf = (
     '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road"]'
 )
-if len(sys.argv) <= 7:
+if len(sys.argv) >= 7:
     north, south, east, west = float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6])
     g_main = ox.graph_from_bbox(
         (north, south, east, west), custom_filter=cf, simplify=False, retain_all=True
@@ -46,7 +46,7 @@ if len(sys.argv) <= 7:
         g_single = ox.graph_from_bbox(
             (north, south, east, west), custom_filter=cf_single, simplify=False, retain_all=True
         )
-elif len(sys.argv) <= 4:
+elif len(sys.argv) >= 4:
     g_main = ox.graph_from_place(aoi, custom_filter=cf, simplify=False, retain_all=True)
     if len(sys.argv) == 5:
         single_road_type = sys.argv[4]
@@ -58,7 +58,7 @@ nodes_main, edges_main = ox.graph_to_gdfs(g_main)
 
 #save the roads to scratch folder as gpkg files, then export to feature class in File GDB
 temp_file = "E:/timber_project/scratch/temp_roads.gpkg"
-layer_name = "truck_only_roads"
+layer_name = "roads"
 export_to_arcgis(edges_main, temp_file, layer_name)
 if single_road_type:
     nodes_single, edges_single = ox.graph_to_gdfs(g_single)
