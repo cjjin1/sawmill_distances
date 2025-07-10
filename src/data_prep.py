@@ -23,8 +23,8 @@ NFS_roads = sys.argv[4]
 sawmills = sys.argv[5]
 harvest_sites = sys.argv[6]
 
-#Project all feature classes to NAD 1983 StatePlane Mississippi East (can be changed)
-SR = arcpy.SpatialReference(2899)
+#Project all feature classes
+SR = arcpy.SpatialReference(3404)
 if not arcpy.Exists(os.path.join(transportation_dataset, os.path.basename(roads))):
     arcpy.Project_management(roads, os.path.join(transportation_dataset, os.path.basename(roads)), SR)
 if not arcpy.Exists(os.path.splitext(os.path.basename(NFS_roads))[0]):
@@ -198,6 +198,7 @@ arcpy.management.Merge([roads, NFS_roads], output_roads)
 
 #integreate the roads dataset then convert to line so that each line ends at an intersection
 arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
+print("integergration successful")
 arcpy.management.FeatureToLine(output_roads, os.path.join(transportation_dataset, "all_roads_fixed"))
 output_roads = os.path.join(transportation_dataset, "all_roads_fixed")
 
@@ -208,10 +209,10 @@ arcpy.management.CalculateGeometryAttributes(
 )
 
 #Create and build the network dataset using roads dataset
-arcpy.na.CreateNetworkDataset(
-    transportation_dataset,
-    "streets_nd",
-    [os.path.basename(output_roads)],
-    "NO_ELEVATION"
-)
-arcpy.na.BuildNetwork(os.path.join(transportation_dataset, "streets_nd"))
+# arcpy.na.CreateNetworkDataset(
+#     transportation_dataset,
+#     "streets_nd",
+#     [os.path.basename(output_roads)],
+#     "NO_ELEVATION"
+# )
+# arcpy.na.BuildNetwork(os.path.join(transportation_dataset, "streets_nd"))

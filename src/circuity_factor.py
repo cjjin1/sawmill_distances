@@ -9,6 +9,7 @@ import sys, arcpy, csv, os
 import distance_calculator
 import statsmodels.api as sm
 import numpy as np
+import pandas as pd
 from datetime import datetime
 
 #read in inputs
@@ -45,6 +46,7 @@ output_writer = csv.writer(output_file)
 
 #runs the calculate_distance() function for every harvest site
 print("starting distance calculations at: ", datetime.now())
+count = 0
 for oid in hs_dict:
     #selects harvest site using object id
     arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
@@ -71,6 +73,8 @@ for oid in hs_dict:
     except arcpy.ExecuteError as e:
         print(f"Harvest site {oid} could not find a path to a sawmill: {e}")
         output_writer.writerow([oid, "n/a", "n/a"])
+    print(f"({count}) Calculated distance for {oid}")
+    count += 1
     arcpy.management.Delete("harvest_site_layer")
 print("finished distance calculations at: ", datetime.now())
 output_file.close()
@@ -91,17 +95,37 @@ if len(rd_list) == 0 or len(ed_list) == 0:
 road_distance = np.array(rd_list)
 euclidean_distance = np.array(ed_list)
 
-#create an array of Euclidean distance squared
-euclidean_dist_sq = euclidean_distance ** 2
+df = pd.DataFrame({
+    'sl': euclidean_distance,
+    'sl_sq': euclidean_distance ** 2,
+    'rd': road_distance
+})
 
-#ordinary least squares regression
-X = np.column_stack((euclidean_distance, euclidean_dist_sq))
-X = sm.add_constant(X)
-model = sm.OLS(road_distance, X).fit()
+X1 = sm.add_constant(df[['sl', 'sl_sq']])  # includes intercept
+y = df['rd']
+
+model1 = sm.OLS(y, X1).fit()
+print(model1.summary())
+print()
+
+X2 = sm.add_constant(df[['sl']])
+model2 = sm.OLS(y, X2).fit()
+print(model2.summary())
+print()
+
+X3 = df[['sl']]  # No constant (intercept)
+model3 = sm.OLS(y, X3).fit()
+print(model3.summary())
+print()
+
+b1 = model3.params['sl']
+print(b1)
 
 #print output and write to text file
-print(model.summary())
 results_file = open(os.path.join(output_dir, "OLS_results.txt"), "w+")
-results_file.write(str(model.summary()))
+results_file.write(str(model1.summary()) + "\n")
+results_file.write(str(model2.summary()) + "\n")
+results_file.write(str(model3.summary()) + "\n")
+results_file.write(f"Circuity factor: {b1}")
 results_file.close()
 
