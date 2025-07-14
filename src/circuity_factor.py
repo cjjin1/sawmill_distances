@@ -102,7 +102,8 @@ for oid in hs_dict:
                 hs_dict[oid]
             )
             if c > 10:
-                raise arcpy.ExecuteError("Too many harvest sites 120 miles away from desired sawmills")
+                print("Too many harvest sites 120 miles away from desired sawmills")
+                exit(1)
             c += 1
 
         rd_list.append(dist)
@@ -110,8 +111,6 @@ for oid in hs_dict:
         output_writer.writerow([oid, dist, euclidean_dist])
     except arcpy.ExecuteError as e:
         print(f"Harvest site {oid} could not find a path to a sawmill: {e}")
-        if e == "Too many harvest sites 120 miles away from desired sawmills":
-            exit(1)
         output_writer.writerow([oid, "n/a", "n/a"])
     print(f"({count}) Calculated distance for {oid}")
     count += 1
