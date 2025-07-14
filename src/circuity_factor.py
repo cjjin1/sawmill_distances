@@ -67,6 +67,8 @@ for oid in hs_dict:
             output_path,
             hs_dict[oid]
         )
+        if dist > 120:
+            raise arcpy.ExecuteError("Sawmill is farther than 120 miles driving distance.")
         rd_list.append(dist)
         ed_list.append(euclidean_dist)
         output_writer.writerow([oid, dist, euclidean_dist])
