@@ -5,7 +5,7 @@
 # Purpose: Finds the road circuity factor given a list of harvest sites
 ########################################################################################################################
 
-import sys, arcpy, csv, os
+import sys, arcpy, csv, os, random
 import distance_calculator
 import statsmodels.api as sm
 import numpy as np
@@ -44,6 +44,12 @@ ed_list = []
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
 output_writer = csv.writer(output_file)
 
+#get list of harvest site IDs from harvest site feature class
+id_list = []
+sc = arcpy.da.SearchCursor(harvest_sites, ["OBJECTID"])
+for row in sc:
+    id_list.append(row[0])
+
 #runs the calculate_distance() function for every harvest site
 print("starting distance calculations at: ", datetime.now())
 count = 0
@@ -67,13 +73,41 @@ for oid in hs_dict:
             output_path,
             hs_dict[oid]
         )
-        if dist > 120:
-            raise arcpy.ExecuteError("Sawmill is farther than 120 miles driving distance.")
+
+        #if the distance ends up being greater than 120 miles, a new object ID is obtained that isn't already being used
+        #the loop continues until a path less than 120 miles is found or if a 10 calculation is reached
+        #at this point, it is assumed that there are no possible paths less than 120 miles and the script is stopped
+        c = 0
+        while dist > 120:
+            rand_id = random.randint(1, len(id_list))
+            while rand_id in hs_dict:
+                rand_id = random.randint(1, len(id_list))
+            arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+            arcpy.management.SelectLayerByAttribute(
+                "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
+            )
+            output_path = os.path.join(output_dir, f"path_{oid}.shp")
+            dist, euclidean_dist = distance_calculator.calculate_distance(
+                "harvest_site_layer",
+                roads_dataset,
+                network_dataset,
+                sawmills,
+                slope_raster,
+                ofa,
+                output_path,
+                hs_dict[oid]
+            )
+            if c > 10:
+                raise arcpy.ExecuteError("Too many harvest sites 120 miles away from sawmills")
+            c += 1
+
         rd_list.append(dist)
         ed_list.append(euclidean_dist)
         output_writer.writerow([oid, dist, euclidean_dist])
     except arcpy.ExecuteError as e:
         print(f"Harvest site {oid} could not find a path to a sawmill: {e}")
+        if e == "Too many harvest sites 120 miles away from sawmills":
+            exit(1)
         output_writer.writerow([oid, "n/a", "n/a"])
     print(f"({count}) Calculated distance for {oid}")
     count += 1
