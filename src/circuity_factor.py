@@ -82,6 +82,10 @@ for oid in hs_dict:
             rand_id = random.randint(1, len(id_list))
             while rand_id in hs_dict:
                 rand_id = random.randint(1, len(id_list))
+            print(
+                f"Harvest site {oid} has a distance to the nearest {hs_dict[oid]} sawmill greater than 120 miles, "
+                + f"new oid: {rand_id}"
+            )
             arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
             arcpy.management.SelectLayerByAttribute(
                 "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
@@ -98,7 +102,7 @@ for oid in hs_dict:
                 hs_dict[oid]
             )
             if c > 10:
-                raise arcpy.ExecuteError("Too many harvest sites 120 miles away from sawmills")
+                raise arcpy.ExecuteError("Too many harvest sites 120 miles away from desired sawmills")
             c += 1
 
         rd_list.append(dist)
