@@ -163,6 +163,49 @@ def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
     arcpy.management.Delete(cost)
     arcpy.management.Delete(backlink)
 
+def calculate_road_dist_only(harvest_site, network_ds, sawmills, output_path, sm_type=None):
+    centroid_fc = "harvest_site_centroid"
+    arcpy.management.FeatureToPoint(harvest_site, centroid_fc, "INSIDE")
+
+    if int(arcpy.management.GetCount(sawmills)[0]) == 1:
+        calculate_road_distance_nd(centroid_fc, network_ds, sawmills, output_path)
+        euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
+    elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
+        sm_input = sawmills
+        if sm_type:
+            arcpy.management.MakeFeatureLayer(sawmills, "sawmills_filtered")
+            arcpy.management.SelectLayerByAttribute(
+                "sawmills_filtered", "NEW_SELECTION", f"Mill_Type='{sm_type}'"
+            )
+            sm_input = "sawmills_filtered"
+            if int(arcpy.management.GetCount(sm_input)[0]) == 0:
+                raise arcpy.ExecuteError(f"No sawmills of type {sm_type} exit in the provided sawmills data")
+        calculate_closest_road_distance_nd("nearest_point", network_ds, sm_input, output_path)
+        arcpy.management.GeneratePointsAlongLines(
+            output_path,
+            "out_path_points",
+            Point_Placement="PERCENTAGE",
+            Percentage=100,
+            Include_End_Points="END_POINTS"
+        )
+        arcpy.management.MakeFeatureLayer(sm_input, "sawmill_destination")
+        arcpy.management.SelectLayerByLocation(
+            "sawmill_destination",
+            "WITHIN_A_DISTANCE",
+            "out_path_points",
+            search_distance="2000 feet"
+        )
+        euclidean_distance = euclidean_distance_near(centroid_fc, "sawmill_destination")
+        arcpy.management.Delete("sawmill_destination")
+        arcpy.management.Delete("temp_path_points")
+        arcpy.management.Delete("sawmills_filtered")
+    else:
+        raise arcpy.ExecuteError("No valid sawmill input")
+    arcpy.management.Delete(centroid_fc)
+
+    road_distance = calculate_distance_for_fc(output_path)
+    return road_distance, euclidean_distance
+
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
     """Finds the distance from a starting point to a sawmill destination using network analyst"""
     arcpy.CheckOutExtension("Network")
@@ -186,7 +229,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=starting_point,
         append="CLEAR",
-        search_tolerance="2000 Feet",
+        search_tolerance="5000 Feet",
         search_criteria=[["all_roads_fixed", "SHAPE"]]
     )
 
@@ -231,7 +274,7 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
         facilities,
         sawmills,
         append="CLEAR",
-        search_tolerance="2000 Feet",
+        search_tolerance="5000 Feet",
         search_criteria=[["all_roads_fixed", "SHAPE"]]
     )
     arcpy.na.AddLocations(

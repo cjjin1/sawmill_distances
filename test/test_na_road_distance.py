@@ -362,5 +362,49 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(arcpy.Exists(output_path))
         self.assertTrue(8.5 <= dist <= 9)
 
+    def test_simple_calculate_distance_1(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_path_simple_1.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 48"
+        )
+
+        dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            "sawmill_layer",
+            output_path
+        )
+        print(f"Test 1 road distance result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
+        arcpy.management.Delete("harvest_site_layer")
+        arcpy.management.Delete("sawmill_layer")
+        self.assertTrue(56 <= dist <= 57)
+        self.assertTrue(43.8 <= euclidean_dist <= 44)
+
+    def test_simple_calculate_distance_2(self):
+        output_path = "E:/timber_project/outputs/BV_test/test_path_simple_2.shp"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
+        )
+        dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            self.sawmills,
+            output_path,
+            "lumber"
+        )
+        print(f"Closest lumber sawmill road distance result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(arcpy.Exists(output_path))
+        self.assertTrue(10.5 <= dist <= 11)
+        self.assertTrue(8.3 <= euclidean_dist <= 8.6)
+
     if __name__ == '__main__':
         unittest.main()
