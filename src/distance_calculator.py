@@ -180,7 +180,7 @@ def calculate_road_dist_only(harvest_site, network_ds, sawmills, output_path, sm
             sm_input = "sawmills_filtered"
             if int(arcpy.management.GetCount(sm_input)[0]) == 0:
                 raise arcpy.ExecuteError(f"No sawmills of type {sm_type} exit in the provided sawmills data")
-        calculate_closest_road_distance_nd("nearest_point", network_ds, sm_input, output_path)
+        calculate_closest_road_distance_nd(centroid_fc, network_ds, sm_input, output_path)
         arcpy.management.GeneratePointsAlongLines(
             output_path,
             "out_path_points",
