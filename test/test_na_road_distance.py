@@ -12,7 +12,7 @@ import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
     def setUp(self):
-        arcpy.env.workspace = "I:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
+        arcpy.env.workspace = "C:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb"
         arcpy.env.overwriteOutput = True
 
         self.network_dataset = "Transportation/streets_nd"
@@ -23,7 +23,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.ofa = "off_limit_areas"
 
     def test_calculate_road_distance_nd_1(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -50,7 +50,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(43.8 <= euclidean_dist <= 44)
 
     def test_calculate_road_distance_nd_2(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_nd_path_2.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_2.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -77,7 +77,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(1.1 <= euclidean_dist <= 1.2)
 
     def test_calculate_road_distance_nd_3(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_nd_path_3.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_3.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -104,7 +104,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(150.2 <= euclidean_dist <= 150.4)
 
     def test_calculate_road_distance_nd_4(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_nd_path_4.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_4.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -132,7 +132,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(8.3 <= euclidean_dist <= 8.6)
 
     def test_calculate_road_distance_nd_closest_chip(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_chip.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_chip.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -155,7 +155,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(34 <= euclidean_dist <= 34.5)
 
     def test_calculate_road_distance_nd_closest_lumber(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_lumber.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_lumber.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -178,7 +178,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(8.3 <= euclidean_dist <= 8.6)
 
     def test_calculate_road_distance_nd_closest_mass_timber(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_mass_timber.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_mass_timber.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -201,7 +201,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(57.2 <= euclidean_dist <= 57.6)
 
     def test_calculate_road_distance_nd_closest_OSB(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_OSB.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_OSB.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -224,7 +224,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(157 <= euclidean_dist <= 158)
 
     def test_calculate_road_distance_nd_closest_panel(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_panel.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_panel.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -247,7 +247,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(49 <= euclidean_dist <= 50)
 
     def test_calculate_road_distance_nd_closest_pellet(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_pellet.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_pellet.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -270,7 +270,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(51 <= euclidean_dist <= 52)
 
     def test_calculate_road_distance_nd_closest_plywoood_veneer(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_plywoood_veneer.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_plywoood_veneer.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -293,7 +293,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(32 <= euclidean_dist <= 32.5)
 
     def test_calculate_road_distance_nd_closest_pulp_paper(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_pulp_paper.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_pulp_paper.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -316,7 +316,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(55.5 <= euclidean_dist <= 56.5)
 
     def test_oneway_1(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_oneway_closest.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_oneway_closest.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -337,7 +337,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(8.5 <= dist <= 9)
 
     def test_oneway_2(self):
-        output_path = "I:/timber_project/outputs/BV_test/test_oneway_set.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_oneway_set.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -363,7 +363,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(8.5 <= dist <= 9)
 
     def test_simple_calculate_distance_1(self):
-        output_path = "E:/timber_project/outputs/BV_test/test_path_simple_1.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_path_simple_1.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
@@ -387,7 +387,7 @@ class TestDistanceCalculator(unittest.TestCase):
         self.assertTrue(43.8 <= euclidean_dist <= 44)
 
     def test_simple_calculate_distance_2(self):
-        output_path = "E:/timber_project/outputs/BV_test/test_path_simple_2.shp"
+        output_path = "C:/timber_project/outputs/BV_test/test_path_simple_2.shp"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
