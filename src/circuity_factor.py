@@ -22,6 +22,10 @@ harvest_sites = sys.argv[6]
 slope_raster = sys.argv[7]
 ofa = sys.argv[8]
 output_dir = sys.argv[9]
+try:
+    simplify = sys.argv[10]
+except IndexError:
+    simplify = "NO_SIMPLIFY"
 
 #set workspace
 arcpy.env.workspace = workspace
@@ -63,16 +67,25 @@ for oid in hs_dict:
     #attempts to run distance calculation, appends both distance results to their respective lists
     #if an error is encountered, the script still completes with whatever results exist
     try:
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            roads_dataset,
-            network_dataset,
-            sawmills,
-            slope_raster,
-            ofa,
-            output_path,
-            hs_dict[oid]
-        )
+        if simplify == "simplify":
+            dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
+                "harvest_site_layer",
+                network_dataset,
+                sawmills,
+                output_path,
+                hs_dict[oid]
+            )
+        else:
+            dist, euclidean_dist = distance_calculator.calculate_distance(
+                "harvest_site_layer",
+                roads_dataset,
+                network_dataset,
+                sawmills,
+                slope_raster,
+                ofa,
+                output_path,
+                hs_dict[oid]
+            )
 
         #if the distance ends up being greater than 120 miles, a new object ID is obtained that isn't already being used
         #the loop continues until a path less than 120 miles is found or if a 10 calculation is reached
@@ -87,16 +100,25 @@ for oid in hs_dict:
                 "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
             )
             output_path = os.path.join(output_dir, f"path_{oid}.shp")
-            dist, euclidean_dist = distance_calculator.calculate_distance(
-                "harvest_site_layer",
-                roads_dataset,
-                network_dataset,
-                sawmills,
-                slope_raster,
-                ofa,
-                output_path,
-                hs_dict[oid]
-            )
+            if simplify == "simplify":
+                dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
+                    "harvest_site_layer",
+                    network_dataset,
+                    sawmills,
+                    output_path,
+                    hs_dict[oid]
+                )
+            else:
+                dist, euclidean_dist = distance_calculator.calculate_distance(
+                    "harvest_site_layer",
+                    roads_dataset,
+                    network_dataset,
+                    sawmills,
+                    slope_raster,
+                    ofa,
+                    output_path,
+                    hs_dict[oid]
+                )
             if c > 10:
                 raise arcpy.ExecuteError("Too many harvest sites 120 miles away from sawmills")
             c += 1
