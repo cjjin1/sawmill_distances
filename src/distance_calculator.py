@@ -229,8 +229,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=starting_point,
         append="CLEAR",
-        search_tolerance="5000 Feet",
-        search_criteria=[["all_roads_fixed", "SHAPE"]]
+        search_tolerance="5000 Feet"
     )
 
     arcpy.na.AddLocations(
@@ -238,8 +237,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=sawmill,
         append="APPEND",
-        search_tolerance="2000 Feet",
-        search_criteria=[["all_roads_fixed", "SHAPE"]]
+        search_tolerance="2000 Feet"
     )
     arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
@@ -274,16 +272,14 @@ def calculate_closest_road_distance_nd(starting_point, network_dataset, sawmills
         facilities,
         sawmills,
         append="CLEAR",
-        search_tolerance="5000 Feet",
-        search_criteria=[["all_roads_fixed", "SHAPE"]]
+        search_tolerance="5000 Feet"
     )
     arcpy.na.AddLocations(
         cf_layer_name,
         incidents,
         starting_point,
         append="APPEND",
-        search_tolerance="2000 Feet",
-        search_criteria=[["all_roads_fixed", "SHAPE"]]
+        search_tolerance="2000 Feet"
     )
 
     arcpy.na.Solve(cf_layer_name, ignore_invalids="SKIP")

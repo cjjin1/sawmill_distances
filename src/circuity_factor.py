@@ -23,9 +23,9 @@ slope_raster = sys.argv[7]
 ofa = sys.argv[8]
 output_dir = sys.argv[9]
 try:
-    simplify = sys.argv[10]
+    road_only = sys.argv[10]
 except IndexError:
-    simplify = "NO_SIMPLIFY"
+    road_only = "INCLUDE_START_PATH"
 
 #set workspace
 arcpy.env.workspace = workspace
@@ -58,6 +58,7 @@ for row in sc:
 print("starting distance calculations at: ", datetime.now())
 count = 0
 for oid in hs_dict:
+    entry_id = oid
     #selects harvest site using object id
     arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
     arcpy.management.SelectLayerByAttribute(
@@ -67,7 +68,7 @@ for oid in hs_dict:
     #attempts to run distance calculation, appends both distance results to their respective lists
     #if an error is encountered, the script still completes with whatever results exist
     try:
-        if simplify == "simplify":
+        if road_only == "ROAD_ONLY":
             dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
                 "harvest_site_layer",
                 network_dataset,
@@ -104,7 +105,7 @@ for oid in hs_dict:
                 "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
             )
             output_path = os.path.join(output_dir, f"path_{oid}.shp")
-            if simplify == "simplify":
+            if road_only == "ROAD_ONLY":
                 dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
                     "harvest_site_layer",
                     network_dataset,
@@ -123,14 +124,16 @@ for oid in hs_dict:
                     output_path,
                     hs_dict[oid]
                 )
+            entry_id = rand_id
             if c > 10:
                 print("Too many harvest sites 120 miles away from desired sawmills")
                 exit(1)
             c += 1
+        id_list.remove(entry_id)
 
         rd_list.append(dist)
         ed_list.append(euclidean_dist)
-        output_writer.writerow([oid, dist, euclidean_dist])
+        output_writer.writerow([entry_id, dist, euclidean_dist])
     except arcpy.ExecuteError as e:
         print(f"Harvest site {oid} could not find a path to a sawmill: {e}")
         output_writer.writerow([oid, "n/a", "n/a"])
@@ -162,7 +165,7 @@ df = pd.DataFrame({
     'rd': road_distance
 })
 
-X1 = sm.add_constant(df[['sl', 'sl_sq']])  # includes intercept
+X1 = sm.add_constant(df[['sl', 'sl_sq']])
 y = df['rd']
 
 model1 = sm.OLS(y, X1).fit()
@@ -174,7 +177,7 @@ model2 = sm.OLS(y, X2).fit()
 print(model2.summary())
 print()
 
-X3 = df[['sl']]  # No constant (intercept)
+X3 = df[['sl']]
 model3 = sm.OLS(y, X3).fit()
 print(model3.summary())
 print()
