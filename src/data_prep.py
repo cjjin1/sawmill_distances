@@ -198,7 +198,6 @@ arcpy.management.Merge([roads, NFS_roads], output_roads)
 
 #integreate the roads dataset then convert to line so that each line ends at an intersection
 arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
-print("integergration successful")
 arcpy.management.FeatureToLine(output_roads, os.path.join(transportation_dataset, "all_roads_fixed"))
 output_roads = os.path.join(transportation_dataset, "all_roads_fixed")
 
