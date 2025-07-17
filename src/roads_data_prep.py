@@ -2,11 +2,10 @@
 # roads_data_prep.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Prepares data for distance calculations. Filters exit points for NFS roads that connect to public roads.
-#          Projects all data to WGS1984. Snaps sawmills and exit points to roads dataset. Makes a raster from roads
-#          dataset.
-# Usage: <Workspace> <Feature Dataset> <Roads Dataset> <NFS Roads Shapefile> <sawmill shapefile> <harvest sites>
-#        <[optional] Boundary Shapefile>
+# Purpose: Combines OSM roads and NFS roads into a single roads feature class and puts it into a transportation dataset
+#          to be used in a network dataset
+# Usage: <Workspace> <Feature Dataset> <Roads data> <NFS Roads data> <Boundary input> <spatial reference>
+#        <output name>
 ########################################################################################################################
 
 import arcpy, sys, os
