@@ -2,64 +2,159 @@
 # roads_data_prep.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Uses osmnx to retrieve roads data, can retrieve one specific type of road along with truck only roads
-# Usage: <output_roads_file> <output_nodes_files> <aoi> <road type[optional]>
-#        <output_roads_file> <output_nodes_files> <north> <south> <east> <west> <road type[optional]>
+# Purpose: Prepares data for distance calculations. Filters exit points for NFS roads that connect to public roads.
+#          Projects all data to WGS1984. Snaps sawmills and exit points to roads dataset. Makes a raster from roads
+#          dataset.
+# Usage: <Workspace> <Feature Dataset> <Roads Dataset> <NFS Roads Shapefile> <sawmill shapefile> <harvest sites>
+#        <[optional] Boundary Shapefile>
 ########################################################################################################################
 
-import osmnx as ox
-import sys, arcpy, os
+import arcpy, sys, os
 
-def export_to_arcgis(edges, file, layer):
-    """Converts the edges of a graph to a GPKG file, then to a feature class, removing Big Integer type fields"""
-    edges.to_file(file, layer = layer, driver = "GPKG")
-    arcpy.conversion.FeatureClassToFeatureClass(
-        in_features=os.path.join(file, layer),
-        out_path=sys.argv[1],
-        out_name=layer
-    )
-    arcpy.management.DeleteField(os.path.join(sys.argv[1], layer), ["u", "v", "key", "osmid"])
-    arcpy.management.Delete(file)
-
+#read in scratch directory
+workspace = sys.argv[1]
+transport_dataset = sys.argv[2]
+arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
-#read in area of interest
-aoi = sys.argv[3]
-#create graph
-#if there are 6 input arguments, read in arguments as coordinates for bbox
-#otherwise, read in the first argument as the name of place for aoi
-g_main = None
-g_single = None
-single_road_type = None
+#read in shapefiles for public roads, NFS roads, boundary, and spatial reference
+roads = sys.argv[3]
+NFS_roads = sys.argv[4]
+boundary_shp = sys.argv[5]
+spat_ref = sys.argv[6]
+output_name = sys.argv[7]
 
-cf = (
-    '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road"]'
+#Project all feature classes
+SR = arcpy.SpatialReference(int(spat_ref))
+if not arcpy.Exists(os.path.basename(roads)):
+    arcpy.management.Project(roads, os.path.basename(roads), SR)
+if not arcpy.Exists(os.path.splitext(os.path.basename(NFS_roads))[0]):
+    arcpy.management.Project(NFS_roads, os.path.splitext(os.path.basename(NFS_roads))[0], SR)
+roads = os.path.basename(roads)
+NFS_roads = os.path.splitext(os.path.basename(NFS_roads))[0]
+
+#Project the boundary
+if not arcpy.Exists(os.path.basename(boundary_shp).split(".")[0]):
+    arcpy.Project_management(boundary_shp, os.path.basename(boundary_shp).split(".")[0], SR)
+boundary_shp = os.path.basename(boundary_shp).split(".")[0]
+# Clip the NFS roads to the boundary
+arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_bounded")
+NFS_roads = "NFS_bounded"
+
+#generate points along each NFS road
+points = "NFS_points"
+arcpy.management.GeneratePointsAlongLines(
+    NFS_roads, points, "PERCENTAGE", Percentage = 4, Include_End_Points = "END_POINTS"
 )
-if len(sys.argv) >= 7:
-    north, south, east, west = float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6])
-    g_main = ox.graph_from_bbox(
-        (north, south, east, west), custom_filter=cf, simplify=False, retain_all=True
+
+#use Near on points to check for proximity to public roads
+#add a field to indicate if a point is near or not
+arcpy.analysis.Near(points, roads, search_radius="170 Feet")
+arcpy.management.AddField(points, "IS_NEAR", "SHORT")
+arcpy.management.CalculateField(
+    points, "IS_NEAR", "0 if !NEAR_DIST! == -1 else 1", "PYTHON3"
+)
+
+#mark every NFS road as a duplicate if more than 20 points is near a public road (> 80%)
+dup_dict = {}
+arcpy.management.AddField(NFS_roads, "DUPLICATE", "SHORT")
+sc = arcpy.da.SearchCursor(points, ["ORIG_FID", "IS_NEAR"])
+uc = arcpy.da.UpdateCursor(NFS_roads, ["OBJECTID","DUPLICATE"])
+for row in sc:
+    if not dup_dict.get(row[0]):
+        dup_dict[row[0]] = row[1]
+    else:
+        dup_dict[row[0]] += row[1]
+del row, sc
+
+for row in uc:
+    if dup_dict[row[0]] > 20:
+        row[1] = 1
+    else:
+        row[1] = 0
+    uc.updateRow(row)
+del row, uc
+
+#export all NFS roads that are not flagged as duplicates
+arcpy.conversion.ExportFeatures(NFS_roads, "NFS_cleaned", "DUPLICATE = 0")
+NFS_roads = "NFS_cleaned"
+
+#get points to snap the NFS roads to
+end_points = "end_points"
+arcpy.management.GeneratePointsAlongLines(
+    NFS_roads, end_points, Point_Placement="PERCENTAGE", Percentage=100, Include_End_Points="END_POINTS"
+)
+arcpy.analysis.Near(end_points, roads, search_radius="100 Feet", location="LOCATION", distance_unit="Miles")
+arcpy.CreateFeatureclass_management(
+    arcpy.env.workspace, "road_points", "POINT", spatial_reference=SR
+)
+sc = arcpy.da.SearchCursor(end_points, ["SHAPE@", "NEAR_X", "NEAR_Y"])
+ic = arcpy.da.InsertCursor("road_points", ["SHAPE@"])
+for shape, near_x, near_y in sc:
+    road_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), SR)
+    if near_x != -1 and near_y != -1:
+        ic.insertRow([road_point])
+del sc, ic, shape, near_x, near_y
+
+#remove NFS_roads that won't snap to any public road
+remove_count = 1
+while remove_count > 0:
+    remove_count = 0
+    arcpy.management.MakeFeatureLayer(end_points, "end_points_neg")
+    arcpy.management.SelectLayerByAttribute(
+        "end_points_neg", "NEW_SELECTION", "NEAR_DIST = -1"
     )
-    if len(sys.argv) == 8:
-        single_road_type = sys.argv[7]
-        cf_single = f'["highway"="{single_road_type}"]'
-        g_single = ox.graph_from_bbox(
-            (north, south, east, west), custom_filter=cf_single, simplify=False, retain_all=True
-        )
-elif len(sys.argv) >= 4:
-    g_main = ox.graph_from_place(aoi, custom_filter=cf, simplify=False, retain_all=True)
-    if len(sys.argv) == 5:
-        single_road_type = sys.argv[4]
-        cf_single = f'["highway"="{single_road_type}"]'
-        g_single = ox.graph_from_place(aoi, custom_filter=cf_single, simplify=False, retain_all=True)
+    arcpy.analysis.SpatialJoin(
+        target_features=end_points,
+        join_features=NFS_roads,
+        out_feature_class="spatial_join_output",
+        join_operation="JOIN_ONE_TO_ONE",
+        join_type="KEEP_ALL",
+        match_option="INTERSECT",
+        field_mapping="",
+        search_radius=None,
+        distance_field_name=""
+    )
+    arcpy.management.MakeFeatureLayer("spatial_join_output", "joined_lyr")
+    arcpy.management.SelectLayerByAttribute(
+        "joined_lyr", "NEW_SELECTION", '"Join_Count" >= 2'
+    )
 
-#get nodes and edges from graph
-nodes_main, edges_main = ox.graph_to_gdfs(g_main)
+    orig_fid_dict = {}
+    sc = arcpy.da.SearchCursor("end_points_neg", ["ORIG_FID"])
+    for row in sc:
+        if orig_fid_dict.get(row[0]):
+            orig_fid_dict[row[0]] += 1
+        else:
+            orig_fid_dict[row[0]] = 1
+    del row, sc
 
-#save the roads to scratch folder as gpkg files, then export to feature class in File GDB
-temp_file = "E:/timber_project/scratch/temp_roads.gpkg"
-layer_name = "roads"
-export_to_arcgis(edges_main, temp_file, layer_name)
-if single_road_type:
-    nodes_single, edges_single = ox.graph_to_gdfs(g_single)
-    export_to_arcgis(edges_single, temp_file, f"{single_road_type}s")
+    sc = arcpy.da.SearchCursor("joined_lyr", ["ORIG_FID"])
+    for row in sc:
+        if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+            orig_fid_dict[row[0]] -= 1
+    del row, sc
+
+    uc = arcpy.da.UpdateCursor(NFS_roads, ["OBJECTID"])
+    for row in uc:
+        if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+            uc.deleteRow()
+            remove_count += 1
+    del row, uc
+    arcpy.management.Delete("joined_lyr")
+    arcpy.management.Delete("spatial_join_output")
+    arcpy.management.Delete("end_points_neg")
+
+#snap the cleaned NFS roads to the points on the public roads
+arcpy.edit.Snap(NFS_roads, [["road_points", "VERTEX", "100 Feet"]])
+
+#merge the two roads datasets
+output_roads = "all_roads"
+arcpy.management.Merge([roads, NFS_roads], output_roads)
+
+#integreate the roads dataset then convert to line so that each line ends at an intersection
+arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
+arcpy.management.FeatureToLine(output_roads, output_name)
+
+#move output to transportation dataset
+arcpy.conversion.FeatureClassToFeatureClass(output_name, transport_dataset, output_name)
