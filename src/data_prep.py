@@ -67,6 +67,9 @@ def clean_sawmill_data(sawmill_data, sr, boundary):
     arcpy.management.CopyFeatures("sawmill_layer", sm_bound)
     arcpy.management.Delete("sawmill_layer")
 
+    #reproject copied features to correct spatial reference
+    arcpy.management.Project(sm_bound, "sawmills_bounded_proj", sr)
+
     # remove closed and announced sawmills from sawmill fc
     uc = arcpy.da.UpdateCursor(sm_bound, ["Status"])
     for row in uc:
@@ -74,7 +77,7 @@ def clean_sawmill_data(sawmill_data, sr, boundary):
             uc.deleteRow()
     del row, uc
 
-def create_network_dataset(transport_ds, roads_data):
+def create_road_fc(transport_ds, roads_data):
     """Cleans and merges the roads feature classes, then creates a network dataset out of the result"""
     #set workspace to transportation feature dataset
     arcpy.env.workspace = transport_ds
@@ -113,7 +116,7 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
 SR = arcpy.SpatialReference(int(spat_ref))
-project_roads(roads, transport_dataset, SR)
-clean_harvest_site_data(harvest_sites, SR, hs_boundary)
+#project_roads(roads, transport_dataset, SR)
+#clean_harvest_site_data(harvest_sites, SR, hs_boundary)
 clean_sawmill_data(sawmills, SR, sm_boundary)
-create_network_dataset(transport_dataset, roads)
+#create_road_fc(transport_dataset, roads)
