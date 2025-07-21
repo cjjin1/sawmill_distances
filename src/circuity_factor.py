@@ -2,7 +2,8 @@
 # distance_calculator.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Finds the road circuity factor given a list of harvest sites
+# Purpose: Finds the road circuity factor from between road distance and straightline distance from harvest sites to
+#          sawmills.
 ########################################################################################################################
 
 import sys, arcpy, csv, os, random
@@ -10,150 +11,145 @@ import distance_calculator
 import statsmodels.api as sm
 import numpy as np
 import pandas as pd
-from datetime import datetime
 
 #read in inputs
 workspace = sys.argv[1]
-input_csv = sys.argv[2]
-network_dataset = sys.argv[3]
-roads_dataset = sys.argv[4]
-sawmills = sys.argv[5]
-harvest_sites = sys.argv[6]
-slope_raster = sys.argv[7]
-ofa = sys.argv[8]
-output_dir = sys.argv[9]
-try:
-    road_only = sys.argv[10]
-except IndexError:
-    road_only = "INCLUDE_START_PATH"
+network_dataset = sys.argv[2]
+sawmills = sys.argv[3]
+harvest_sites = sys.argv[4]
+output_dir = sys.argv[5]
+keep_output_paths = sys.argv[6]
+sawmill_bucket = None
+if len(sys.argv) == 8:
+    sawmill_bucket = sys.argv[7]
 
 #set workspace
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
-#read harvest site csv file and store in a dictionary
-#csv file should contain harvest site object id and desired sawmill type
-hs_dict = {}
-csv_file = open(input_csv, "r", newline="\n")
-reader = csv.reader(csv_file)
-for row in reader:
-    hs_dict[int(row[0])] = row[1]
-csv_file.close()
+#convert harvest sites to points if given as polygons
+desc = arcpy.Describe(harvest_sites)
+if desc.shapeType == "Polygon":
+    if arcpy.Exists("hs_points"):
+        arcpy.management.Delete("hs_points")
+    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
+    harvest_sites = "hs_points"
+elif desc.shapeType != "Point":
+    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
-#lists to store road and Euclidean distance
-rd_list = []
-ed_list = []
+
+#create dictionary for sawmill type buckets
+sm_type_buckets = {
+    "lumber":["lumber"],
+    "pellet":["pellet"],
+    "chip":["chip"],
+    "pulp/paper":["pulp/paper"],
+    "plywood/veneer":["plywood/veneer", "panel"],
+    "composite board":["OSB", "mass timber", "EWP"]
+}
+
+#if a specific bucket is selected, then all other buckets are removed from the dictionary
+if sawmill_bucket:
+    sawmill_bucket_list = sm_type_buckets[sawmill_bucket]
+    sm_type_buckets = {
+        sawmill_bucket: sawmill_bucket_list
+    }
+
+#dict to store straight line distance and ids
+dist_id_dict = {
+    "lumber": {},
+    "pellet": {},
+    "chip": {},
+    "pulp/paper":{},
+    "plywood/veneer": {},
+    "composite board": {}
+}
 
 #output file for distance results so the full script doesn't have to run every time
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
 output_writer = csv.writer(output_file)
 
-#get list of harvest site IDs from harvest site feature class
-id_list = []
+#calculate the distance for every harvest site to every type of sawmill
 sc = arcpy.da.SearchCursor(harvest_sites, ["OBJECTID"])
+arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
 for row in sc:
-    id_list.append(row[0])
-
-#runs the calculate_distance() function for every harvest site
-print("starting distance calculations at: ", datetime.now())
-count = 0
-for oid in hs_dict:
-    entry_id = oid
-    #selects harvest site using object id
-    arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
     arcpy.management.SelectLayerByAttribute(
-        "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {oid}"
+        "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {row[0]}"
     )
-    output_path = os.path.join(output_dir, f"path_{oid}.shp")
-    #attempts to run distance calculation, appends both distance results to their respective lists
-    #if an error is encountered, the script still completes with whatever results exist
-    try:
-        if road_only == "ROAD_ONLY":
-            dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
-                "harvest_site_layer",
-                network_dataset,
-                sawmills,
-                output_path,
-                hs_dict[oid]
-            )
-        else:
-            dist, euclidean_dist = distance_calculator.calculate_distance(
-                "harvest_site_layer",
-                roads_dataset,
-                network_dataset,
-                sawmills,
-                slope_raster,
-                ofa,
-                output_path,
-                hs_dict[oid]
-            )
+    arcpy.analysis.Near(
+        sawmills,
+        "harvest_site_layer", "120 Miles", method="GEODESIC", distance_unit = "Miles"
+    )
+    arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+    for sm_bucket in sm_type_buckets:
+        #sort by mill type and ensure distance is valid
+        mill_types = sm_type_buckets[sm_bucket]
+        conditions = [f"Mill_Type = '{t}'" for t in mill_types]
+        where_clause = "(" + " OR ".join(conditions) + ") AND NEAR_DIST > 0"
+        arcpy.management.SelectLayerByAttribute(
+            "sawmill_layer",
+            "NEW_SELECTION",
+            where_clause
+        )
+        #get lowest straight line distance and id of nearest sawmill
+        sc2 = arcpy.da.SearchCursor(
+            "sawmill_layer", ["OBJECTID", "NEAR_DIST", "Mill_Type"], sql_clause=(None, "ORDER BY NEAR_DIST ASC")
+        )
+        for n_fid, n_dist, m_type in sc2:
+            dist_id_dict[sm_bucket][row[0]] = (n_fid, n_dist)
+            break
+        del sc2
 
-        #if the distance ends up being greater than 120 miles, a new object ID is obtained that isn't already being used
-        #the loop continues until a path less than 120 miles is found or if a 10 calculation is reached
-        #at this point, it is assumed that there are no possible paths less than 120 miles and the script is stopped
-        c = 0
-        while dist > 120:
-            rand_id = random.randint(1, len(id_list))
-            while rand_id in hs_dict:
-                rand_id = random.randint(1, len(id_list))
-            print(
-                f"Harvest site {oid} has a distance to the nearest {hs_dict[oid]} sawmill greater than 120 miles, "
-                + f"new oid: {rand_id}"
-            )
-            arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
-            arcpy.management.SelectLayerByAttribute(
-                "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
-            )
-            output_path = os.path.join(output_dir, f"path_{oid}.shp")
-            if road_only == "ROAD_ONLY":
-                dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
-                    "harvest_site_layer",
-                    network_dataset,
-                    sawmills,
-                    output_path,
-                    hs_dict[oid]
-                )
-            else:
-                dist, euclidean_dist = distance_calculator.calculate_distance(
-                    "harvest_site_layer",
-                    roads_dataset,
-                    network_dataset,
-                    sawmills,
-                    slope_raster,
-                    ofa,
-                    output_path,
-                    hs_dict[oid]
-                )
-            entry_id = rand_id
-            if c > 10:
-                print("Too many harvest sites 120 miles away from desired sawmills")
-                exit(1)
-            c += 1
-        id_list.remove(entry_id)
+    print(f"{row[0]} distances completed")
+    arcpy.management.Delete("sawmill_layer")
+arcpy.management.Delete("harvest_site_layer")
 
-        rd_list.append(dist)
-        ed_list.append(euclidean_dist)
-        output_writer.writerow([entry_id, dist, euclidean_dist])
-    except arcpy.ExecuteError as e:
-        print(f"Harvest site {oid} could not find a path to a sawmill: {e}")
-        output_writer.writerow([oid, "n/a", "n/a"])
-    print(f"({count}) Calculated distance for {oid}")
-    count += 1
-    arcpy.management.Delete("harvest_site_layer")
-print("finished distance calculations at: ", datetime.now())
+#lists to store road and Euclidean distance
+rd_list = []
+ed_list = []
+
+#select m number of random ids from each of the bucket's lists
+#calculate the road distance for each of the ids and sawmill id pairs
+#add to rd_list and ed_list, as well as write out to a csv file
+m = 5
+arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
+for sm_bucket in dist_id_dict:
+    oid_list = list(dist_id_dict[sm_bucket].keys())
+    rand_id_list = random.sample(oid_list, m)
+    for rand_id in rand_id_list:
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
+        )
+        arcpy.management.SelectLayerByAttribute(
+            "sawmill_layer",
+            "NEW_SELECTION",
+            f"OBJECTID = {dist_id_dict[sm_bucket][rand_id][0]}"
+        )
+        out_path = os.path.join(output_dir, f"path_{sm_bucket[:3]}_{rand_id}.shp")
+        distance_calculator.calculate_road_distance_nd(
+            "harvest_site_layer", network_dataset, "sawmill_layer", out_path
+        )
+        road_dist = distance_calculator.calculate_distance_for_fc(out_path)
+        rd_list.append(road_dist)
+        ed_list.append(dist_id_dict[sm_bucket][rand_id][1])
+        if keep_output_paths == "DO_NOT_KEEP_OUTPUT_PATHS":
+            arcpy.management.Delete(out_path)
+        output_writer.writerow(
+            [rand_id,
+             dist_id_dict[sm_bucket][rand_id][0],
+             dist_id_dict[sm_bucket][rand_id][1],
+             road_dist]
+        )
+    print(f"{sm_bucket} road distance completed")
+
+#close csv file and delete temporary layers, feature classes, and solvers
 output_file.close()
-
-#checks if either list of distances are of length 0
-if len(rd_list) == 0 or len(ed_list) == 0:
-    raise arcpy.ExecuteError("No sawmills found for any harvest site, check input data")
-
-#alternate code to be run if distances have already been calculated
-# csv_file = open(os.path.join(output_dir, "distances.csv"), "r", newline="\n")
-# reader = csv.reader(csv_file)
-# for row in reader:
-#     rd_list.append(float(row[1]))
-#     ed_list.append(float(row[2]))
-# csv_file.close()
+arcpy.management.Delete("harvest_site_layer")
+arcpy.management.Delete("sawmill_layer")
+arcpy.management.Delete("hs_points")
+for name in arcpy.ListDatasets("*Solver*"):
+    arcpy.management.Delete(name)
 
 #convert lists to arrays
 road_distance = np.array(rd_list)
@@ -192,4 +188,3 @@ results_file.write(str(model2.summary()) + "\n")
 results_file.write(str(model3.summary()) + "\n")
 results_file.write(f"Circuity factor: {b1}")
 results_file.close()
-

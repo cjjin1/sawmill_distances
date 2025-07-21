@@ -19,21 +19,19 @@ def calculate_road_dist_only(harvest_site, network_ds, sawmills, output_path, sm
     elif desc.shapeType != "Point":
         raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
-    arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-    arcpy.management.SelectLayerByAttribute(
-        "sawmill_layer", "NEW_SELECTION", f"Mill_Type = '{sm_type}'"
-    )
     try:
-        nearest_sawmill_fid, nearest_sawmill_sl_dist = euclidean_distance_near(starting_point, "sawmill_layer")
+        nearest_sawmill_fid, nearest_sm_dist = euclidean_distance(starting_point, sawmills, sm_type)
     except arcpy.ExecuteError:
         raise arcpy.ExecuteError(f"No sawmill of type {sm_type} within 120 miles of site")
 
+    arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
     arcpy.management.SelectLayerByAttribute(
         "sawmill_layer", "NEW_SELECTION", f"OBJECTID = {nearest_sawmill_fid}"
     )
     calculate_road_distance_nd(starting_point, network_ds, "sawmill_layer", output_path)
     road_dist = calculate_distance_for_fc(output_path)
-    return nearest_sawmill_sl_dist, road_dist
+    arcpy.management.Delete("sawmill_layer")
+    return nearest_sm_dist, road_dist
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
     """Finds the distance from a starting point to a sawmill destination using network analyst"""
@@ -89,9 +87,15 @@ def calculate_distance_for_fc(fc_path):
     del row, sc
     return distance
 
-def euclidean_distance_near(hs_point, points):
+def euclidean_distance(hs_point, points, mill_type):
     """Calculates the Euclidean distance between two points using near tool"""
-    arcpy.analysis.Near(hs_point, points,"120 Miles" ,distance_unit = "Miles", method="GEODESIC")
+    arcpy.management.MakeFeatureLayer(points, "point_layer")
+    arcpy.management.SelectLayerByAttribute(
+        "point_layer", "NEW_SELECTION", f"Mill_Type = '{mill_type}'"
+    )
+    arcpy.analysis.Near(
+        hs_point, "point_layer","120 Miles" ,distance_unit = "Miles", method="GEODESIC"
+    )
     near_fid = 0
     distance = 0
     sc = arcpy.da.SearchCursor(hs_point, ["NEAR_FID","NEAR_DIST"])
@@ -100,6 +104,7 @@ def euclidean_distance_near(hs_point, points):
         distance = row[1]
         break
     del row, sc
+    arcpy.management.Delete("point_layer")
     if near_fid == -1 or distance == -1:
         raise arcpy.ExecuteError("Euclidean distance: no harvest site within 120 miles of site")
     return near_fid, distance
