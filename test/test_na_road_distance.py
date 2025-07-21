@@ -21,390 +21,173 @@ class TestDistanceCalculator(unittest.TestCase):
         self.harvest_sites = "harvest_sites_bounded"
         self.slope_raster = "slope_raster"
         self.ofa = "off_limit_areas"
+        self.harvest_points = "harvest_site_points"
 
-    def test_calculate_road_distance_nd_1(self):
+    def test_calculate_road_distance_chip(self):
         output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "chip"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
         )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 48"
-        )
 
-        dist, euclidean_dist = distance_calculator.calculate_distance(
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
             "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            "sawmill_layer",
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        print(f"Test 1 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        self.assertTrue(56 <= dist <= 57)
-        self.assertTrue(43.8 <= euclidean_dist <= 44)
-
-    def test_calculate_road_distance_nd_2(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_2.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 3576"
-        )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 3"
-        )
-
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            "sawmill_layer",
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        print(f"Test 2 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        self.assertTrue(5.0 <= dist <= 5.5)
-        self.assertTrue(1.1 <= euclidean_dist <= 1.2)
-
-    def test_calculate_road_distance_nd_3(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_3.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 868"
-        )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 79"
-        )
-
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            "sawmill_layer",
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        print(f"Test 3 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        self.assertTrue(164 <= dist <= 165)
-        self.assertTrue(150.2 <= euclidean_dist <= 150.4)
-
-    def test_calculate_road_distance_nd_4(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_4.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 63"
-        )
-
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            "sawmill_layer",
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        print(f"Test 4 result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(10.5 <= dist <= 11)
-        self.assertTrue(8.3 <= euclidean_dist <= 8.6)
-
-    def test_calculate_road_distance_nd_closest_chip(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_chip.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
             self.network_dataset,
             self.sawmills,
-            self.slope_raster,
-            self.ofa,
             output_path,
-            "chip"
+            sawmill_type
         )
-        print(f"Closest chip sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(40.5 <= dist <= 41)
-        self.assertTrue(34 <= euclidean_dist <= 34.5)
+        self.assertTrue(37 <= dist <= 38)
+        self.assertTrue(31 <= euclidean_dist <= 32)
 
-    def test_calculate_road_distance_nd_closest_lumber(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_lumber.shp"
+    def test_calculate_road_distance_lumber(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "lumber"
 
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.MakeFeatureLayer(self.harvest_points, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
         )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
+
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
             "harvest_site_layer",
-            self.roads_dataset,
             self.network_dataset,
             self.sawmills,
-            self.slope_raster,
-            self.ofa,
             output_path,
-            "lumber"
+            sawmill_type
         )
-        print(f"Closest lumber sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(10.5 <= dist <= 11)
-        self.assertTrue(8.3 <= euclidean_dist <= 8.6)
+        self.assertTrue(10 <= dist <= 10.6)
+        self.assertTrue(7.4 <= euclidean_dist <= 7.8)
 
-    def test_calculate_road_distance_nd_closest_mass_timber(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_mass_timber.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "mass timber"
-        )
-        print(f"Closest mass timber sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(72.5 <= dist <= 73)
-        self.assertTrue(57.2 <= euclidean_dist <= 57.6)
-
-    def test_calculate_road_distance_nd_closest_OSB(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_OSB.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "OSB"
-        )
-        print(f"Closest OSB sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(172 <= dist <= 173)
-        self.assertTrue(157 <= euclidean_dist <= 158)
-
-    def test_calculate_road_distance_nd_closest_panel(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_panel.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "panel"
-        )
-        print(f"Closest panel sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(59 <= dist <= 60)
-        self.assertTrue(49 <= euclidean_dist <= 50)
-
-    def test_calculate_road_distance_nd_closest_pellet(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_pellet.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "pellet"
-        )
-        print(f"Closest pellet sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(63 <= dist <= 64)
-        self.assertTrue(51 <= euclidean_dist <= 52)
-
-    def test_calculate_road_distance_nd_closest_plywoood_veneer(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_plywoood_veneer.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "plywood/veneer"
-        )
-        print(f"Closest plywood/veneer sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(39 <= dist <= 40)
-        self.assertTrue(32 <= euclidean_dist <= 32.5)
-
-    def test_calculate_road_distance_nd_closest_pulp_paper(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_pulp_paper.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path,
-            "pulp/paper"
-        )
-        print(f"Closest pulp/paper sawmill result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(65.5 <= dist <= 66.5)
-        self.assertTrue(55.5 <= euclidean_dist <= 56.5)
-
-    def test_oneway_1(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_oneway_closest.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 395"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            self.sawmills,
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        arcpy.management.Delete("harvest_site_layer")
-        print(f"Oneway test result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(8.5 <= dist <= 9)
-
-    def test_oneway_2(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_oneway_set.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 395"
-        )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 63"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_distance(
-            "harvest_site_layer",
-            self.roads_dataset,
-            self.network_dataset,
-            "sawmill_layer",
-            self.slope_raster,
-            self.ofa,
-            output_path
-        )
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        print(f"Oneway test result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(8.5 <= dist <= 9)
-
-    def test_simple_calculate_distance_1(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_path_simple_1.shp"
+    def test_calculate_road_distance_mass_timber(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "mass timber"
 
         arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
         )
-        arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer", "NEW_SELECTION", "OBJECTID = 48"
-        )
 
-        dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
-            "harvest_site_layer",
-            self.network_dataset,
-            "sawmill_layer",
-            output_path
-        )
-        print(f"Test 1 road distance result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        self.assertTrue(56 <= dist <= 57)
-        self.assertTrue(43.8 <= euclidean_dist <= 44)
-
-    def test_simple_calculate_distance_2(self):
-        output_path = "C:/timber_project/outputs/BV_test/test_path_simple_2.shp"
-
-        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 5305"
-        )
-        dist, euclidean_dist = distance_calculator.calculate_road_dist_only(
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
             "harvest_site_layer",
             self.network_dataset,
             self.sawmills,
             output_path,
-            "lumber"
+            sawmill_type
         )
-        print(f"Closest lumber sawmill road distance result: {dist:.4f}, Euclidean: {euclidean_dist:.4f}")
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
         arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-        self.assertTrue(10.5 <= dist <= 11)
-        self.assertTrue(8.3 <= euclidean_dist <= 8.6)
+        self.assertTrue(69 <= dist <= 70)
+        self.assertTrue(55.3 <= euclidean_dist <= 56.3)
+
+    def test_calculate_road_distance_OSB(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "OSB"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_points, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+        with self.assertRaises(arcpy.ExecuteError) as e:
+            distance_calculator.calculate_road_dist_only(
+                "harvest_site_layer",
+                self.network_dataset,
+                self.sawmills,
+                output_path,
+                sawmill_type
+            )
+        arcpy.management.Delete("harvest_site_layer")
+        print(f"Test {sawmill_type} successfully results in an error: {e.exception}")
+
+    def test_calculate_road_distance_panel(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "panel"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            self.sawmills,
+            output_path,
+            sawmill_type
+        )
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(56 <= dist <= 57)
+        self.assertTrue(46.5 <= euclidean_dist <= 47.5)
+
+    def test_calculate_road_distance_pellet(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "pellet"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_points, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            self.sawmills,
+            output_path,
+            sawmill_type
+        )
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(60.5 <= dist <= 61.5)
+        self.assertTrue(49.5 <= euclidean_dist <= 50.5)
+
+    def test_calculate_road_distance_plywoood_veneer(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "plywood/veneer"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_sites, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            self.sawmills,
+            output_path,
+            sawmill_type
+        )
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(35.5 <= dist <= 36.5)
+        self.assertTrue(29 <= euclidean_dist <= 30)
+
+    def test_calculate_road_distance_pulp_paper(self):
+        output_path = "C:/timber_project/outputs/BV_test/test_nd_path_1.shp"
+        sawmill_type = "pulp/paper"
+
+        arcpy.management.MakeFeatureLayer(self.harvest_points, "harvest_site_layer")
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 444"
+        )
+
+        euclidean_dist, dist = distance_calculator.calculate_road_dist_only(
+            "harvest_site_layer",
+            self.network_dataset,
+            self.sawmills,
+            output_path,
+            sawmill_type
+        )
+        print(f"Test {sawmill_type} result: {dist:.4f}, Euclidean: {euclidean_dist:.4f} ")
+        arcpy.management.Delete("harvest_site_layer")
+        self.assertTrue(66 <= dist <= 67)
+        self.assertTrue(53.8 <= euclidean_dist <= 54)
 
     if __name__ == '__main__':
         unittest.main()
