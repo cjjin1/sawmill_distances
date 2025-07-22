@@ -70,7 +70,7 @@ if sawmill_bucket:
     }
     dist_id_dict = {sawmill_bucket: {}}
 
-# #output file for distance results so the full script doesn't have to run every time
+#output file for distance results so the full script doesn't have to run every time
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
 output_writer = csv.writer(output_file)
 
