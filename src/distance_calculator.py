@@ -56,7 +56,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=starting_point,
         append="CLEAR",
-        search_tolerance="10000 Feet"
+        search_tolerance="15000 Feet"
     )
 
     arcpy.na.AddLocations(
@@ -64,9 +64,12 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=sawmill,
         append="APPEND",
-        search_tolerance="10000 Feet"
+        search_tolerance="15000 Feet"
     )
-    arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
+    try:
+        arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
+    except:
+        raise arcpy.ExecuteError()
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     arcpy.management.Delete(route_layer_name)
     arcpy.CheckInExtension("Network")
@@ -94,7 +97,7 @@ def euclidean_distance(hs_point, points, mill_type):
         "point_layer", "NEW_SELECTION", f"Mill_Type = '{mill_type}'"
     )
     arcpy.analysis.Near(
-        hs_point, "point_layer","120 Miles" ,distance_unit = "Miles", method="GEODESIC"
+        hs_point, "point_layer","120 Miles" ,distance_unit = "Miles", method="PLANAR"
     )
     near_fid = 0
     distance = 0
