@@ -116,7 +116,7 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
 SR = arcpy.SpatialReference(int(spat_ref))
-#project_roads(roads, transport_dataset, SR)
-#clean_harvest_site_data(harvest_sites, SR, hs_boundary)
+project_roads(roads, transport_dataset, SR)
+clean_harvest_site_data(harvest_sites, SR, hs_boundary)
 clean_sawmill_data(sawmills, SR, sm_boundary)
-#create_road_fc(transport_dataset, roads)
+create_road_fc(transport_dataset, roads)

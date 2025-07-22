@@ -37,8 +37,10 @@ if not arcpy.Exists(os.path.basename(boundary_shp).split(".")[0]):
     arcpy.Project_management(boundary_shp, os.path.basename(boundary_shp).split(".")[0], SR)
 boundary_shp = os.path.basename(boundary_shp).split(".")[0]
 # Clip the NFS roads to the boundary
-arcpy.analysis.Clip(NFS_roads, boundary_shp, "NFS_bounded")
+arcpy.management.MakeFeatureLayer(NFS_roads, "NFS_roads")
+arcpy.management.SelectLayerByLocation("NFS_roads", "INTERSECT", boundary_shp)
 NFS_roads = "NFS_bounded"
+arcpy.management.Project("NFS_roads", NFS_roads, SR)
 
 #generate points along each NFS road
 points = "NFS_points"
