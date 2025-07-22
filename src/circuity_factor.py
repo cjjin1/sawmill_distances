@@ -65,7 +65,7 @@ dist_id_dict = {
     "composite board": {}
 }
 
-#output file for distance results so the full script doesn't have to run every time
+# #output file for distance results so the full script doesn't have to run every time
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
 output_writer = csv.writer(output_file)
 
@@ -130,7 +130,11 @@ for sm_bucket in dist_id_dict:
         distance_calculator.calculate_road_distance_nd(
             "harvest_site_layer", network_dataset, "sawmill_layer", out_path
         )
-        road_dist = distance_calculator.calculate_distance_for_fc(out_path)
+        try:
+            road_dist = distance_calculator.calculate_distance_for_fc(out_path)
+        except arcpy.ExecuteError:
+            print(f"{sm_bucket}:{rand_id},{dist_id_dict[sm_bucket][rand_id][0]} failed")
+            road_dist = "n/a"
         rd_list.append(road_dist)
         ed_list.append(dist_id_dict[sm_bucket][rand_id][1])
         if keep_output_paths == "DO_NOT_KEEP_OUTPUT_PATHS":
@@ -150,6 +154,13 @@ arcpy.management.Delete("sawmill_layer")
 arcpy.management.Delete("hs_points")
 for name in arcpy.ListDatasets("*Solver*"):
     arcpy.management.Delete(name)
+
+#optional code if it is desired to reuse previously calculated data
+# input_file = open(os.path.join(output_dir, "distances.csv"), "r", newline="\n")
+# input_reader = csv.reader(input_file)
+# for row in input_reader:
+#     ed_list.append(float(row[2]))
+#     rd_list.append(float(row[3]))
 
 #convert lists to arrays
 road_distance = np.array(rd_list)
