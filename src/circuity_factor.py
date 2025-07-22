@@ -83,7 +83,7 @@ for row in sc:
     )
     arcpy.analysis.Near(
         sawmills,
-        "harvest_site_layer", "120 Miles", method="GEODESIC", distance_unit = "Miles"
+        "harvest_site_layer", "120 Miles", method="PLANAR", distance_unit = "Miles"
     )
     arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
     for sm_bucket in sm_type_buckets:
@@ -138,7 +138,7 @@ for sm_bucket in dist_id_dict:
             road_dist = distance_calculator.calculate_distance_for_fc(out_path)
         except arcpy.ExecuteError:
             print(f"{sm_bucket}:{rand_id},{dist_id_dict[sm_bucket][rand_id][0]} failed")
-            road_dist = "n/a"
+            exit(1)
         rd_list.append(road_dist)
         ed_list.append(dist_id_dict[sm_bucket][rand_id][1])
         if not keep_output_paths:
