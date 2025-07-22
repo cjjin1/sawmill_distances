@@ -52,13 +52,6 @@ sm_type_buckets = {
     "composite board":["OSB", "mass timber", "EWP"]
 }
 
-#if a specific bucket is selected, then all other buckets are removed from the dictionary
-if sawmill_bucket:
-    sawmill_bucket_list = sm_type_buckets[sawmill_bucket]
-    sm_type_buckets = {
-        sawmill_bucket: sawmill_bucket_list
-    }
-
 #dict to store straight line distance and ids
 dist_id_dict = {
     "lumber": {},
@@ -68,6 +61,14 @@ dist_id_dict = {
     "plywood/veneer": {},
     "composite board": {}
 }
+
+#if a specific bucket is selected, then all other buckets are removed from the dictionary
+if sawmill_bucket:
+    sawmill_bucket_list = sm_type_buckets[sawmill_bucket]
+    sm_type_buckets = {
+        sawmill_bucket: sawmill_bucket_list
+    }
+    dist_id_dict = {sawmill_bucket: {}}
 
 # #output file for distance results so the full script doesn't have to run every time
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
