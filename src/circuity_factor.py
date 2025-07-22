@@ -12,16 +12,20 @@ import statsmodels.api as sm
 import numpy as np
 import pandas as pd
 
-#read in inputs
 workspace = sys.argv[1]
 network_dataset = sys.argv[2]
 sawmills = sys.argv[3]
 harvest_sites = sys.argv[4]
 output_dir = sys.argv[5]
-keep_output_paths = sys.argv[6]
+pairs_per_bucket = int(sys.argv[6])
+keep_output_paths = sys.argv[7]
+if keep_output_paths.lower() == "true":
+    keep_output_paths = True
+else:
+    keep_output_paths = False
 sawmill_bucket = None
-if len(sys.argv) == 8:
-    sawmill_bucket = sys.argv[7]
+if len(sys.argv) == 9 and sys.argv[8] != "#":
+    sawmill_bucket = sys.argv[8]
 
 #set workspace
 arcpy.env.workspace = workspace
@@ -111,12 +115,11 @@ ed_list = []
 #select m number of random ids from each of the bucket's lists
 #calculate the road distance for each of the ids and sawmill id pairs
 #add to rd_list and ed_list, as well as write out to a csv file
-m = 5
 arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
 arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
 for sm_bucket in dist_id_dict:
     oid_list = list(dist_id_dict[sm_bucket].keys())
-    rand_id_list = random.sample(oid_list, m)
+    rand_id_list = random.sample(oid_list, pairs_per_bucket)
     for rand_id in rand_id_list:
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
@@ -137,7 +140,7 @@ for sm_bucket in dist_id_dict:
             road_dist = "n/a"
         rd_list.append(road_dist)
         ed_list.append(dist_id_dict[sm_bucket][rand_id][1])
-        if keep_output_paths == "DO_NOT_KEEP_OUTPUT_PATHS":
+        if not keep_output_paths:
             arcpy.management.Delete(out_path)
         output_writer.writerow(
             [rand_id,
