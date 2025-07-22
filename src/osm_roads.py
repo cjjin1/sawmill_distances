@@ -47,5 +47,5 @@ nodes_main, edges_main = ox.graph_to_gdfs(g_main)
 
 #save the roads to scratch folder as gpkg files, then export to feature class in File GDB
 temp_file = "C:/timber_project/scratch/temp_roads.gpkg"
-layer_name = "va_roads"
+layer_name = "osm_roads"
 export_to_arcgis(edges_main, temp_file, layer_name)
