@@ -8,33 +8,20 @@
 import arcpy, os
 from arcpy.sa import *
 
-def calculate_road_dist_only(harvest_site, network_ds, sawmills, output_path, sm_type):
-    """Finds the nearest sawmill of given sawmill type by straight line distance, then finds the road distance"""
-    if int(arcpy.management.GetCount(harvest_site)[0]) > 1:
-        raise arcpy.ExecuteError("Euclidean distance: harvest site feature class contain more than one feature")
-    starting_point = "starting_point"
-    desc = arcpy.Describe(harvest_site)
-    if desc.shapeType == "Polygon":
-        arcpy.management.FeatureToPoint(harvest_site, starting_point, "INSIDE")
-    elif desc.shapeType != "Point":
-        raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
-
-    try:
-        nearest_sawmill_fid, nearest_sm_dist = euclidean_distance(starting_point, sawmills, sm_type)
-    except arcpy.ExecuteError:
-        raise arcpy.ExecuteError(f"No sawmill of type {sm_type} within 120 miles of site")
-
-    arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-    arcpy.management.SelectLayerByAttribute(
-        "sawmill_layer", "NEW_SELECTION", f"OBJECTID = {nearest_sawmill_fid}"
-    )
-    calculate_road_distance_nd(starting_point, network_ds, "sawmill_layer", output_path)
+def calculate_route_distance(harvest_site, network_ds, sawmill, output_path):
+    """Finds the route from harvest site to sawmill then calculates distance"""
+    calculate_road_distance_nd(harvest_site, network_ds, sawmill, output_path)
     road_dist = calculate_distance_for_fc(output_path)
-    arcpy.management.Delete("sawmill_layer")
-    return nearest_sm_dist, road_dist
+    arcpy.analysis.Near(harvest_site, output_path, search_radius="3 Miles", distance_unit="Miles")
+    sc = arcpy.da.SearchCursor(harvest_site, ["NEAR_DIST"])
+    for row in sc:
+        road_dist += row[0]
+        break
+    del sc, row
+    return road_dist
 
 def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
-    """Finds the distance from a starting point to a sawmill destination using network analyst"""
+    """Finds the road distance from a starting point to a sawmill destination using network analyst"""
     arcpy.CheckOutExtension("Network")
     route_layer_name = "sawmill_route"
     result = arcpy.na.MakeRouteLayer(
@@ -56,7 +43,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=starting_point,
         append="CLEAR",
-        search_tolerance="15000 Feet"
+        search_tolerance="20000 Feet"
     )
 
     arcpy.na.AddLocations(
@@ -64,7 +51,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         sub_layer=stops_layer_name,
         in_table=sawmill,
         append="APPEND",
-        search_tolerance="15000 Feet"
+        search_tolerance="20000 Feet"
     )
     try:
         arcpy.na.Solve(route_layer, ignore_invalids="SKIP")

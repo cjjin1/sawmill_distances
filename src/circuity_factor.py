@@ -82,8 +82,7 @@ for row in sc:
         "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {row[0]}"
     )
     arcpy.analysis.Near(
-        sawmills,
-        "harvest_site_layer", "120 Miles", method="PLANAR", distance_unit = "Miles"
+        sawmills,"harvest_site_layer", "120 Miles", method="PLANAR", distance_unit = "Miles"
     )
     arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
     for sm_bucket in sm_type_buckets:
@@ -131,11 +130,10 @@ for sm_bucket in dist_id_dict:
             f"OBJECTID = {dist_id_dict[sm_bucket][rand_id][0]}"
         )
         out_path = os.path.join(output_dir, f"path_{sm_bucket[:3]}_{rand_id}.shp")
-        distance_calculator.calculate_road_distance_nd(
-            "harvest_site_layer", network_dataset, "sawmill_layer", out_path
-        )
         try:
-            road_dist = distance_calculator.calculate_distance_for_fc(out_path)
+            road_dist = distance_calculator.calculate_route_distance(
+                "harvest_site_layer", network_dataset, "sawmill_layer", out_path
+            )
         except arcpy.ExecuteError:
             print(f"{sm_bucket}:{rand_id},{dist_id_dict[sm_bucket][rand_id][0]} failed")
             exit(1)
@@ -165,6 +163,7 @@ for name in arcpy.ListDatasets("*Solver*"):
 # for row in input_reader:
 #     ed_list.append(float(row[2]))
 #     rd_list.append(float(row[3]))
+# input_file.close()
 
 #convert lists to arrays
 road_distance = np.array(rd_list)
