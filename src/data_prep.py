@@ -70,31 +70,19 @@ def clean_sawmill_data(sawmill_data, sr, boundary):
     #reproject copied features to correct spatial reference
     arcpy.management.Project(sm_bound, "sawmills_bounded_proj", sr)
 
-    # remove closed and announced sawmills from sawmill fc
-    uc = arcpy.da.UpdateCursor(sm_bound, ["Status"])
-    for row in uc:
-        if row[0] == "Closed":
-            uc.deleteRow()
-    del row, uc
-
 def create_road_fc(transport_ds, roads_data):
     """Cleans and merges the roads feature classes, then creates a network dataset out of the result"""
     #set workspace to transportation feature dataset
     arcpy.env.workspace = transport_ds
 
     #create list of feature classes to merge, erasing from the larger roads dataset to remove duplicate roads
-    nfs_list = arcpy.ListFeatureClasses("*NFS*")
-    merge_list = []
+    osm_nfs_roads = arcpy.ListFeatureClasses()[0]
     erasing_fc = os.path.basename(roads_data)
-    for i, rd_nfs in enumerate(nfs_list):
-        arcpy.analysis.Erase(erasing_fc, rd_nfs, f"roads_erased_{i}")
-        erasing_fc = f"roads_erased_{i}"
-        merge_list.append(rd_nfs)
-    merge_list.append(erasing_fc)
+    arcpy.analysis.Erase(erasing_fc, osm_nfs_roads, "roads_erased")
 
     #merge road feature classes
     merged_roads = "merged_roads"
-    arcpy.management.Merge(merge_list, merged_roads)
+    arcpy.management.Merge(["roads_erased", osm_nfs_roads], merged_roads)
     arcpy.management.RepairGeometry(merged_roads)
 
     #add and calculate distance field
