@@ -1,109 +1,103 @@
 Documentation:
-Data required for scripts:
-1. NFS roads dataset
-2. Sawmill dataset
-3. Harvest sites dataset
-3. [Optional] Boundary dataset
+For the data prepration scripts, use in the order shown below.
 
 Data prep:
 - All input files are done as full path
-1. roads_data_prep.py
-  - Uses OSM data to retrieve road data for network analyst
+1. osm_roads.py
+  - IMPORTANT: This script needs to be run twice if the study area is very large:
+    - Once for the entire study area: this includes paths to every desirable sawmill
+    - Second time is for a smaller study area, which encapsulates where the NFS roads will
+      need to be connected to OSM roads. roads_data_prep.py will not run properly if the roads data set is too large
+  - Uses OSM data to retrieve road data
   - Depending on size of location chosen, may take several minutes
   - Inputs:
       - output roads File GDB (must be created beforehand)
-      - output nodes File GDB (must be created beforehand, currently not used in script)
-      - aoi (string of place to gather data for, eg. "Mississippi, USA")
-        - or -
-      - North, South, East, West coordinates for a bounding box
-      - [optional] select a single road type to export as a feature class
+      - Area of Interest:
+        - two options for inputs: name of place or shapefile
+      - for third argument, use either the keyword "aoi" or "shapefile" to signify which method to use
     - Example Input:
-      - E:/timber_project/data/ms_roads.gdb 
-      - E:/timber_project/data/ms_nodes.gdb
-      - "Mississippi, USA"
-      - Residential
+      - C:/timber_project/data/nc_va_roads.gdb 
+      - C:/timber_project/data/boundaries/nc_va_boundaries
+      - shapefile
 
-2. data_prep.py
-  - Prepares data with various operations:
-      - projection
-      - clipping
-      - Creating intersection points
-      - adding distance field to roads dataset
-      - creating network dataset
-  - Building the network dataset is done within ArcGIS Pro manually, not in the script
+2. road_data_prep.py
+  - Handles combining NFS roads and OSM roads
   - Inputs: 
       - Workspace (FileGDB to store data)
-      - Feature Dataset (Feature Dataset within a File GDB, must be created beforehand)
-      - Roads Dataset (path to roads dataset created in roads_data_prep.py)
-      - NFS Roads Shapefile (dataset of NFS roads)
-      - sawmill shapefile (dataset of sawmills)
-      - harvest sites (dataset of harvest sites)
-      - [optional] Boundary Shapefile (if any dataset extends past the desired area of interest)
+      - Feature Dataset (Feature Dataset within the File GDB, must be created beforehand)
+      - Roads feature class (path to smaller roads dataset created in osm_roads.py)
+      - NFS Roads feature class (dataset of NFS roads)
+      - Boundary feature class (to clip the NFS roads fc)
+      - Spatial reference (Input needs to be the WKID/SRID code)
+      - output name (for the output roads data)
   - Example Input:
-      - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb
-      - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/Transportation
-      - E:/timber_project/data/ms_roads.gdb/roads 
-      - E:/timber_project/data/RoadCore_FS.shp
-      - E:/timber_project/data/sawmill_forisk.shp
-      - E:/timber_project/data/Activity_TimberHarvest.shp
-      - E:/timber_project/data/GOVTUNIT_Mississippi_State_Shape/Shape/GU_StateOrTerritory.shp
+      - C:/timber_project/scratch/App_test/app_nd.gdb
+      - C:/timber_project/scratch/App_test/app_nd.gdb/Transportation
+      - C:/timber_project/data/nc_va_roads.gdb/osm_roads 
+      - C:/timber_project/data/RoadCore_FS.shp
+      - C:/timber_project/data/boundaries/nc_va_boundaries.shp
+      - 3404
+      - nc_va_osm_NFS_roads
 
-3. slope_raster.py
-  - Creates a slope raster for least cost distance from centroid to road
-    - Takes in several polygon and polyline feature classes for roadless areas
-    - Takes in DEM for slope
-    - Creates slope raster then removes roadless areas from said raster
+3. data_prep
+  - Handles projecting and cleaning harvest site and sawmill data
+  - Merges the combined NFS/OSM roads with the larger OSM road feature class
   - Inputs:
-    - Workspace (to store files)
-    - Stream feature dataset (to store projected and clipped streams)
-    - Stream directory (directory that holds original streams data)
-    - Roadless area (feature class of areas deemed roadless)
-    - Roads dataset (dataset of roads)
-    - DEM raster (original DEM of study area)
-    - [optional] Boundary Shapefile (if any dataset extends past the desired area of interest)
+    - Workspace (FileGDB to store data)
+    - Feature Dataset (same feature dataset the combined NFS/OSM road feature class is in)
+    - roads (the larger roads feature class created by osm_roads.py)
+    - harvest sites
+    - sawmills
+    - harvest site boundary (to clip harvest sites)
+    - sawmill boundary (to clip sawmill data)
+    - Spatial Reference (Input needs to be the WKID/SRID code)
   - Example Input:
-    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb
-    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/streams
-    - E:/timber_project/data/streams
-    - E:/timber_project/data/roadless_areas
-    - E:/timber_project/scratch/Bienville_OSM_test/BV_ND.gdb/Transportation/all_roads
-    - E:/timber_project/data/USGS_13_n33w090_20221121.tif
-    - E:/timber_project/data/BienvilleBoundary
+    - C:/timber_project/scratch/App_test/app_nd.gdb
+    - C:/timber_project/scratch/App_test/app_nd.gdb/Transportation
+    - C:/timber_project/data/app_roads.gdb/osm_roads
+    - C:/timber_project/data/Activity_TimberHarvest.shp
+    - C:/timber_project/data/sawmills.shp
+    - C:/timber_project/data/boundaries/app_boundaries.shp
+    - C:/timber_project/data/boundaries/app_study_area.shp
+    - 3404
 
 BEFORE CALCULATIONS:
-Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follow these steps:
-- Open the streets_nd network dataset properties in the catalog
-- Create a new travel mode called "Driving Distance"
-  - Under costs, ensure length is used for impedance
-- Under the costs tab at the top, ensure the distance field is used for the evaluators
-- Under the restrictions tab, create a new restriction called "Oneway"
-  - usage Type: prohibited (-1)
-  - under evaluators, for the Along source, set the type to field script and use this value and code block
-    - Value=evaluator(!oneway!, !reversed!)
-    - Code Block:
-      def evaluator(oneway, reversed):
-        return oneway == 1 and reversed == 1
-  - under evaluators, for the Against source, set the type to field script and use this value and code block
-    - Value=evaluator(!oneway!, !reversed!)
-    - Code Block:
-      def evaluator(oneway, reversed):
-        return oneway == 1 and reversed == 0
-- Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
-- Build one more time before calculating
+1. First, the Create Network dataset tool must be run. Inputs include:
+  - Feature dataset (containing the merged roads feature class)
+  - Dataset name (call it streets_nd)
+  - Source feature class (select the merged_roads feature class created in data_prep.py)
+  - Select no elevation model
+2. Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follow these steps:
+  - Open the streets_nd network dataset properties in the catalog
+  - Create a new travel mode called "Driving Distance"
+    - Under costs, ensure length is used for impedance
+  - Under the costs tab at the top, ensure the distance field is used for the evaluators
+  - Under the restrictions tab, create a new restriction called "Oneway"
+    - usage Type: prohibited (-1)
+    - under evaluators, for the Along source, set the type to field script and use this value and code block
+      - Value=evaluator(!oneway!, !reversed!)
+      - Code Block:
+        def evaluator(oneway, reversed):
+          return oneway == 1 and reversed == 1
+    - under evaluators, for the Against source, set the type to field script and use this value and code block
+      - Value=evaluator(!oneway!, !reversed!)
+      - Code Block:
+        def evaluator(oneway, reversed):
+          return oneway == 1 and reversed == 0
+  - Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
+3. Build the network using the Build Network tool
 
-To run distance calculations:
-- Ensure network dataset is built
-- Create a script and import the distance_calculator.py script
-- Call on main distance calculation function with input files produced by data prep scripts
-- The calculate_distance() function will calculate road distance and Euclidean distance from harvest site
-  centroid to sawmill destination
-- Needs 7 inputs:
-  - harvest site (singular harvest site to act as starting point)
-  - roads (roads dataset (featureclass/shapefile, not network dataset))
-  - network dataset (network dataset of roads)
-  - sawmills (can be a single sawmill or multiple sawmills)
-    - if multiple sawmills, will find the nearest sawmill
-  - slope raster
-  - off-limit areas feature class
-  - output path (user designated file path for output route feature class)
-  - [optional] sawmill type (only works with multiple sawmill inputs)
+Circuity Factor calculation:
+circuity_factor.py
+  - Calculates straight line distance for every harvest site to the nearest sawmill of each type
+  - Randomly selects a number (specified by user) of site-to-sawmill pairs for each type and calculates road distance
+  - Runs OLS analysis using straight line distance and road distance
+  - Inputs:
+    - Workspace (FileGDB to store data)
+    - Network dataset (created manually using the merged roads feature class)
+    - sawmills (the modified feature class created by data_prep.py)
+    - harvest sites (the modified feature class created by data_prep.py)
+    - output directory (to store results)
+    - Number of site-to-sawmill pairs per mill type (recommended at least 5, 20 if a single mill type is selected)
+    - Keep Output Paths? (simply true or false for if the output paths should be kept)
+    - sawmill type (for if a single sawmill type is desired)
