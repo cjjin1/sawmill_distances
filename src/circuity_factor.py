@@ -66,6 +66,7 @@ output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n"
 output_writer = csv.writer(output_file)
 
 #calculate the distance for every harvest site to every type of sawmill
+arcpy.AddMessage("Starting Straight Line Distance Calculations")
 sc = arcpy.da.SearchCursor(harvest_sites, ["OBJECTID"])
 arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
 for row in sc:
@@ -105,38 +106,52 @@ ed_list = []
 #select m number of random ids from each of the type's lists
 #calculate the road distance for each of the ids and sawmill id pairs
 #add to rd_list and ed_list, as well as write out to a csv file
+arcpy.AddMessage("Starting Road Distance Calculations")
 arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
 arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
 for sm_type in dist_id_dict:
     oid_list = list(dist_id_dict[sm_type].keys())
     rand_id_list = random.sample(oid_list, pairs_per_type)
+    remaining_ids = list(set(oid_list) - set(rand_id_list))
     for rand_id in rand_id_list:
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
-        )
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer",
-            "NEW_SELECTION",
-            f"OBJECTID = {dist_id_dict[sm_type][rand_id][0]}"
-        )
-        out_path = os.path.join(output_dir, f"path_{sm_type[:3]}_{rand_id}.shp")
-        try:
-            road_dist = distance_calculator.calculate_route_distance(
-                "harvest_site_layer", network_dataset, "sawmill_layer", out_path
-            )
-        except arcpy.ExecuteError as e:
-            print(f"{sm_type}:{rand_id},{dist_id_dict[sm_type][rand_id][0]} failed: {str(e)}")
-            exit(1)
-        rd_list.append(road_dist)
-        ed_list.append(dist_id_dict[sm_type][rand_id][1])
-        if not keep_output_paths:
-            arcpy.management.Delete(out_path)
-        output_writer.writerow(
-            [rand_id,
-             dist_id_dict[sm_type][rand_id][0],
-             dist_id_dict[sm_type][rand_id][1],
-             road_dist]
-        )
+        road_dist = None
+        id_to_try = rand_id
+        while not road_dist:
+            try:
+                arcpy.management.SelectLayerByAttribute(
+                    "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {id_to_try}"
+                )
+                arcpy.management.SelectLayerByAttribute(
+                    "sawmill_layer",
+                    "NEW_SELECTION",
+                    f"OBJECTID = {dist_id_dict[sm_type][id_to_try][0]}"
+                )
+                out_path = os.path.join(output_dir, f"path_{sm_type[:3]}_{id_to_try}.shp")
+                road_dist = distance_calculator.calculate_route_distance(
+                    "harvest_site_layer", network_dataset, "sawmill_layer", out_path
+                )
+                rd_list.append(road_dist)
+                ed_list.append(dist_id_dict[sm_type][id_to_try][1])
+                if not keep_output_paths:
+                    arcpy.management.Delete(out_path)
+                output_writer.writerow(
+                    [id_to_try,
+                     dist_id_dict[sm_type][id_to_try][0],
+                     dist_id_dict[sm_type][id_to_try][1],
+                     road_dist]
+                )
+            except arcpy.ExecuteError as e:
+                arcpy.AddWarning(f"{sm_type}:{id_to_try},{dist_id_dict[sm_type][id_to_try][0]} failed: {str(e)}")
+                if remaining_ids:
+                    id_to_try = random.choice(remaining_ids)
+                    remaining_ids.remove(id_to_try)
+                    print(f"Attempting new ID: {id_to_try}")
+                    arcpy.AddWarning(f"Attempting new ID: {id_to_try}")
+                    road_dist = None
+                else:
+                    arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
+                    road_dist = 1
+
     print(f"{sm_type} road distance completed")
 
 #close csv file and delete temporary layers, feature classes, and solvers
@@ -156,6 +171,7 @@ for name in arcpy.ListDatasets("*Solver*"):
 # input_file.close()
 
 #convert lists to arrays
+arcpy.AddMessage("Starting OLS regression")
 road_distance = np.array(rd_list)
 euclidean_distance = np.array(ed_list)
 
