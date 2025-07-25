@@ -2,7 +2,7 @@
 # distance_calculator.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Finds the road circuity factor from between road distance and straightline distance from harvest sites to
+# Purpose: Finds the road circuity factor from between road distance and straight-line distance from harvest sites to
 #          sawmills.
 ########################################################################################################################
 
@@ -17,15 +17,15 @@ network_dataset = sys.argv[2]
 sawmills = sys.argv[3]
 harvest_sites = sys.argv[4]
 output_dir = sys.argv[5]
-pairs_per_bucket = int(sys.argv[6])
+pairs_per_type = int(sys.argv[6])
 keep_output_paths = sys.argv[7]
 if keep_output_paths.lower() == "true":
     keep_output_paths = True
 else:
     keep_output_paths = False
-sawmill_bucket = None
+sawmill_type = None
 if len(sys.argv) == 9 and sys.argv[8] != "#":
-    sawmill_bucket = sys.argv[8]
+    sawmill_type = sys.argv[8]
 
 #set workspace
 arcpy.env.workspace = workspace
@@ -41,9 +41,8 @@ if desc.shapeType == "Polygon":
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
-
-#create dictionary for sawmill type buckets
-sm_type_buckets = [
+#create list for sawmill types
+sm_types = [
     "Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product", "Plywood/Veneer"
 ]
 
@@ -57,10 +56,10 @@ dist_id_dict = {
     "Plywood/Veneer": {}
 }
 
-#if a specific bucket is selected, then all other buckets are removed from the dictionary
-if sawmill_bucket:
-    sm_type_buckets = [sawmill_bucket]
-    dist_id_dict = {sawmill_bucket: {}}
+#if a specific type is selected, then all other types are removed from the list
+if sawmill_type:
+    sm_types = [sawmill_type]
+    dist_id_dict = {sawmill_type: {}}
 
 #output file for distance results so the full script doesn't have to run every time
 output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
@@ -77,12 +76,12 @@ for row in sc:
         sawmills,"harvest_site_layer", "120 Miles", method="PLANAR", distance_unit = "Miles"
     )
     arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-    for sm_bucket in sm_type_buckets:
+    for sm_type in sm_types:
         #sort by mill type and ensure distance is valid
         arcpy.management.SelectLayerByAttribute(
             "sawmill_layer",
             "NEW_SELECTION",
-            f"Mill_Type = '{sm_bucket}' AND NEAR_DIST >= 0"
+            f"Mill_Type = '{sm_type}' AND NEAR_DIST >= 0"
         )
         #get lowest straight line distance and id of nearest sawmill
         sc2 = arcpy.da.SearchCursor(
@@ -91,7 +90,7 @@ for row in sc:
             sql_clause=(None, "ORDER BY NEAR_DIST ASC")
         )
         for n_fid, n_dist, m_type in sc2:
-            dist_id_dict[sm_bucket][row[0]] = (n_fid, n_dist)
+            dist_id_dict[sm_type][row[0]] = (n_fid, n_dist)
             break
         del sc2
 
@@ -103,14 +102,14 @@ arcpy.management.Delete("harvest_site_layer")
 rd_list = []
 ed_list = []
 
-#select m number of random ids from each of the bucket's lists
+#select m number of random ids from each of the type's lists
 #calculate the road distance for each of the ids and sawmill id pairs
 #add to rd_list and ed_list, as well as write out to a csv file
 arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
 arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
-for sm_bucket in dist_id_dict:
-    oid_list = list(dist_id_dict[sm_bucket].keys())
-    rand_id_list = random.sample(oid_list, pairs_per_bucket)
+for sm_type in dist_id_dict:
+    oid_list = list(dist_id_dict[sm_type].keys())
+    rand_id_list = random.sample(oid_list, pairs_per_type)
     for rand_id in rand_id_list:
         arcpy.management.SelectLayerByAttribute(
             "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {rand_id}"
@@ -118,27 +117,27 @@ for sm_bucket in dist_id_dict:
         arcpy.management.SelectLayerByAttribute(
             "sawmill_layer",
             "NEW_SELECTION",
-            f"OBJECTID = {dist_id_dict[sm_bucket][rand_id][0]}"
+            f"OBJECTID = {dist_id_dict[sm_type][rand_id][0]}"
         )
-        out_path = os.path.join(output_dir, f"path_{sm_bucket[:3]}_{rand_id}.shp")
+        out_path = os.path.join(output_dir, f"path_{sm_type[:3]}_{rand_id}.shp")
         try:
             road_dist = distance_calculator.calculate_route_distance(
                 "harvest_site_layer", network_dataset, "sawmill_layer", out_path
             )
-        except arcpy.ExecuteError:
-            print(f"{sm_bucket}:{rand_id},{dist_id_dict[sm_bucket][rand_id][0]} failed")
+        except arcpy.ExecuteError as e:
+            print(f"{sm_type}:{rand_id},{dist_id_dict[sm_type][rand_id][0]} failed: {str(e)}")
             exit(1)
         rd_list.append(road_dist)
-        ed_list.append(dist_id_dict[sm_bucket][rand_id][1])
+        ed_list.append(dist_id_dict[sm_type][rand_id][1])
         if not keep_output_paths:
             arcpy.management.Delete(out_path)
         output_writer.writerow(
             [rand_id,
-             dist_id_dict[sm_bucket][rand_id][0],
-             dist_id_dict[sm_bucket][rand_id][1],
+             dist_id_dict[sm_type][rand_id][0],
+             dist_id_dict[sm_type][rand_id][1],
              road_dist]
         )
-    print(f"{sm_bucket} road distance completed")
+    print(f"{sm_type} road distance completed")
 
 #close csv file and delete temporary layers, feature classes, and solvers
 output_file.close()

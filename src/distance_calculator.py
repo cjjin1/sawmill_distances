@@ -53,10 +53,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         append="APPEND",
         search_tolerance="20000 Feet"
     )
-    try:
-        arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
-    except:
-        raise arcpy.ExecuteError()
+    arcpy.na.Solve(route_layer, ignore_invalids="SKIP")
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     arcpy.management.Delete(route_layer_name)
     arcpy.CheckInExtension("Network")
