@@ -75,7 +75,7 @@ def create_road_fc(transport_ds, roads_data):
     #set workspace to transportation feature dataset
     arcpy.env.workspace = transport_ds
 
-    #create list of feature classes to merge, erasing from the larger roads dataset to remove duplicate roads
+    #erase the osm-nfs combined roads from the larger roads data
     osm_nfs_roads = arcpy.ListFeatureClasses()[0]
     erasing_fc = os.path.basename(roads_data)
     arcpy.analysis.Erase(erasing_fc, osm_nfs_roads, "roads_erased")
