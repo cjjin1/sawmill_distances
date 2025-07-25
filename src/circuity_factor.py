@@ -43,31 +43,23 @@ elif desc.shapeType != "Point":
 
 
 #create dictionary for sawmill type buckets
-sm_type_buckets = {
-    "lumber":["lumber"],
-    "pellet":["pellet"],
-    "chip":["chip"],
-    "pulp/paper":["pulp/paper"],
-    "plywood/veneer":["plywood/veneer", "panel"],
-    "composite board":["OSB", "mass timber", "EWP"]
-}
+sm_type_buckets = [
+    "Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product", "Plywood/Veneer"
+]
 
 #dict to store straight line distance and ids
 dist_id_dict = {
-    "lumber": {},
-    "pellet": {},
-    "chip": {},
-    "pulp/paper":{},
-    "plywood/veneer": {},
-    "composite board": {}
+    "Lumber/Solid Wood": {},
+    "Pellet": {},
+    "Chip": {},
+    "Pulp/Paper":{},
+    "Composite Panel/Engineered Wood Product": {},
+    "Plywood/Veneer": {}
 }
 
 #if a specific bucket is selected, then all other buckets are removed from the dictionary
 if sawmill_bucket:
-    sawmill_bucket_list = sm_type_buckets[sawmill_bucket]
-    sm_type_buckets = {
-        sawmill_bucket: sawmill_bucket_list
-    }
+    sm_type_buckets = [sawmill_bucket]
     dist_id_dict = {sawmill_bucket: {}}
 
 #output file for distance results so the full script doesn't have to run every time
@@ -87,17 +79,16 @@ for row in sc:
     arcpy.management.MakeFeatureLayer(sawmills, "sawmill_layer")
     for sm_bucket in sm_type_buckets:
         #sort by mill type and ensure distance is valid
-        mill_types = sm_type_buckets[sm_bucket]
-        conditions = [f"Mill_Type = '{t}'" for t in mill_types]
-        where_clause = "(" + " OR ".join(conditions) + ") AND NEAR_DIST > 0"
         arcpy.management.SelectLayerByAttribute(
             "sawmill_layer",
             "NEW_SELECTION",
-            where_clause
+            f"Mill_Type = '{sm_bucket}' AND NEAR_DIST >= 0"
         )
         #get lowest straight line distance and id of nearest sawmill
         sc2 = arcpy.da.SearchCursor(
-            "sawmill_layer", ["OBJECTID", "NEAR_DIST", "Mill_Type"], sql_clause=(None, "ORDER BY NEAR_DIST ASC")
+            "sawmill_layer",
+            ["OBJECTID", "NEAR_DIST", "Mill_Type"],
+            sql_clause=(None, "ORDER BY NEAR_DIST ASC")
         )
         for n_fid, n_dist, m_type in sc2:
             dist_id_dict[sm_bucket][row[0]] = (n_fid, n_dist)
