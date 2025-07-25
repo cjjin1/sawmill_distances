@@ -145,12 +145,13 @@ for sm_type in dist_id_dict:
                 if remaining_ids:
                     id_to_try = random.choice(remaining_ids)
                     remaining_ids.remove(id_to_try)
-                    print(f"Attempting new ID: {id_to_try}")
-                    arcpy.AddWarning(f"Attempting new ID: {id_to_try}")
+                    arcpy.AddWarning(f"Attempting new ID: {id_to_try}, {dist_id_dict[sm_type][id_to_try][0]}")
                     road_dist = None
                 else:
                     arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
                     road_dist = 1
+        if id_to_try != rand_id:
+            arcpy.AddMessage(f"New ID ({id_to_try}) successful")
 
     print(f"{sm_type} road distance completed")
 
@@ -200,6 +201,7 @@ print()
 
 b1 = model3.params['sl']
 print(b1)
+arcpy.AddMessage(f"Circuity Factor: {b1}")
 
 #print output and write to text file
 results_file = open(os.path.join(output_dir, "OLS_results.txt"), "w+")
