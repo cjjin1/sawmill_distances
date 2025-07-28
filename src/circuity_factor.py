@@ -1,5 +1,5 @@
 ########################################################################################################################
-# distance_calculator.py
+# circuity_factor.py
 # Author: James Jin
 # unity ID: cjjin
 # Purpose: Finds the road circuity factor from between road distance and straight-line distance from harvest sites to
