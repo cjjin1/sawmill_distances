@@ -50,27 +50,38 @@ arcpy.management.GeneratePointsAlongLines(
 
 #use Near on points to check for proximity to public roads
 #add a field to indicate if a point is near or not
-#TODO try adding a ~20% 50 feet minimum
+#TODO test adding a ~20% 50 feet minimum
 arcpy.analysis.Near(points, roads, search_radius="170 Feet")
 arcpy.management.AddField(points, "IS_NEAR", "SHORT")
 arcpy.management.CalculateField(
     points, "IS_NEAR", "0 if !NEAR_DIST! == -1 else 1", "PYTHON3"
 )
 
+arcpy.analysis.Near(points, roads, search_radius="50 Feet")
+arcpy.management.AddField(points, "VERY_NEAR", "SHORT")
+arcpy.management.CalculateField(
+    points, "VERY_NEAR", "0 if !NEAR_DIST! == -1 else 1", "PYTHON3"
+)
+
 #mark every NFS road as a duplicate if more than 20 points is near a public road (> 80%)
-dup_dict = {}
+near_dict = {}
+very_near_dict = {}
 arcpy.management.AddField(NFS_roads, "DUPLICATE", "SHORT")
-sc = arcpy.da.SearchCursor(points, ["ORIG_FID", "IS_NEAR"])
+sc = arcpy.da.SearchCursor(points, ["ORIG_FID", "IS_NEAR", "VERY_NEAR"])
 uc = arcpy.da.UpdateCursor(NFS_roads, ["OBJECTID","DUPLICATE"])
 for row in sc:
-    if not dup_dict.get(row[0]):
-        dup_dict[row[0]] = row[1]
+    if not near_dict.get(row[0]):
+        near_dict[row[0]] = row[1]
     else:
-        dup_dict[row[0]] += row[1]
+        near_dict[row[0]] += row[1]
+    if not very_near_dict.get(row[0]):
+        very_near_dict[row[0]] = row[1]
+    else:
+        very_near_dict[row[0]] += row[1]
 del row, sc
 
 for row in uc:
-    if dup_dict[row[0]] > 20:
+    if near_dict[row[0]] > 20 and very_near_dict[row[0]] > 4:
         row[1] = 1
     else:
         row[1] = 0
