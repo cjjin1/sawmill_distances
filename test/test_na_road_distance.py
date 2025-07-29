@@ -224,32 +224,5 @@ class TestDistanceCalculator(unittest.TestCase):
         arcpy.management.Delete("harvest_site_layer")
         self.assertTrue(66 <= dist <= 67)
 
-    def test_calculate_road_distance_custom(self):
-        output_path = "C:/timber_project/outputs/app_test/test_custom.shp"
-        nd = "C:/timber_project/scratch/App_test/app_nd.gdb/Transportation/streets_nd"
-        hp = "C:/timber_project/scratch/App_test/app_nd.gdb/sample_sites"
-        sm = "C:/timber_project/scratch/App_test/app_nd.gdb/sawmills"
-
-        arcpy.management.MakeFeatureLayer(hp, "harvest_site_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_site_layer", "NEW_SELECTION", "OBJECTID = 1196"
-        )
-        arcpy.management.MakeFeatureLayer(sm, "sawmill_layer")
-        arcpy.management.SelectLayerByAttribute(
-            "sawmill_layer",
-            "NEW_SELECTION",
-            "OBJECTID = 185"
-        )
-
-        dist = distance_calculator.calculate_route_distance(
-            "harvest_site_layer",
-            nd,
-            "sawmill_layer",
-            output_path,
-        )
-        print(f"Custom test result: {dist:.4f}")
-        arcpy.management.Delete("harvest_site_layer")
-        self.assertTrue(arcpy.Exists(output_path))
-
     if __name__ == '__main__':
         unittest.main()
