@@ -75,13 +75,13 @@ for row in sc:
     else:
         near_dict[row[0]] += row[1]
     if not very_near_dict.get(row[0]):
-        very_near_dict[row[0]] = row[1]
+        very_near_dict[row[0]] = row[2]
     else:
-        very_near_dict[row[0]] += row[1]
+        very_near_dict[row[0]] += row[2]
 del row, sc
 
 for row in uc:
-    if near_dict[row[0]] > 20 and very_near_dict[row[0]] > 4:
+    if near_dict[row[0]] > 20 and very_near_dict[row[0]] > 5:
         row[1] = 1
     else:
         row[1] = 0
