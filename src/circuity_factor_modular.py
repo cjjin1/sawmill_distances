@@ -62,15 +62,11 @@ def read_sl_distance_csv(sl_csv, di_dict):
         di_dict[row[0]][row[1]] = (row[2], row[3])
     sl_in.close()
 
-def calculate_circuity_factor_all(di_dict, ppt, op_dir, hs_sites, sm_data, nw_ds):
+def calculate_road_distance_all(di_dict, ppt, op_dir, hs_sites, sm_data, nw_ds):
     """Calculates circuity factor with every sawmill type"""
     # output file for distance results so the full script doesn't have to run every time
-    output_file = open(os.path.join(output_dir, "distances.csv"), "w+", newline="\n")
+    output_file = open(os.path.join(op_dir, "distances.csv"), "w+", newline="\n")
     output_writer = csv.writer(output_file)
-
-    # lists to store road and Euclidean distance
-    rd_list = []
-    ed_list = []
 
     # select m number of random ids from each of the type's lists
     # calculate the road distance for each of the ids and sawmill id pairs
@@ -101,8 +97,6 @@ def calculate_circuity_factor_all(di_dict, ppt, op_dir, hs_sites, sm_data, nw_ds
                     road_dist = distance_calculator.calculate_route_distance(
                         "harvest_site_layer", nw_ds, "sawmill_layer", out_path
                     )
-                    rd_list.append(road_dist)
-                    ed_list.append(dist_id_dict[sm_type][id_to_try][1])
                     if not keep_output_paths:
                         arcpy.management.Delete(out_path)
                     output_writer.writerow(
@@ -130,36 +124,10 @@ def calculate_circuity_factor_all(di_dict, ppt, op_dir, hs_sites, sm_data, nw_ds
     output_file.close()
     arcpy.management.Delete("harvest_site_layer")
     arcpy.management.Delete("sawmill_layer")
-    arcpy.management.Delete("hs_points")
     for name in arcpy.ListDatasets("*Solver*"):
         arcpy.management.Delete(name)
 
-    # convert lists to arrays
-    arcpy.AddMessage("Starting OLS regression")
-    road_distance = np.array(rd_list)
-    euclidean_distance = np.array(ed_list)
-
-    df = pd.DataFrame({
-        'sl': euclidean_distance,
-        'sl_sq': euclidean_distance ** 2,
-        'rd': road_distance
-    })
-
-    y = df['rd']
-    X3 = df[['sl']]
-    model3 = sm.OLS(y, X3).fit()
-
-    b1 = model3.params['sl']
-    arcpy.AddMessage(f"Circuity Factor: {b1}")
-
-    # print output and write to text file
-    results_out = os.path.join(op_dir, f"OLS_results.txt")
-    results_file = open(results_out, "w+")
-    results_file.write(str(model3.summary()) + "\n")
-    results_file.write(f"Circuity factor: {b1}")
-    results_file.close()
-
-def calculate_circuity_factor_individual(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds):
+def calculate_road_distance_individual(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds):
     """Calculates circuity factor for each sawmill type"""
     # select m number of random ids from each of the type's lists
     # calculate the road distance for each of the ids and sawmill id pairs
@@ -168,12 +136,9 @@ def calculate_circuity_factor_individual(di_dict, ppt, op_dir, hv_sites, sm_data
     arcpy.management.MakeFeatureLayer(hv_sites, "harvest_site_layer")
     arcpy.management.MakeFeatureLayer(sm_data, "sawmill_layer")
     for sm_type in di_dict:
-        # lists to store road and Euclidean distance
-        rd_list = []
-        ed_list = []
 
         # output file for distance results so the full script doesn't have to run every time
-        csv_out = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
+        csv_out = os.path.join(op_dir, f"{sm_type[:3]}_distance.csv")
         output_file = open(csv_out, "w+", newline="\n")
         output_writer = csv.writer(output_file)
 
@@ -199,8 +164,6 @@ def calculate_circuity_factor_individual(di_dict, ppt, op_dir, hv_sites, sm_data
                     road_dist = distance_calculator.calculate_route_distance(
                         "harvest_site_layer", nw_ds, "sawmill_layer", out_path
                     )
-                    rd_list.append(road_dist)
-                    ed_list.append(dist_id_dict[sm_type][id_to_try][1])
                     if not keep_output_paths:
                         arcpy.management.Delete(out_path)
                     output_writer.writerow(
@@ -223,37 +186,54 @@ def calculate_circuity_factor_individual(di_dict, ppt, op_dir, hv_sites, sm_data
                 arcpy.AddMessage(f"New ID ({id_to_try}) successful")
 
         output_file.close()
-        # delete temporary layers, feature classes, and solvers
-        arcpy.management.Delete("harvest_site_layer")
-        arcpy.management.Delete("sawmill_layer")
-        arcpy.management.Delete("hs_points")
-        for name in arcpy.ListDatasets("*Solver*"):
-            arcpy.management.Delete(name)
+    # delete temporary layers, feature classes, and solvers
+    arcpy.management.Delete("harvest_site_layer")
+    arcpy.management.Delete("sawmill_layer")
+    for name in arcpy.ListDatasets("*Solver*"):
+        arcpy.management.Delete(name)
 
-        # convert lists to arrays
-        arcpy.AddMessage(f"Starting OLS regression for {sm_type}")
-        road_distance = np.array(rd_list)
-        euclidean_distance = np.array(ed_list)
+def calculate_circuity_factor_from_csv(rd_csv, output_name):
+    """Reads in road distance csv created by the road distance calculation functions"""
+    rd_list = []
+    ed_list = []
 
-        df = pd.DataFrame({
-            'sl': euclidean_distance,
-            'sl_sq': euclidean_distance ** 2,
-            'rd': road_distance
-        })
+    rd_in = open(rd_csv, "r", newline="\n")
+    rd_reader = csv.reader(rd_in)
+    for row in rd_reader:
+        ed_list.append(float(row[2]))
+        rd_list.append(float(row[3]))
+    rd_in.close()
 
-        y = df['rd']
-        X3 = df[['sl']]
-        model3 = sm.OLS(y, X3).fit()
+    road_distance = np.array(rd_list)
+    euclidean_distance = np.array(ed_list)
 
-        b1 = model3.params['sl']
-        arcpy.AddMessage(f"Circuity Factor for type {sm_type}: {b1}")
+    df = pd.DataFrame({
+        'sl': euclidean_distance,
+        'sl_sq': euclidean_distance ** 2,
+        'rd': road_distance
+    })
 
-        # print output and write to text file
-        results_out = os.path.join(op_dir, f"{sm_type[:3]}_OLS_results.txt")
-        results_file = open(results_out, "w+")
-        results_file.write(str(model3.summary()) + "\n")
-        results_file.write(f"Circuity factor for type {sm_type}: {b1}")
-        results_file.close()
+    X1 = sm.add_constant(df[['sl', 'sl_sq']])
+    y = df['rd']
+
+    model1 = sm.OLS(y, X1).fit()
+
+    X2 = sm.add_constant(df[['sl']])
+    model2 = sm.OLS(y, X2).fit()
+
+    X3 = df[['sl']]
+    model3 = sm.OLS(y, X3).fit()
+
+    b1 = model3.params['sl']
+    print(f"Circuity Factor for {output_name}: {b1}")
+
+    results_file = open(os.path.join(output_dir, output_name), "w+")
+    results_file.write(str(model1.summary()) + "\n")
+    results_file.write(str(model2.summary()) + "\n")
+    results_file.write(str(model3.summary()) + "\n")
+    results_file.write(f"Circuity factor: {b1}")
+    results_file.close()
+
 
 workspace = sys.argv[1]
 network_dataset = sys.argv[2]
@@ -296,17 +276,17 @@ dist_id_dict = {
     "Plywood/Veneer": {}
 }
 
-#calculate_sl_distances(harvest_sites, sawmills, sm_types, dist_id_dict, output_dir)
+calculate_sl_distances(harvest_sites, sawmills, sm_types, dist_id_dict, output_dir)
 read_sl_distance_csv(os.path.join(output_dir, "sl_distances.csv"), dist_id_dict)
-# calculate_circuity_factor_individual(
-#     dist_id_dict,
-#     pairs_per_type,
-#     output_dir,
-#     harvest_sites,
-#     sawmills,
-#     network_dataset
-# )
-calculate_circuity_factor_all(
+calculate_road_distance_individual(
+    dist_id_dict,
+    pairs_per_type,
+    output_dir,
+    harvest_sites,
+    sawmills,
+    network_dataset
+)
+calculate_road_distance_all(
     dist_id_dict,
     int(pairs_per_type / 6),
     output_dir,
@@ -314,3 +294,9 @@ calculate_circuity_factor_all(
     sawmills,
     network_dataset
 )
+arcpy.management.Delete("hs_points")
+result_output = os.path.join(output_dir, "distances.csv")
+calculate_circuity_factor_from_csv(result_output, "circuity_factor_result_all.txt")
+for sm_type in sm_types:
+    result_output = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
+    calculate_circuity_factor_from_csv(result_output, f"circuity_factor_{sm_type[:3]}.txt")
