@@ -50,7 +50,6 @@ arcpy.management.GeneratePointsAlongLines(
 
 #use Near on points to check for proximity to public roads
 #add a field to indicate if a point is near or not
-#TODO test adding a ~20% 50 feet minimum
 arcpy.analysis.Near(points, roads, search_radius="170 Feet")
 arcpy.management.AddField(points, "IS_NEAR", "SHORT")
 arcpy.management.CalculateField(

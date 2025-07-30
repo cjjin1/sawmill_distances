@@ -51,7 +51,7 @@ dist_id_dict = {
     "Lumber/Solid Wood": {},
     "Pellet": {},
     "Chip": {},
-    "Pulp/Paper":{},
+    "Pulp/Paper": {},
     "Composite Panel/Engineered Wood Product": {},
     "Plywood/Veneer": {}
 }

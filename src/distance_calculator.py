@@ -2,11 +2,15 @@
 # distance_calculator.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Calculates distance from a harvest site to a sawmill
+# Purpose: Calculates distance from a harvest site to a sawmill, also contains functions for compiling results of
+#          distance calculations into csv files
 ########################################################################################################################
 
-import arcpy, os
-from arcpy.sa import *
+import arcpy, csv, os, random
+import statsmodels.api as sm
+import numpy as np
+import pandas as pd
+import datetime
 
 def calculate_route_distance(harvest_site, network_ds, sawmill, output_path):
     """Finds the route from harvest site to sawmill then calculates distance"""
@@ -96,159 +100,166 @@ def euclidean_distance(hs_point, points, mill_type):
         raise arcpy.ExecuteError("Euclidean distance: no harvest site within 120 miles of site")
     return near_fid, distance
 
-########################################################################################################################
-# def calculate_distance(harvest_site, roads, network_ds, sawmills, slope, off_limit_areas, output_path, sm_type=None):
-#     """Finds the total road distance from a harvest site to a sawmill destination.
-#        Harvest site input must be a singular point.
-#        If multiple sawmills are inputted, then the nearest sawmill will be the destination.
-#        Returns both total road distance and Euclidean distance, in that order"""
-#     temp_site = "harvest_site_erased"
-#     centroid_fc = "harvest_site_centroid"
-#     arcpy.analysis.Erase(harvest_site, off_limit_areas, temp_site)
-#     arcpy.management.FeatureToPoint(temp_site, centroid_fc, "INSIDE")
-#
-#     sr = arcpy.Describe(harvest_site).spatialReference
-#     arcpy.CreateFeatureclass_management(
-#         arcpy.env.workspace, "nearest_point", "POINT", spatial_reference=sr
-#     )
-#     arcpy.analysis.Near(centroid_fc, roads, location="LOCATION", distance_unit="Feet")
-#     dist_to_road = -1
-#     sc = arcpy.da.SearchCursor(centroid_fc, ["NEAR_DIST"])
-#     for row in sc:
-#         dist_to_road = row[0]
-#     del row, sc
-#     if dist_to_road == -1:
-#         raise arcpy.ExecuteError("Invalid harvest site input")
-#
-#     if int(arcpy.management.GetCount(centroid_fc)[0]) != 1:
-#         raise arcpy.ExecuteError("Invalid harvest site input")
-#
-#     lc_path = "least_cost_path"
-#     path_distance = 0
-#     if dist_to_road < 100:
-#         arcpy.management.CreateFeatureclass(
-#             arcpy.env.workspace, lc_path, "POLYLINE", spatial_reference=sr
-#         )
-#         sc = arcpy.da.SearchCursor(centroid_fc, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
-#         ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
-#         near_line = None
-#         for shape, near_dist, near_x, near_y in sc:
-#             starting_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), shape.spatialReference)
-#             path_distance = near_dist
-#             ic.insertRow([starting_point])
-#             arcpy.management.Delete(starting_point)
-#             near_line = arcpy.Polyline(arcpy.Array([shape.firstPoint, arcpy.Point(near_x, near_y)]), sr)
-#         del shape, near_x, near_y, sc, ic
-#         ic2 = arcpy.da.InsertCursor("least_cost_path", ["SHAPE@"])
-#         ic2.insertRow([near_line])
-#         del ic2
-#         arcpy.management.Delete(near_line)
-#     else:
-#         roads_raster = os.path.basename(roads) + "_raster"
-#         if not arcpy.Exists(roads_raster):
-#             arcpy.conversion.PolylineToRaster(
-#                 roads, "OBJECTID", roads_raster, cellsize=slope
-#             )
-#         calculate_least_cost_path(centroid_fc, roads_raster, slope, lc_path)
-#         lcp_points = "lcp_points"
-#         arcpy.management.GeneratePointsAlongLines(
-#             lc_path, lcp_points, Point_Placement="PERCENTAGE", Percentage=100, Include_End_Points="END_POINTS"
-#         )
-#         arcpy.analysis.Near(lcp_points, roads, search_radius="60 Feet", location="LOCATION", distance_unit="Miles")
-#         near_dist_min = 100
-#         near_x_min = 0
-#         near_y_min = 0
-#         spat_ref = None
-#         sc = arcpy.da.SearchCursor(lcp_points, ["SHAPE@", "NEAR_DIST", "NEAR_X", "NEAR_Y"])
-#         ic = arcpy.da.InsertCursor("nearest_point", ["SHAPE@"])
-#         for shape, near_dist, near_x, near_y in sc:
-#             if near_dist != -1 and near_dist < near_dist_min:
-#                 near_dist_min = near_dist
-#                 near_x_min = near_x
-#                 near_y_min = near_y
-#                 spat_ref = shape.spatialReference
-#         if not spat_ref:
-#             raise arcpy.ExecuteError("No nearby roads to harvest site")
-#         starting_point = arcpy.PointGeometry(arcpy.Point(near_x_min, near_y_min), spat_ref)
-#         ic.insertRow([starting_point])
-#         del sc, ic, shape, near_dist, near_x, near_y
-#         arcpy.management.Delete(lcp_points)
-#         arcpy.management.Delete(starting_point)
-#
-#     temp_path = "network_path"
-#     if int(arcpy.management.GetCount(sawmills)[0]) == 1:
-#         calculate_road_distance_nd("nearest_point", network_ds, sawmills, temp_path)
-#         euclidean_distance = euclidean_distance_near(centroid_fc, sawmills)
-#     elif int(arcpy.management.GetCount(sawmills)[0]) > 1:
-#         sm_input = sawmills
-#         if sm_type:
-#             arcpy.management.MakeFeatureLayer(sawmills, "sawmills_filtered")
-#             arcpy.management.SelectLayerByAttribute(
-#                 "sawmills_filtered", "NEW_SELECTION", f"Mill_Type='{sm_type}'"
-#             )
-#             sm_input = "sawmills_filtered"
-#             if int(arcpy.management.GetCount(sm_input)[0]) == 0:
-#                 raise arcpy.ExecuteError(f"No sawmills of type {sm_type} exit in the provided sawmills data")
-#         calculate_closest_road_distance_nd("nearest_point", network_ds, sm_input, temp_path)
-#         arcpy.management.GeneratePointsAlongLines(
-#             temp_path,
-#             "temp_path_points",
-#             Point_Placement="PERCENTAGE",
-#             Percentage=100,
-#             Include_End_Points="END_POINTS"
-#         )
-#         arcpy.management.MakeFeatureLayer(sm_input, "sawmill_destination")
-#         arcpy.management.SelectLayerByLocation(
-#             "sawmill_destination",
-#             "WITHIN_A_DISTANCE",
-#             "temp_path_points",
-#             search_distance="2000 feet"
-#         )
-#         euclidean_distance = euclidean_distance_near(centroid_fc, "sawmill_destination")
-#         arcpy.management.Delete("sawmill_destination")
-#         arcpy.management.Delete("temp_path_points")
-#         arcpy.management.Delete("sawmills_filtered")
-#     else:
-#         raise arcpy.ExecuteError("No valid sawmill input")
-#
-#     arcpy.edit.Snap(
-#         in_features=lc_path,
-#         snap_environment=[[temp_path, "END", "100 Feet"]]
-#     )
-#     arcpy.management.Merge([temp_path, lc_path], output_path)
-#     if path_distance > 0:
-#         road_distance = calculate_distance_for_fc(temp_path)
-#         road_distance += path_distance / 5280
-#     else:
-#         road_distance = calculate_distance_for_fc(output_path)
-#
-#     arcpy.management.Delete(temp_path)
-#     arcpy.management.Delete("least_cost_path")
-#     arcpy.management.Delete(centroid_fc)
-#     arcpy.management.Delete("nearest_point")
-#     arcpy.management.Delete(temp_site)
-#     for name in arcpy.ListDatasets("*Solver*"):
-#         arcpy.management.Delete(name)
-#     for name in arcpy.ListRasters("*Cost*"):
-#         arcpy.management.Delete(name)
-#     return road_distance, euclidean_distance
-#
-# def calculate_least_cost_path(starting_point, dest, cost_raster, output_path):
-#     """Takes in a starting point, roads raster, and a sawmill destination
-#        Finds the distance from the starting point to the sawmill destination
-#        Returns a feature class containing a path and distance
-#        Can accommodate multiple destinations if destination is unknown, will find
-#        the closest destination out of the entire sawmill feature class"""
-#     cost = CostDistance(starting_point, cost_raster)
-#     backlink = CostBackLink(starting_point, cost_raster)
-#     cost_path = CostPath(
-#         dest,
-#         cost,
-#         backlink,
-#         "BEST_SINGLE"
-#     )
-#     arcpy.conversion.RasterToPolyline(cost_path, output_path)
-#     arcpy.management.Delete(cost_path)
-#     arcpy.management.Delete(cost)
-#     arcpy.management.Delete(backlink)
-########################################################################################################################
+def calculate_sl_distances(hv_sites, sawmill_data, sm_ts, di_dict, op_dir):
+    """Calculates straight line distance from every harvest site to every sawmill for every sawmill type"""
+    csv_sl_out = os.path.join(op_dir, f"sl_distances_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv")
+    sl_out = open(csv_sl_out, "w+", newline="\n")
+    sl_writer = csv.writer(sl_out)
+
+    # calculate the distance for every harvest site to every type of sawmill
+    arcpy.AddMessage("Starting Straight Line Distance Calculations")
+    sc = arcpy.da.SearchCursor(hv_sites, ["OBJECTID"])
+    arcpy.management.MakeFeatureLayer(hv_sites, "harvest_site_layer")
+    for row in sc:
+        arcpy.management.SelectLayerByAttribute(
+            "harvest_site_layer", "NEW_SELECTION", f"OBJECTID = {row[0]}"
+        )
+        arcpy.analysis.Near(
+            sawmill_data,
+            "harvest_site_layer",
+            "120 Miles",
+            method="PLANAR",
+            distance_unit="Miles"
+        )
+        arcpy.management.MakeFeatureLayer(sawmill_data, "sawmill_layer")
+        for sm_t in sm_ts:
+            # sort by mill type and ensure distance is valid
+            arcpy.management.SelectLayerByAttribute(
+                "sawmill_layer",
+                "NEW_SELECTION",
+                f"Mill_Type = '{sm_t}' AND NEAR_DIST >= 0"
+            )
+            # get lowest straight line distance and id of nearest sawmill
+            sc2 = arcpy.da.SearchCursor(
+                "sawmill_layer",
+                ["OBJECTID", "NEAR_DIST", "Mill_Type"],
+                sql_clause=(None, "ORDER BY NEAR_DIST ASC")
+            )
+            for n_fid, n_dist, m_type in sc2:
+                di_dict[sm_t][row[0]] = (n_fid, n_dist)
+                sl_writer.writerow([sm_t, row[0], n_fid, n_dist])
+                break
+            del sc2
+
+        print(f"{row[0]} distances completed")
+        arcpy.management.Delete("sawmill_layer")
+    arcpy.management.Delete("harvest_site_layer")
+    sl_out.close()
+
+def read_sl_distance_csv(sl_csv, di_dict):
+    """Reads in from straight line distance csv file"""
+    sl_in = open(sl_csv, "r", newline="\n")
+    sl_reader = csv.reader(sl_in)
+    for row in sl_reader:
+        di_dict[row[0]][row[1]] = (row[2], row[3])
+    sl_in.close()
+
+def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop):
+    """Calculates circuity factor for each sawmill type, can accommodate different sample sizes per sawmill type"""
+    # select m number of random ids from each of the type's lists
+    # calculate the road distance for each of the ids and sawmill id pairs
+    # add to rd_list and ed_list, as well as write out to a csv file
+    arcpy.AddMessage("Starting Road Distance Calculations")
+    arcpy.management.MakeFeatureLayer(hv_sites, "harvest_site_layer")
+    arcpy.management.MakeFeatureLayer(sm_data, "sawmill_layer")
+    for sm_type in di_dict:
+
+        # output file for distance results so the full script doesn't have to run every time
+        csv_out = os.path.join(op_dir, f"{sm_type[:3]}_distance.csv")
+        output_file = open(csv_out, "w+", newline="\n")
+        output_writer = csv.writer(output_file)
+
+        oid_list = list(di_dict[sm_type].keys())
+        sample_size = ppt
+        if isinstance(ppt, dict):
+            sample_size = int(ppt[sm_type])
+        rand_id_list = random.sample(oid_list, sample_size)
+        remaining_ids = list(set(oid_list) - set(rand_id_list))
+        for rand_id in rand_id_list:
+            road_dist = None
+            id_to_try = rand_id
+            while not road_dist:
+                try:
+                    arcpy.management.SelectLayerByAttribute(
+                        "harvest_site_layer",
+                        "NEW_SELECTION",
+                        f"OBJECTID = {id_to_try}"
+                    )
+                    arcpy.management.SelectLayerByAttribute(
+                        "sawmill_layer",
+                        "NEW_SELECTION",
+                        f"OBJECTID = {di_dict[sm_type][id_to_try][0]}"
+                    )
+                    out_path = os.path.join(op_dir, f"path_{sm_type[:3]}_{id_to_try}.shp")
+                    road_dist = calculate_route_distance(
+                        "harvest_site_layer", nw_ds, "sawmill_layer", out_path
+                    )
+                    if not kop:
+                        arcpy.management.Delete(out_path)
+                    output_writer.writerow(
+                        [id_to_try,
+                         di_dict[sm_type][id_to_try][0],
+                         di_dict[sm_type][id_to_try][1],
+                         road_dist]
+                    )
+                except arcpy.ExecuteError as e:
+                    arcpy.AddWarning(f"{sm_type}:{id_to_try},{di_dict[sm_type][id_to_try][0]} failed: {str(e)}")
+                    if remaining_ids:
+                        id_to_try = random.choice(remaining_ids)
+                        remaining_ids.remove(id_to_try)
+                        arcpy.AddWarning(f"Attempting new ID: {id_to_try}, {di_dict[sm_type][id_to_try][0]}")
+                        road_dist = None
+                    else:
+                        arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
+                        road_dist = 1
+            if id_to_try != rand_id:
+                arcpy.AddMessage(f"New ID ({id_to_try}) successful")
+
+        output_file.close()
+    # delete temporary layers, feature classes, and solvers
+    arcpy.management.Delete("harvest_site_layer")
+    arcpy.management.Delete("sawmill_layer")
+    for name in arcpy.ListDatasets("*Solver*"):
+        arcpy.management.Delete(name)
+
+def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir):
+    """Reads in road distance csv created by the road distance calculation functions"""
+    rd_list = []
+    ed_list = []
+
+    rd_in = open(rd_csv, "r", newline="\n")
+    rd_reader = csv.reader(rd_in)
+    for row in rd_reader:
+        ed_list.append(float(row[2]))
+        rd_list.append(float(row[3]))
+    rd_in.close()
+
+    road_distance = np.array(rd_list)
+    euclidean_distance = np.array(ed_list)
+
+    df = pd.DataFrame({
+        'sl': euclidean_distance,
+        'sl_sq': euclidean_distance ** 2,
+        'rd': road_distance
+    })
+
+    X1 = sm.add_constant(df[['sl', 'sl_sq']])
+    y = df['rd']
+
+    model1 = sm.OLS(y, X1).fit()
+
+    X2 = sm.add_constant(df[['sl']])
+    model2 = sm.OLS(y, X2).fit()
+
+    X3 = df[['sl']]
+    model3 = sm.OLS(y, X3).fit()
+
+    b1 = model3.params['sl']
+    print(f"Circuity Factor for {output_name}: {b1}")
+
+    results_file = open(os.path.join(op_dir, output_name), "w+")
+    results_file.write(str(model1.summary()) + "\n")
+    results_file.write(str(model2.summary()) + "\n")
+    results_file.write(str(model3.summary()) + "\n")
+    results_file.write(f"Circuity factor: {b1}")
+    results_file.close()
