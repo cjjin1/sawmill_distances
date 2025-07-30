@@ -5,7 +5,7 @@
 # Purpose: Use Neyman or Proportional Allocation to find optimal sample sizes for each sawmill type
 ########################################################################################################################
 
-import sys, arcpy, csv, os, random
+import sys, arcpy, csv, os
 import distance_calculator as dc
 import datetime
 import numpy as np
