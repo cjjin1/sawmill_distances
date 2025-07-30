@@ -5,17 +5,24 @@
 # Purpose: Calculates the straight line distances from each harvest site to every sawmill of each type
 ########################################################################################################################
 
-import sys, arcpy, os
+import sys, arcpy, os, random
 import distance_calculator as dc
 
 sawmills = sys.argv[1]
 harvest_sites = sys.argv[2]
 output_dir = sys.argv[3]
 try:
+    subset_size = int(sys.argv[4])
+    if subset_size < 1:
+        arcpy.AddWarning("Invalid subset size, harvest site feature class will not be subset.")
+except ValueError:
+    arcpy.AddWarning("Invalid subset size, harvest site feature class will not be subset.")
+    subset_size = 0
+try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
 except OSError:
-    workspace = sys.argv[4]
+    workspace = sys.argv[5]
 
 #set workspace
 arcpy.env.workspace = workspace
@@ -30,6 +37,24 @@ if desc.shapeType == "Polygon":
     harvest_sites = "hs_points"
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
+
+if subset_size > 0:
+    sc = arcpy.da.SearchCursor(harvest_sites, ["OBJECTID"])
+    id_list = []
+    for row in sc:
+        id_list.append(row[0])
+    del row, sc
+
+    rand_id_list = random.sample(id_list, subset_size)
+    where_clause = f"OBJECTID IN ({','.join(map(str, rand_id_list))})"
+    arcpy.management.MakeFeatureLayer(harvest_sites, "harvest_site_layer")
+    arcpy.management.SelectLayerByAttribute(
+        "harvest_site_layer",
+        "NEW_SELECTION",
+        where_clause,
+    )
+    arcpy.management.CopyFeatures("harvest_site_layer", "harvest_site_subset")
+    harvest_sites = "harvest_site_subset"
 
 #create list for sawmill types
 sm_types = [
