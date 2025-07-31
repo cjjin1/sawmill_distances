@@ -20,27 +20,40 @@ sawmills = sys.argv[5]
 harvest_sites = sys.argv[6]
 keep_output_paths = sys.argv[7]
 calculate_road_distances = sys.argv[8]
+
+#set string inputs to proper boolean values
 if keep_output_paths.lower() == "true":
     keep_output_paths = True
 else:
     keep_output_paths = False
-
 if calculate_road_distances.lower() == "true":
     calculate_road_distances = True
 else:
     calculate_road_distances = False
 
+#check if calculate_road_distances and output_dir are valid
 if not calculate_road_distances and output_dir == "":
     raise arcpy.ExecuteError("An directory input is required if road distances are not to be calculated.")
 
+#convert harvest sites to points if given as polygons
+desc = arcpy.Describe(harvest_sites)
+if desc.shapeType == "Polygon":
+    if arcpy.Exists("hs_points"):
+        arcpy.management.Delete("hs_points")
+    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
+    harvest_sites = "hs_points"
+elif desc.shapeType != "Point":
+    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
+
+#set workspace
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
 except OSError:
     workspace = sys.argv[9]
-
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
+arcpy.env.addOutputsToMap = False
 
 #read in sample sizes
 ss_dict = {}
@@ -88,6 +101,10 @@ rd_dict = {
     "Plywood/Veneer": []
 }
 
+rd_list = []
+ed_list = []
+
+#read in distance calculations from CSV
 for sm_type in rd_dict:
     csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
     try:
@@ -97,33 +114,13 @@ for sm_type in rd_dict:
         raise arcpy.ExecuteError()
     rd_reader = csv.reader(rd_in)
     for row in rd_reader:
+        rd_list.append(float(row[3]))
+        ed_list.append(float(row[2]))
         multiplier = float(row[3]) / float(row[2])
-        rd_dict[sm_type].append((multiplier, row[3], row[2]))
+        rd_dict[sm_type].append(multiplier)
     rd_in.close()
 
-mean_multipliers_out = os.path.join(os.path.abspath(output_dir), "mean_multipliers.csv")
-csv_out = open(mean_multipliers_out, "w", newline="\n")
-csv_writer = csv.writer(csv_out)
-
-rd_list = []
-ed_list = []
-
-for i in range(0, 10000):
-    total_multiplier_list = []
-    for sm_type in rd_dict:
-        random_sample = random.choices(rd_dict[sm_type], k=len(rd_dict[sm_type]))
-        multiplier_list = [float(t[0]) for t in random_sample]
-        rd_sample_list = [float(t[1]) for t in random_sample]
-        ed_sample_list = [float(t[2]) for t in random_sample]
-        total_multiplier_list.extend(multiplier_list)
-        rd_list.extend(rd_sample_list)
-        ed_list.extend(ed_sample_list)
-    sample_mean = sum(total_multiplier_list) / len(total_multiplier_list)
-    csv_writer.writerow([sample_mean])
-csv_out.close()
-
-arcpy.AddMessage(f"Results can be found in {output_dir}")
-
+#find circuity factor
 road_distance = np.array(rd_list)
 euclidean_distance = np.array(ed_list)
 
@@ -153,3 +150,31 @@ results_file.write(str(model2.summary()) + "\n")
 results_file.write(str(model3.summary()) + "\n")
 results_file.write(f"Circuity factor: {b1}")
 results_file.close()
+
+#resample from the calculated distances, output mean multiplier of each resample to CSV file
+mean_multipliers_out = os.path.join(os.path.abspath(output_dir), "mean_multipliers.csv")
+csv_out = open(mean_multipliers_out, "w", newline="\n")
+csv_writer = csv.writer(csv_out)
+csv_writer.writerow(["Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product",
+                     "Plywood/Veneer", "Combined Average"])
+
+for i in range(0, 1000):
+    total_multiplier_list = []
+    output_dict = {}
+    for sm_type in rd_dict:
+        random_sample = random.choices(rd_dict[sm_type], k=len(rd_dict[sm_type]))
+        sample_mean = sum(random_sample) / len(rd_dict[sm_type])
+        output_dict[sm_type] = sample_mean
+        total_multiplier_list.extend(random_sample)
+    total_sample_mean = sum(total_multiplier_list) / len(total_multiplier_list)
+    csv_writer.writerow([output_dict["Lumber/Solid Wood"],
+                         output_dict["Pellet"],
+                         output_dict["Chip"],
+                         output_dict["Pulp/Paper"],
+                         output_dict["Composite Panel/Engineered Wood Product"],
+                         output_dict["Plywood/Veneer"],
+                         total_sample_mean]
+    )
+csv_out.close()
+
+arcpy.AddMessage(f"Results can be found in {output_dir}")
