@@ -208,7 +208,6 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
                     gc.collect()
                     if road_dist == 0:
                         raise arcpy.ExecuteError("Solve resulted in failure")
-                    time.sleep(0.1)
                     gc.collect()
                     if not kop:
                         arcpy.management.Delete(out_path)
@@ -234,6 +233,7 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
                     arcpy.management.Delete(f"sawmill_layer_{id_to_try}")
                     for name in arcpy.ListDatasets("*Solver*"):
                         arcpy.management.Delete(name)
+                    time.sleep(0.25)
                     gc.collect()
                     arcpy.management.ClearWorkspaceCache()
             if id_to_try != rand_id:
