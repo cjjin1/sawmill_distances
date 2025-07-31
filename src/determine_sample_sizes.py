@@ -14,12 +14,15 @@ allocation_type = sys.argv[1]
 output_dir = sys.argv[2]
 sawmills = sys.argv[3]
 if allocation_type == "Neyman":
-    sl_dist_csv = sys.argv[4]
-    network_dataset = sys.argv[5]
-    harvest_sites = sys.argv[6]
-    pairs_per_type = int(sys.argv[7])
-    keep_output_paths = sys.argv[8]
-    calculate_road_distances = sys.argv[9]
+    sl_dist_csv = sys.argv[5]
+    network_dataset = sys.argv[6]
+    harvest_sites = sys.argv[7]
+    pairs_per_type = int(sys.argv[8])
+    keep_output_paths = sys.argv[9]
+    calculate_road_distances = sys.argv[10]
+    if "#" in sys.argv[5:9]:
+        raise arcpy.ExecuteError("Straight Line Distance CSV File, " +
+                                 "Network Dataset, Harvest Site Data, and Pairs Per Type are all required parameters")
     if keep_output_paths.lower() == "true":
         keep_output_paths = True
     else:
@@ -32,7 +35,7 @@ if allocation_type == "Neyman":
         proj = arcpy.mp.ArcGISProject("CURRENT")
         workspace = proj.defaultGeodatabase
     except OSError:
-        workspace = sys.argv[10]
+        workspace = sys.argv[11]
 
     # set workspace
     arcpy.env.workspace = workspace

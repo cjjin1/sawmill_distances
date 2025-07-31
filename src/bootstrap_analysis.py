@@ -76,6 +76,7 @@ if calculate_road_distances:
     dc.calculate_road_distances(
         dist_id_dict, ss_dict, output_dir, harvest_sites, sawmills, network_dataset, keep_output_paths
     )
+arcpy.AddMessage("Road Distances Calculated")
 
 # dictionary to store multipliers
 rd_dict = {
