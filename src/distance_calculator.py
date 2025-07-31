@@ -6,7 +6,7 @@
 #          distance calculations into csv files
 ########################################################################################################################
 
-import arcpy, csv, os, random
+import arcpy, csv, os, random, time, gc
 import statsmodels.api as sm
 import numpy as np
 import pandas as pd
@@ -66,6 +66,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
         raise arcpy.ExecuteError(e)
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     arcpy.management.Delete(route_layer_name)
+    arcpy.management.Delete(route_layer)
     arcpy.CheckInExtension("Network")
 
 def calculate_distance_for_fc(fc_path):
@@ -185,6 +186,8 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
             id_to_try = rand_id
             while not road_dist:
                 try:
+                    time.sleep(0.5)
+                    gc.collect()
                     arcpy.management.MakeFeatureLayer(hv_sites, f"harvest_site_{id_to_try}")
                     arcpy.management.MakeFeatureLayer(sm_data, f"sawmill_layer_{id_to_try}")
                     arcpy.management.SelectLayerByAttribute(
@@ -201,13 +204,12 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
                     road_dist = calculate_route_distance(
                         f"harvest_site_{id_to_try}", nw_ds, f"sawmill_layer_{id_to_try}", out_path
                     )
+                    time.sleep(0.25)
+                    gc.collect()
                     if road_dist == 0:
                         raise arcpy.ExecuteError("Solve resulted in failure")
-                    # delete temporary layers, feature classes, and solvers
-                    arcpy.management.Delete(f"harvest_site_{id_to_try}")
-                    arcpy.management.Delete(f"sawmill_layer_{id_to_try}")
-                    for name in arcpy.ListDatasets("*Solver*"):
-                        arcpy.management.Delete(name)
+                    time.sleep(0.1)
+                    gc.collect()
                     if not kop:
                         arcpy.management.Delete(out_path)
                     output_writer.writerow(
@@ -226,6 +228,14 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
                     else:
                         arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
                         break
+                finally:
+                    # delete temporary layers, feature classes, and solvers
+                    arcpy.management.Delete(f"harvest_site_{id_to_try}")
+                    arcpy.management.Delete(f"sawmill_layer_{id_to_try}")
+                    for name in arcpy.ListDatasets("*Solver*"):
+                        arcpy.management.Delete(name)
+                    gc.collect()
+                    arcpy.management.ClearWorkspaceCache()
             if id_to_try != rand_id:
                 arcpy.AddMessage(f"New ID ({id_to_try}) successful")
             arcpy.AddMessage(f"Site {count}: Harvest Site {id_to_try} calculated.")

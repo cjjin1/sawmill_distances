@@ -168,6 +168,8 @@ elif allocation_type == "Proportional":
     for sm_type in count_dict:
         n = (count_dict[sm_type] / total_count) * int(total_sample_size)
         n = round(n)
+        if n < 30:
+            n = 30
         arcpy.AddMessage(f"Sample size for {sm_type}: {n}")
         out_writer.writerow([sm_type, n])
     out_file.close()
