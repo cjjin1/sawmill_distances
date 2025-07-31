@@ -65,7 +65,7 @@ if output_dir:
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 else:
-    output_dir = workspace + "/../" + f"bootstrap_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
+    output_dir = workspace + "/../" + f"outputs/bootstrap_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_dir = os.path.abspath(output_dir)

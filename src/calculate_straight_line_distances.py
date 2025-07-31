@@ -76,7 +76,7 @@ if output_dir:
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 else:
-    output_dir = workspace + "/../" + "straight_line_distances"
+    output_dir = workspace + "/../" + "outputs/straight_line_distances"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

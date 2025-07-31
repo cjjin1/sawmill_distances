@@ -46,7 +46,7 @@ if allocation_type == "Neyman":
         if not calculate_road_distances:
             raise arcpy.ExecuteError("Must provide directory that contains road distance files if using previously " +
                                      "calculated road distance data")
-        output_dir = workspace + "/../" + f"neyman_allocation_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
+        output_dir = workspace + "/../" + f"outputs/neyman_allocation_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -142,7 +142,8 @@ elif allocation_type == "Proportional":
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
     else:
-        output_dir = workspace + "/../" + f"proportional_allocation_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
+        output_dir = (workspace + "/../"
+                      + f"outputs/proportional_allocation_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
