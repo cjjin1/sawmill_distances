@@ -39,7 +39,7 @@ if allocation_type == "Neyman":
     arcpy.env.overwriteOutput = True
 
     # Setup output directory
-    if output_dir:
+    if output_dir != "#":
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
     else:
@@ -138,7 +138,7 @@ elif allocation_type == "Proportional":
     arcpy.env.overwriteOutput = True
 
     # Setup output directory
-    if output_dir:
+    if output_dir != "#":
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
     else:
