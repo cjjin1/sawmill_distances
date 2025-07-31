@@ -206,11 +206,10 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
                     )
                     time.sleep(0.25)
                     gc.collect()
-                    if road_dist == 0:
-                        raise arcpy.ExecuteError("Solve resulted in failure")
-                    gc.collect()
                     if not kop:
                         arcpy.management.Delete(out_path)
+                    if road_dist == 0:
+                        raise arcpy.ExecuteError("Solve resulted in failure")
                     output_writer.writerow(
                         [id_to_try,
                          di_dict[sm_type][id_to_try][0],
