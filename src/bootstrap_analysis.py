@@ -101,6 +101,17 @@ rd_dict = {
     "Plywood/Veneer": []
 }
 
+#dictionary to store road distance and straight line distance for circuity analysis
+#index 0 is road distance, index 1 is straight line distance
+cf_dict = {
+    "Lumber/Solid Wood": ([],[]),
+    "Pellet": ([],[]),
+    "Chip": ([],[]),
+    "Pulp/Paper": ([],[]),
+    "Composite Panel/Engineered Wood Product": ([],[]),
+    "Plywood/Veneer": ([],[])
+}
+
 rd_list = []
 ed_list = []
 
@@ -114,13 +125,19 @@ for sm_type in rd_dict:
         raise arcpy.ExecuteError()
     rd_reader = csv.reader(rd_in)
     for row in rd_reader:
+        cf_dict[sm_type][0].append(float(row[3]))
         rd_list.append(float(row[3]))
+        cf_dict[sm_type][1].append(float(row[2]))
         ed_list.append(float(row[2]))
         multiplier = float(row[3]) / float(row[2])
         rd_dict[sm_type].append(multiplier)
     rd_in.close()
 
-#find circuity factor
+#find circuity factor for individual sawmill types
+for sm_type in cf_dict:
+    csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
+    dc.calculate_circuity_factor_from_csv(csv_in, f"{sm_type[:3]})_circuity_factor.txt", output_dir)
+
 road_distance = np.array(rd_list)
 euclidean_distance = np.array(ed_list)
 
@@ -142,7 +159,7 @@ X3 = df[['sl']]
 model3 = sm.OLS(y, X3).fit()
 
 b1 = model3.params['sl']
-arcpy.AddMessage(f"Circuity Factor: {b1}")
+arcpy.AddMessage(f"Circuity Factor for all types: {b1}")
 
 results_file = open(os.path.join(output_dir, "circuity_factor.txt"), "w+")
 results_file.write(str(model1.summary()) + "\n")

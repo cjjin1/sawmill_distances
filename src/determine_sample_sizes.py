@@ -178,3 +178,5 @@ elif allocation_type == "Proportional":
     arcpy.AddMessage(f"Sample size csv file can be found in {os.path.abspath(output_dir)}")
 else:
     raise arcpy.ExecuteError("Invalid allocation type")
+
+#TODO combine determine_sample_sizes.py and bootstrap_analysis

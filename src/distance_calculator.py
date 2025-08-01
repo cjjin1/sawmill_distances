@@ -275,7 +275,7 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir):
     model3 = sm.OLS(y, X3).fit()
 
     b1 = model3.params['sl']
-    print(f"Circuity Factor for {output_name}: {b1}")
+    arcpy.AddMessage(f"Circuity Factor for {output_name}: {b1}")
 
     results_file = open(os.path.join(op_dir, output_name), "w+")
     results_file.write(str(model1.summary()) + "\n")
