@@ -124,6 +124,8 @@ if allocation_type == "Neyman":
         std_dev = np.std(rd_dict[sm_type])
         n = (z ** 2 * float(std_dev) ** 2) / E ** 2
         n = round(n)
+        if n < 30:
+            n = 30
         arcpy.AddMessage(f"Sample size for {sm_type}: {n}")
         out_writer.writerow([sm_type, n])
     out_file.close()
