@@ -6,72 +6,19 @@
 ########################################################################################################################
 
 import sys, arcpy, csv, os, random
-import distance_calculator as dc
 import datetime
-import statsmodels.api as sm
-import numpy as np
-import pandas as pd
 
-sample_size_csv = sys.argv[1]
-sl_dist_csv = sys.argv[2]
-output_dir = sys.argv[3]
-network_dataset = sys.argv[4]
-sawmills = sys.argv[5]
-harvest_sites = sys.argv[6]
-keep_output_paths = sys.argv[7]
-calculate_road_distances = sys.argv[8]
-
-#set string inputs to proper boolean values
-if keep_output_paths.lower() == "true":
-    keep_output_paths = True
-else:
-    keep_output_paths = False
-if calculate_road_distances.lower() == "true":
-    calculate_road_distances = True
-else:
-    calculate_road_distances = False
-
-#check if calculate_road_distances and output_dir are valid
-if not calculate_road_distances and output_dir == "":
-    raise arcpy.ExecuteError("An directory input is required if road distances are not to be calculated.")
-
-#convert harvest sites to points if given as polygons
-desc = arcpy.Describe(harvest_sites)
-if desc.shapeType == "Polygon":
-    if arcpy.Exists("hs_points"):
-        arcpy.management.Delete("hs_points")
-    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
-    harvest_sites = "hs_points"
-elif desc.shapeType != "Point":
-    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
+output_dir = sys.argv[1]
 
 #set workspace
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
 except OSError:
-    workspace = sys.argv[9]
+    workspace = sys.argv[2]
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
-
-#read in sample sizes
-ss_dict = {}
-ss_in = open(sample_size_csv, "r", newline="\n")
-csv_reader = csv.reader(ss_in)
-for row in csv_reader:
-    ss_dict[row[0]] = row[1]
-ss_in.close()
-
-#dict to store straight line distance and ids
-dist_id_dict = {
-    "Lumber/Solid Wood": {},
-    "Pellet": {},
-    "Chip": {},
-    "Pulp/Paper": {},
-    "Composite Panel/Engineered Wood Product": {},
-    "Plywood/Veneer": {}
-}
 
 #Setup output directory
 if output_dir != "#":
@@ -83,14 +30,6 @@ else:
         os.makedirs(output_dir)
     output_dir = os.path.abspath(output_dir)
 
-#read in straight line distances then calculate road distances using read in sample sizes
-dc.read_sl_distance_csv(sl_dist_csv, dist_id_dict)
-if calculate_road_distances:
-    dc.calculate_road_distances(
-        dist_id_dict, ss_dict, output_dir, harvest_sites, sawmills, network_dataset, keep_output_paths
-    )
-arcpy.AddMessage("Road Distances Calculated")
-
 # dictionary to store multipliers
 rd_dict = {
     "Lumber/Solid Wood": [],
@@ -101,72 +40,19 @@ rd_dict = {
     "Plywood/Veneer": []
 }
 
-#dictionary to store road distance and straight line distance for circuity analysis
-#index 0 is road distance, index 1 is straight line distance
-cf_dict = {
-    "Lumber/Solid Wood": ([],[]),
-    "Pellet": ([],[]),
-    "Chip": ([],[]),
-    "Pulp/Paper": ([],[]),
-    "Composite Panel/Engineered Wood Product": ([],[]),
-    "Plywood/Veneer": ([],[])
-}
-
-rd_list = []
-ed_list = []
-
 #read in distance calculations from CSV
 for sm_type in rd_dict:
     csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
     try:
         rd_in = open(csv_in, "r", newline="\n")
     except FileNotFoundError:
-        arcpy.AddError("Road distance csv files not found, rerun script tool with calculations.")
+        arcpy.AddError("Road distance csv files not found, rerun Circuity Factor script tool with calculations.")
         raise arcpy.ExecuteError()
     rd_reader = csv.reader(rd_in)
     for row in rd_reader:
-        cf_dict[sm_type][0].append(float(row[3]))
-        rd_list.append(float(row[3]))
-        cf_dict[sm_type][1].append(float(row[2]))
-        ed_list.append(float(row[2]))
         multiplier = float(row[3]) / float(row[2])
         rd_dict[sm_type].append(multiplier)
     rd_in.close()
-
-#find circuity factor for individual sawmill types
-for sm_type in cf_dict:
-    csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
-    dc.calculate_circuity_factor_from_csv(csv_in, f"{sm_type[:3]})_circuity_factor.txt", output_dir)
-
-road_distance = np.array(rd_list)
-euclidean_distance = np.array(ed_list)
-
-df = pd.DataFrame({
-    'sl': euclidean_distance,
-    'sl_sq': euclidean_distance ** 2,
-    'rd': road_distance
-})
-
-X1 = sm.add_constant(df[['sl', 'sl_sq']])
-y = df['rd']
-
-model1 = sm.OLS(y, X1).fit()
-
-X2 = sm.add_constant(df[['sl']])
-model2 = sm.OLS(y, X2).fit()
-
-X3 = df[['sl']]
-model3 = sm.OLS(y, X3).fit()
-
-b1 = model3.params['sl']
-arcpy.AddMessage(f"Circuity Factor for all types: {b1}")
-
-results_file = open(os.path.join(output_dir, "circuity_factor.txt"), "w+")
-results_file.write(str(model1.summary()) + "\n")
-results_file.write(str(model2.summary()) + "\n")
-results_file.write(str(model3.summary()) + "\n")
-results_file.write(f"Circuity factor: {b1}")
-results_file.close()
 
 #resample from the calculated distances, output mean multiplier of each resample to CSV file
 mean_multipliers_out = os.path.join(os.path.abspath(output_dir), "mean_multipliers.csv")
@@ -175,7 +61,7 @@ csv_writer = csv.writer(csv_out)
 csv_writer.writerow(["Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product",
                      "Plywood/Veneer", "Combined Average"])
 
-for i in range(0, 1000):
+for i in range(0, 10000):
     total_multiplier_list = []
     output_dict = {}
     for sm_type in rd_dict:
