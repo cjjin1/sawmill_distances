@@ -6,7 +6,7 @@
 #          sawmills.
 ########################################################################################################################
 
-import sys, arcpy, csv, os, random, time, gc
+import sys, arcpy, csv, os, random, time, gc, math
 import distance_calculator as dc
 import statsmodels.api as sm
 import numpy as np
@@ -129,7 +129,7 @@ if calculate_road_distances:
                 #if less than originally set sample size
                 std_dev = np.std(multi_dict[sm_type])
                 n = (z ** 2 * float(std_dev) ** 2) / E ** 2
-                n = round(n)
+                n = math.ceil(n)
                 if n > sample_size:
                     sample_size = n
                     arcpy.AddMessage(f"Calculated sample size for {sm_type} is greater than {pairs_per_type}.")
