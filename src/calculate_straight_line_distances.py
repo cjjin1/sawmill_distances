@@ -61,16 +61,6 @@ sm_types = [
     "Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product", "Plywood/Veneer"
 ]
 
-#dict to store straight line distance and ids
-dist_id_dict = {
-    "Lumber/Solid Wood": {},
-    "Pellet": {},
-    "Chip": {},
-    "Pulp/Paper": {},
-    "Composite Panel/Engineered Wood Product": {},
-    "Plywood/Veneer": {}
-}
-
 #Setup output directory
 if output_dir != "#":
     if not os.path.exists(output_dir):
@@ -80,5 +70,5 @@ else:
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-dc.calculate_sl_distances(harvest_sites, sawmills, sm_types, dist_id_dict, output_dir)
+dc.calculate_sl_distances(harvest_sites, sawmills, sm_types, output_dir)
 arcpy.AddMessage(f"Straight Line Distance CSV can be found in: {os.path.abspath(output_dir)}")

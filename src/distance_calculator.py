@@ -107,7 +107,7 @@ def euclidean_distance(hs_point, points, mill_type):
         raise arcpy.ExecuteError("Euclidean distance: no harvest site within 120 miles of site")
     return near_fid, distance
 
-def calculate_sl_distances(hv_sites, sawmill_data, sm_ts, di_dict, op_dir):
+def calculate_sl_distances(hv_sites, sawmill_data, sm_ts, op_dir):
     """Calculates straight line distance from every harvest site to every sawmill for every sawmill type"""
     csv_sl_out = os.path.join(op_dir, f"sl_distances_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv")
     sl_out = open(csv_sl_out, "w+", newline="\n")
@@ -143,7 +143,6 @@ def calculate_sl_distances(hv_sites, sawmill_data, sm_ts, di_dict, op_dir):
                 sql_clause=(None, "ORDER BY NEAR_DIST ASC")
             )
             for n_fid, n_dist, m_type in sc2:
-                di_dict[sm_t][row[0]] = (n_fid, n_dist)
                 sl_writer.writerow([sm_t, row[0], n_fid, n_dist])
                 break
             del sc2
