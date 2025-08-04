@@ -20,16 +20,6 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
 
-#Setup output directory
-if output_dir != "#":
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-else:
-    output_dir = workspace + "/../" + f"outputs/bootstrap_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    output_dir = os.path.abspath(output_dir)
-
 # dictionary to store multipliers
 rd_dict = {
     "Lumber/Solid Wood": [],
@@ -55,7 +45,9 @@ for sm_type in rd_dict:
     rd_in.close()
 
 #resample from the calculated distances, output mean multiplier of each resample to CSV file
-mean_multipliers_out = os.path.join(os.path.abspath(output_dir), "mean_multipliers.csv")
+mean_multipliers_out = os.path.join(
+    os.path.abspath(output_dir), f"mean_multipliers_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+)
 csv_out = open(mean_multipliers_out, "w", newline="\n")
 csv_writer = csv.writer(csv_out)
 csv_writer.writerow(["Lumber/Solid Wood", "Pellet", "Chip", "Pulp/Paper", "Composite Panel/Engineered Wood Product",
