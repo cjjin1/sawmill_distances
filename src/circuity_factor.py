@@ -160,7 +160,7 @@ if calculate_road_distances:
                     f"sawmill_layer_{rand_id}",
                     out_path
                 )
-                time.sleep(0.25)
+                time.sleep(0.5)
                 gc.collect()
                 if not keep_output_paths:
                     arcpy.management.Delete(out_path)
@@ -190,7 +190,7 @@ if calculate_road_distances:
                 arcpy.management.Delete(f"sawmill_layer_{rand_id}")
                 for name in arcpy.ListDatasets("*Solver*"):
                     arcpy.management.Delete(name)
-                time.sleep(0.25)
+                time.sleep(0.5)
                 gc.collect()
                 arcpy.management.ClearWorkspaceCache()
             count += 1
