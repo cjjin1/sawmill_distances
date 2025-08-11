@@ -10,6 +10,7 @@ import distance_calculator as dc
 
 sawmills = sys.argv[1]
 harvest_sites = sys.argv[2]
+harvest_sites_subset = f"{harvest_sites}_subset"
 output_dir = sys.argv[3]
 try:
     subset_size = int(sys.argv[4])
@@ -53,8 +54,8 @@ if subset_size > 0:
         "NEW_SELECTION",
         where_clause,
     )
-    arcpy.management.CopyFeatures("harvest_site_layer", "harvest_site_subset")
-    harvest_sites = "harvest_site_subset"
+    arcpy.management.CopyFeatures("harvest_site_layer", harvest_sites_subset)
+    harvest_sites = harvest_sites_subset
 
 #create list for sawmill types
 sm_types = [
