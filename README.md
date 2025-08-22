@@ -15,10 +15,12 @@ Data prep:
       - Area of Interest:
         - two options for inputs: name of place or shapefile
       - for third argument, use either the keyword "aoi" or "shapefile" to signify which method to use
+      - Output name
     - Example Input:
       - C:/timber_project/data/nc_va_roads.gdb 
       - C:/timber_project/data/boundaries/nc_va_boundaries
       - shapefile
+      - osm_roads
 
 2. road_data_prep.py
   - Handles combining NFS roads and OSM roads

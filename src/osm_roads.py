@@ -3,7 +3,7 @@
 # Author: James Jin
 # unity ID: cjjin
 # Purpose: Uses osmnx to retrieve roads data, can retrieve one specific type of road along with truck only roads
-# Usage: <output_roads_file> <output_nodes_files> <aoi> <aoi type(place or shapefile)>
+# Usage: <output_roads_file_GDB> <aoi> <aoi type(place or shapefile)> <output_name>
 ########################################################################################################################
 
 import osmnx as ox
