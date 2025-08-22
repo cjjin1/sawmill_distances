@@ -26,10 +26,11 @@ arcpy.env.overwriteOutput = True
 #read in area of interest
 aoi = sys.argv[2]
 aoi_type = sys.argv[3]
+fc_name = sys.argv[4]
 #create graph with custom filter
 g_main = None
 cf = (
-    '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road"]'
+    '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road|track|service"]'
 )
 #check what kind of input was read (shapefile or place name)
 if aoi_type == "aoi":
@@ -40,12 +41,11 @@ elif aoi_type == "shapefile":
     if gdf.crs != "EPSG:4326":
         gdf = gdf.to_crs("EPSG:4326")
     polygon = gdf.geometry.iloc[0]
-    g_main = ox.graph_from_polygon(polygon, network_type="drive")
+    g_main = ox.graph_from_polygon(polygon, custom_filter=cf, network_type="drive")
 
 #get nodes and edges from graph
 nodes_main, edges_main = ox.graph_to_gdfs(g_main)
 
 #save the roads to scratch folder as gpkg files, then export to feature class in File GDB
 temp_file = "C:/timber_project/scratch/temp_roads.gpkg"
-layer_name = "osm_roads"
-export_to_arcgis(edges_main, temp_file, layer_name)
+export_to_arcgis(edges_main, temp_file, fc_name)
