@@ -11,6 +11,7 @@ import statsmodels.api as sm
 import numpy as np
 import pandas as pd
 import datetime
+import matplotlib.pyplot as plt
 
 def calculate_route_distance(harvest_site, network_ds, sawmill, output_path):
     """Finds the route from harvest site to sawmill then calculates distance"""
@@ -241,7 +242,7 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
 
         output_file.close()
 
-def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir):
+def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type, pdf_file):
     """Reads in road distance csv created by the road distance calculation functions"""
     rd_list = []
     ed_list = []
@@ -255,6 +256,9 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir):
 
     road_distance = np.array(rd_list)
     euclidean_distance = np.array(ed_list)
+
+    generate_histogram(road_distance, "Road Distance", sawmill_type, 50, pdf_file)
+    generate_histogram(euclidean_distance, "Euclidean Distance", sawmill_type, 50, pdf_file)
 
     df = pd.DataFrame({
         'sl': euclidean_distance,
@@ -282,3 +286,12 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir):
     results_file.write(str(model3.summary()) + "\n")
     results_file.write(f"Circuity factor: {b1}")
     results_file.close()
+
+def generate_histogram(arr, value_name, sm_type, bin_num, pdf):
+    """Generates a histogram based off an array for a sawmill type. Outputs to a pdf file."""
+    plt.hist(arr, bins=bin_num)
+    plt.xlabel(value_name)
+    plt.ylabel("Frequency")
+    plt.title(f"Histogram of {value_name} for {sm_type}")
+    pdf.savefig()
+    plt.close()

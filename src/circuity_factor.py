@@ -12,6 +12,7 @@ import statsmodels.api as sm
 import numpy as np
 import pandas as pd
 import datetime
+from matplotlib.backends.backend_pdf import PdfPages
 
 sl_dist_csv = sys.argv[1]
 output_dir = sys.argv[2]
@@ -204,6 +205,9 @@ else:
 rd_list = []
 ed_list = []
 
+#create a pdf for histograms
+pdf = PdfPages(os.path.join(output_dir, "histograms.pdf"))
+
 #find circuity factor for individual sawmill types
 for sm_type in multi_dict:
     csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
@@ -213,12 +217,17 @@ for sm_type in multi_dict:
         rd_list.append(float(row[3]))
         ed_list.append(float(row[2]))
     input_file.close()
-    dc.calculate_circuity_factor_from_csv(csv_in, f"{sm_type[:3]}_circuity_factor.txt", output_dir)
+    dc.calculate_circuity_factor_from_csv(
+        csv_in, f"{sm_type[:3]}_circuity_factor.txt", output_dir, sm_type, pdf
+    )
 
 #find circuity factor for all sawmill types combined
 if single_sawmill_type == "All":
     road_distance = np.array(rd_list)
     euclidean_distance = np.array(ed_list)
+
+    dc.generate_histogram(road_distance, "Road Distance", "All Sawmills", 100, pdf)
+    dc.generate_histogram(euclidean_distance, "Euclidean Distance", "All Sawmills", 100, pdf)
 
     df = pd.DataFrame({
         'sl': euclidean_distance,
@@ -246,3 +255,6 @@ if single_sawmill_type == "All":
     results_file.write(str(model3.summary()) + "\n")
     results_file.write(f"Circuity factor: {b1}")
     results_file.close()
+
+#close pdf
+pdf.close()
