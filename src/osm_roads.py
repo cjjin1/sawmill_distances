@@ -30,7 +30,7 @@ fc_name = sys.argv[4]
 #create graph with custom filter
 g_main = None
 cf = (
-    '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road|track|service"]'
+    '["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|road|service"]'
 )
 #check what kind of input was read (shapefile or place name)
 if aoi_type == "aoi":
