@@ -228,6 +228,13 @@ if single_sawmill_type == "All":
 
     dc.generate_histogram(road_distance, "Road Distance", "All Sawmills", 100, pdf)
     dc.generate_histogram(euclidean_distance, "Euclidean Distance", "All Sawmills", 100, pdf)
+    dc.generate_overlaid_histogram(
+        [road_distance, euclidean_distance],
+        ["Road Distance", "Euclidean Distance"],
+        "All Sawmills",
+        100,
+        pdf
+    )
 
     df = pd.DataFrame({
         'sl': euclidean_distance,

@@ -259,6 +259,13 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type
 
     generate_histogram(road_distance, "Road Distance", sawmill_type, 50, pdf_file)
     generate_histogram(euclidean_distance, "Euclidean Distance", sawmill_type, 50, pdf_file)
+    generate_overlaid_histogram(
+        [road_distance, euclidean_distance],
+        ["Road Distance", "Euclidean Distance"],
+        sawmill_type,
+        50,
+        pdf_file
+    )
 
     df = pd.DataFrame({
         'sl': euclidean_distance,
@@ -289,9 +296,20 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type
 
 def generate_histogram(arr, value_name, sm_type, bin_num, pdf):
     """Generates a histogram based off an array for a sawmill type. Outputs to a pdf file."""
-    plt.hist(arr, bins=bin_num)
-    plt.xlabel(value_name)
+    plt.hist(arr, bins=bin_num, edgecolor="black", linewidth=1.2)
+    plt.xlabel(value_name + " (Miles)")
     plt.ylabel("Frequency")
     plt.title(f"Histogram of {value_name} for {sm_type}")
+    pdf.savefig()
+    plt.close()
+
+def generate_overlaid_histogram(arr_list, value_list, sm_type, bin_num, pdf):
+    """Generates an overlaid histogram based off two arrays (of both road and eucldiean distance for a sawmill type.
+       Outputs to a pdf file."""
+    plt.hist(arr_list, label=value_list, bins=bin_num, edgecolor="black", linewidth=0.5, color=["blue", "red"])
+    plt.xlabel("Distance (Miles)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.title(f"Histogram of Road and Euclidean Distances for {sm_type}")
     pdf.savefig()
     plt.close()
