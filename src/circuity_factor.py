@@ -228,13 +228,13 @@ if single_sawmill_type == "All":
     road_distance = np.array(rd_list)
     euclidean_distance = np.array(ed_list)
 
-    dc.generate_histogram(road_distance, "Road Distance", "All Sawmills", 100, pdf)
-    dc.generate_histogram(euclidean_distance, "Euclidean Distance", "All Sawmills", 100, pdf)
+    dc.generate_histogram(road_distance, "Road Distance", "All Sawmills", 40, pdf)
+    dc.generate_histogram(euclidean_distance, "Euclidean Distance", "All Sawmills", 40, pdf)
     dc.generate_overlaid_histogram(
         [road_distance, euclidean_distance],
         ["Road Distance", "Euclidean Distance"],
         "All Sawmills",
-        100,
+        60,
         pdf
     )
 
