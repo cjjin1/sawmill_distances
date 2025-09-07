@@ -167,6 +167,8 @@ if calculate_road_distances:
                     arcpy.management.Delete(out_path)
                 if road_dist == 0:
                     raise arcpy.ExecuteError("Solve resulted in failure")
+                if road_dist > 120:
+                    raise arcpy.ExecuteError("Route is longer than 120 miles")
                 output_writer.writerow(
                     [rand_id,
                     dist_id_dict[sm_type][rand_id][0],
