@@ -33,6 +33,15 @@ def clean_harvest_site_data(harvest_site_data, sr, boundary):
     arcpy.management.SelectLayerByLocation(
         "harvest_layer", "WITHIN", bound_proj, selection_type="NEW_SELECTION"
     )
+
+    #filter out for the last 5 years, FS owndership, and accomplished stage description
+    where_clause = "FY_COMPLET >= '2019' AND OWNERSHIP_ = 'FS' AND STAGE_DESC = 'Accomplished'"
+    arcpy.management.SelectLayerByAttribute(
+        "harvest_layer",
+        "SUBSET_SELECTION",
+        where_clause
+    )
+
     hs_bound = "harvest_sites_bounded"
     arcpy.management.CopyFeatures("harvest_layer", hs_bound)
     arcpy.management.Delete("harvest_layer")
@@ -104,7 +113,7 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
 SR = arcpy.SpatialReference(int(spat_ref))
-project_roads(roads, transport_dataset, SR)
+# project_roads(roads, transport_dataset, SR)
 clean_harvest_site_data(harvest_sites, SR, hs_boundary)
-clean_sawmill_data(sawmills, SR, sm_boundary)
-create_road_fc(transport_dataset, roads)
+# clean_sawmill_data(sawmills, SR, sm_boundary)
+# create_road_fc(transport_dataset, roads)
