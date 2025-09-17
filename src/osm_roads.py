@@ -2,7 +2,7 @@
 # osm_roads.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Uses osmnx to retrieve roads data, can retrieve one specific type of road along with truck only roads
+# Purpose: Uses osmnx to retrieve roads data
 # Usage: <output_roads_file_GDB> <aoi> <aoi type(place or shapefile)> <output_name>
 ########################################################################################################################
 
@@ -43,9 +43,13 @@ elif aoi_type == "shapefile":
     polygon = gdf.geometry.iloc[0]
     g_main = ox.graph_from_polygon(polygon, custom_filter=cf, network_type="drive")
 
+print("Graph Obtained")
+
 #get nodes and edges from graph
 nodes_main, edges_main = ox.graph_to_gdfs(g_main)
 
-#save the roads to scratch folder as gpkg files, then export to feature class in File GDB
-temp_file = "C:/timber_project/scratch/temp_roads.gpkg"
-export_to_arcgis(edges_main, temp_file, fc_name)
+#save the roads as gpkg files, then export to feature class in File GDB
+temp_file = os.path.join(sys.argv[1], "../temp_roads.gpkg")
+export_to_arcgis(edges_main, os.path.abspath(temp_file), fc_name)
+
+print("Graph Exported")
