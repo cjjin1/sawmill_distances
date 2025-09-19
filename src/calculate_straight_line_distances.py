@@ -16,6 +16,7 @@ try:
     subset_size = int(sys.argv[4])
     if subset_size < 1:
         arcpy.AddWarning("Invalid subset size, harvest site feature class will not be subset.")
+        subset_size = 0
 except ValueError:
     arcpy.AddWarning("Invalid subset size, harvest site feature class will not be subset.")
     subset_size = 0

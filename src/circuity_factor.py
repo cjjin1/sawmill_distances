@@ -38,16 +38,6 @@ else:
 if not calculate_road_distances and output_dir == "#":
     raise arcpy.ExecuteError("An directory input is required if road distances are not to be calculated.")
 
-#convert harvest sites to points if given as polygons
-desc = arcpy.Describe(harvest_sites)
-if desc.shapeType == "Polygon":
-    if arcpy.Exists("hs_points"):
-        arcpy.management.Delete("hs_points")
-    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
-    harvest_sites = "hs_points"
-elif desc.shapeType != "Point":
-    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
-
 #set workspace
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
@@ -57,6 +47,16 @@ except OSError:
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
+
+#convert harvest sites to points if given as polygons
+desc = arcpy.Describe(harvest_sites)
+if desc.shapeType == "Polygon":
+    if arcpy.Exists("hs_points"):
+        arcpy.management.Delete("hs_points")
+    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
+    harvest_sites = "hs_points"
+elif desc.shapeType != "Point":
+    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
 #Setup output directory
 if output_dir != "#":
