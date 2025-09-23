@@ -265,5 +265,8 @@ if single_sawmill_type == "All":
     results_file.write(f"Circuity factor: {b1}")
     results_file.close()
 
+#TODO
+#output means, medians, regression results into a neat csv
+
 #close pdf
 pdf.close()
