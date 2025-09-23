@@ -266,7 +266,7 @@ if single_sawmill_type == "All":
     results_file.close()
 
 #TODO
-#output means, medians, regression results into a neat csv
+#output means, medians, regression results into a neat csv, change date to be flexible to input
 
 #close pdf
 pdf.close()
