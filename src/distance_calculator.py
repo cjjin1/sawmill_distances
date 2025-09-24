@@ -284,15 +284,19 @@ def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type
     X3 = df[['sl']]
     model3 = sm.OLS(y, X3).fit()
 
-    b1 = model3.params['sl']
-    arcpy.AddMessage(f"Circuity Factor for {output_name}: {b1}")
+    b1 = model1.params['sl']
+    b2 = model2.params['sl']
+    b3 = model3.params['sl']
+    arcpy.AddMessage(f"Circuity Factor for {output_name}: {b3}")
 
     results_file = open(os.path.join(op_dir, output_name), "w+")
     results_file.write(str(model1.summary()) + "\n")
     results_file.write(str(model2.summary()) + "\n")
     results_file.write(str(model3.summary()) + "\n")
-    results_file.write(f"Circuity factor: {b1}")
+    results_file.write(f"Circuity factor: {b3}")
     results_file.close()
+
+    return b1, b2, b3
 
 def generate_histogram(arr, value_name, sm_type, bin_num, pdf):
     """Generates a histogram based off an array for a sawmill type. Outputs to a pdf file."""

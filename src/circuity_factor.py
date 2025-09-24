@@ -6,7 +6,7 @@
 #          sawmills.
 ########################################################################################################################
 
-import sys, arcpy, csv, os, random, time, gc, math
+import sys, arcpy, csv, os, random, time, gc, math, statistics
 import distance_calculator as dc
 import statsmodels.api as sm
 import numpy as np
@@ -210,18 +210,26 @@ ed_list = []
 #create a pdf for histograms
 pdf = PdfPages(os.path.join(output_dir, "histograms.pdf"))
 
+#list for storing circuity factor results
+cf_list = []
+
 #find circuity factor for individual sawmill types
 for sm_type in multi_dict:
+    multiplier_list = []
     csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
     input_file = open(csv_in, "r", newline="\n")
     in_reader = csv.reader(input_file)
     for row in in_reader:
         rd_list.append(float(row[3]))
         ed_list.append(float(row[2]))
+        multiplier_list.append(float(row[3]) / float(row[2]))
     input_file.close()
-    dc.calculate_circuity_factor_from_csv(
+    b1, b2, b3 = dc.calculate_circuity_factor_from_csv(
         csv_in, f"{sm_type[:3]}_circuity_factor.txt", output_dir, sm_type, pdf
     )
+    mean_multiplier = statistics.mean(multiplier_list)
+    median_multiplier = statistics.median(multiplier_list)
+    cf_list.append([sm_type, b1, b2, b3, mean_multiplier, median_multiplier])
 
 #find circuity factor for all sawmill types combined
 if single_sawmill_type == "All":
@@ -255,15 +263,29 @@ if single_sawmill_type == "All":
     X3 = df[['sl']]
     model3 = sm.OLS(y, X3).fit()
 
-    b1 = model3.params['sl']
-    arcpy.AddMessage(f"Circuity Factor for all types: {b1}")
+    b1 = model1.params['sl']
+    b2 = model2.params['sl']
+    b3 = model3.params['sl']
+    arcpy.AddMessage(f"Circuity Factor for all types: {b3}")
 
     results_file = open(os.path.join(output_dir, "circuity_factor_all.txt"), "w+")
     results_file.write(str(model1.summary()) + "\n")
     results_file.write(str(model2.summary()) + "\n")
     results_file.write(str(model3.summary()) + "\n")
-    results_file.write(f"Circuity factor: {b1}")
+    results_file.write(f"Circuity factor: {b3}")
     results_file.close()
+
+    multiplier_list = [rd / ed for rd, ed in zip(rd_list, ed_list)]
+    cf_list.append(["All", b1, b2, b3, statistics.mean(multiplier_list), statistics.median(multiplier_list)])
+
+output_csv = open(os.path.join(output_dir, "total_results.csv"), "w", newline="\n")
+output_writer = csv.writer(output_csv)
+output_writer.writerow(["Sawmill Type", "OLS regression with sl, sl_sq, and intercept",
+                        "OLS regression with sl and intercept", "OLS regression with sl", "Mean Multiplier",
+                        "Median Multiplier"])
+for row in cf_list:
+    output_writer.writerow(row)
+output_csv.close()
 
 #close pdf
 pdf.close()
