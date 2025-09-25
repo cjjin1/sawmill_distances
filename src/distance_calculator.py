@@ -243,7 +243,8 @@ def calculate_road_distances(di_dict, ppt, op_dir, hv_sites, sm_data, nw_ds, kop
         output_file.close()
 
 def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type, pdf_file):
-    """Reads in road distance csv created by the road distance calculation functions"""
+    """Reads in road distance csv created by the road distance calculation functions. Returns coefficent
+       for each regression."""
     rd_list = []
     ed_list = []
 
