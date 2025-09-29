@@ -26,9 +26,9 @@ output_name = sys.argv[7]
 #Project all feature classes
 SR = arcpy.SpatialReference(int(spat_ref))
 if not arcpy.Exists(os.path.basename(roads)):
-    arcpy.management.Project(roads, os.path.basename(roads), SR)
+    arcpy.management.Project(roads, os.path.join(workspace, os.path.basename(roads)), SR)
 if not arcpy.Exists(os.path.splitext(os.path.basename(NFS_roads))[0]):
-    arcpy.management.Project(NFS_roads, os.path.splitext(os.path.basename(NFS_roads))[0], SR)
+    arcpy.management.Project(NFS_roads, os.path.join(workspace, os.path.splitext(os.path.basename(NFS_roads))[0]), SR)
 roads = os.path.basename(roads)
 NFS_roads = os.path.splitext(os.path.basename(NFS_roads))[0]
 
@@ -166,7 +166,4 @@ arcpy.management.Merge([roads, NFS_roads], output_roads)
 
 #integreate the roads dataset then convert to line so that each line ends at an intersection
 arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
-arcpy.management.FeatureToLine(output_roads, output_name)
-
-#move output to transportation dataset
-arcpy.conversion.FeatureClassToFeatureClass(output_name, transport_dataset, output_name)
+arcpy.management.FeatureToLine(output_roads, os.path.join(transport_dataset, output_name))
