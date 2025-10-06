@@ -65,7 +65,7 @@ Data prep:
 
 BEFORE CALCULATIONS:
 1. First, the Create Network dataset tool must be run. Inputs include:
-  - Feature dataset (containing the merged roads feature class)
+  - Feature dataset (containing the complete merged roads (complete_roads) feature class)
   - Dataset name (call it streets_nd)
   - Source feature class (select the merged_roads feature class created in data_prep.py)
   - Select no elevation model
@@ -100,6 +100,6 @@ circuity_factor.py
     - sawmills (the modified feature class created by data_prep.py)
     - harvest sites (the modified feature class created by data_prep.py)
     - output directory (to store results)
-    - Number of site-to-sawmill pairs per mill type (recommended at least 5, 20 if a single mill type is selected)
+    - Number of site-to-sawmill pairs per mill type (recommended at least 30)
     - Keep Output Paths? (simply true or false for if the output paths should be kept)
     - sawmill type (for if a single sawmill type is desired)

@@ -90,14 +90,16 @@ def create_road_fc(transport_ds, roads_data):
     arcpy.analysis.Erase(erasing_fc, osm_nfs_roads, "roads_erased")
 
     #merge road feature classes
-    merged_roads = "merged_roads"
-    arcpy.management.Merge(["roads_erased", osm_nfs_roads], merged_roads)
-    arcpy.management.RepairGeometry(merged_roads)
+    final_roads = "merged_roads"
+    arcpy.management.Merge(["roads_erased", osm_nfs_roads], final_roads)
+    arcpy.management.FeatureToLine(final_roads, "complete_roads")
+    final_roads = "complete_roads"
+    arcpy.management.RepairGeometry(final_roads)
 
     #add and calculate distance field
-    arcpy.management.AddField(merged_roads, "distance", "DOUBLE")
+    arcpy.management.AddField(final_roads, "distance", "DOUBLE")
     arcpy.management.CalculateGeometryAttributes(
-        merged_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
+        final_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
     )
 
 workspace = sys.argv[1]
@@ -113,7 +115,7 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 
 SR = arcpy.SpatialReference(int(spat_ref))
-project_roads(roads, transport_dataset, SR)
-clean_harvest_site_data(harvest_sites, SR, hs_boundary)
-clean_sawmill_data(sawmills, SR, sm_boundary)
+# project_roads(roads, transport_dataset, SR)
+# clean_harvest_site_data(harvest_sites, SR, hs_boundary)
+# clean_sawmill_data(sawmills, SR, sm_boundary)
 create_road_fc(transport_dataset, roads)
