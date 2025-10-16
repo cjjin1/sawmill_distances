@@ -1,0 +1,518 @@
+#!/usr/bin/env python3
+"""
+Extract road data from OSM Planet files for very large areas using GDAL VectorTranslate
+and bounding boxes.
+
+Usage:
+```
+python osm_roads_planet.py
+
+Arguments:
+- planet_file: Path to the OSM planet file (.pbf)
+- bbox: Bounding box [min_lon, min_lat, max_lon, max_lat]
+- layer_name: Name for the output layer
+- overwrite: Whether to overwrite existing files
+- keep_intermediate: Whether to keep the intermediate GPKG
+
+Example:
+python osm_roads_planet.py
+-planet_file "us-latest-osm.pbf"
+-bbox [-95.55452488285067, 28.65376380642857, -74.51856375734542, 36.94887553746901]
+-layer_name "s_sm_coastal_roads"
+-overwrite False
+-keep_intermediate False
+
+Output:
+- Intermediate GPKG file in "intermediate" directory.
+- File Geodatabase in "final" directory.
+
+Project: Timber Suitability
+PI: Dr. Laura Tateosian
+Author: Makiko Shukunobe
+Date: 2025-09-18
+"""
+
+import os
+import sys
+import arcpy
+from pathlib import Path
+import time
+from osgeo import gdal
+
+gdal.UseExceptions()  # Suppress GDAL warnings
+from utils import (
+    time_operation,
+    print_timing_summary,
+    create_project_folders,
+    setup_logging,
+    get_logger,
+    get_shapefile_bbox,
+    get_shapefile_bbox_arcpy,
+)
+
+
+class OSMRoadsPlanet:
+    def _build_where_clause(self):
+        return (
+            "highway IN ("
+            "'motorway','trunk','primary','secondary','tertiary',"
+            "'residential','unclassified','road','service')"
+        )
+
+    def _build_translate_options(self, where_clause):
+        opts = {
+            "format": "GPKG",
+            "where": where_clause,
+            "layers": ["lines"],
+            "layerName": self.layer_name,
+        }
+        if self.overwrite:
+            opts["accessMode"] = "overwrite"
+        if self.bbox is not None:
+            opts["spatFilter"] = [
+                self.bbox[0],
+                self.bbox[1],
+                self.bbox[2],
+                self.bbox[3],
+            ]
+        return opts
+
+    def _open_osm_dataset(self):
+        return gdal.OpenEx(
+            str(self.planet_file),
+            gdal.OF_VECTOR,
+            allowed_drivers=["OSM"],
+            open_options=["USE_CUSTOM_INDEXING=YES", "MAX_TMPFILE_SIZE=2048"],
+        )
+
+    def _progress_callback(self):
+        try:
+            from tqdm import tqdm  # type: ignore
+
+            bar = tqdm(total=100, desc="GDAL VectorTranslate", unit="%", leave=False)
+
+            def _cb(complete, message, user_data):
+                try:
+                    bar.n = int(complete * 100)
+                    bar.refresh()
+                except Exception:
+                    pass
+                return 1
+
+            return _cb, bar
+        except Exception:
+            last_report = {"v": -1}
+
+            def _log_cb(complete, message, user_data):
+                pct = int(complete * 100)
+                if pct // 5 > last_report["v"]:
+                    last_report["v"] = pct // 5
+                    self.logger.info(f"GDAL translate progress: {pct}%")
+                return 1
+
+            return _log_cb, None
+
+    def _log_bbox_where(self, opts, where_clause):
+        if "spatFilter" in opts:
+            bbox_log = f"{opts['spatFilter']} (minX,minY,maxX,maxY)"
+        else:
+            bbox_log = "None (no spatial filter)"
+        self.logger.info("Extracting roads with GDAL VectorTranslate...")
+        self.logger.info(f"Bounding box: {bbox_log}")
+        self.logger.info("Output format: GPKG")
+        self.logger.info(f"Where clause: {where_clause}")
+
+    def __init__(
+        self,
+        planet_file,
+        bbox,
+        layer_name="roads",
+        overwrite=False,
+        keep_intermediate=False,
+    ):
+        """Initialize OSM Roads Planet processor
+
+        Args:
+            planet_file (str): Path to the OSM planet file (.pbf)
+            bbox (list): Bounding box [min_lon, min_lat, max_lon, max_lat]
+            layer_name (str): Name for the output layer
+            overwrite (bool): Whether to overwrite existing files
+        """
+        self.planet_file = planet_file
+        self.bbox = bbox
+        self.layer_name = layer_name
+        self.overwrite = overwrite
+        self.keep_intermediate = keep_intermediate
+        self.logger = get_logger()
+
+        # Setup project folders and paths
+        self.project_paths = create_project_folders()
+        self.file_gdb = str(Path(self.project_paths["final"]) / "roads.gdb")
+        self.downloads_dir = self.project_paths["downloads"]
+        self.intermediate_dir = self.project_paths["intermediate"]
+
+        # Intermediate files
+        self.gpkg_output = os.path.join(
+            self.intermediate_dir, f"{self.layer_name}.gpkg"
+        )
+
+        self.logger.info(f"OSMRoadsPlanet initialized for bbox: {bbox}")
+        self.logger.info(f"Planet file: {planet_file}")
+        self.logger.info(f"Layer name: {layer_name}")
+        self.logger.info(f"Overwrite mode: {overwrite}")
+
+    def extract_roads_with_gdal(self):
+        """Extract roads using GDAL VectorTranslate directly"""
+        if not os.path.exists(self.planet_file):
+            self.logger.error(f"Planet file not found: {self.planet_file}")
+            return False, None
+
+        # Check if output file exists and handle accordingly
+        if os.path.exists(self.gpkg_output) and not self.overwrite:
+            self.logger.info(f"Output file already exists: {self.gpkg_output}")
+            self.logger.info("Skipping extraction, using existing data...")
+            return True, None
+
+        where_clause = self._build_where_clause()
+
+        # Check if planet file exists and get its size
+        planet_size_mb = os.path.getsize(self.planet_file) / (1024 * 1024)
+        self.logger.info(f"Planet file size: {planet_size_mb:.2f} MB")
+
+        # Configure GDAL options for VectorTranslate
+        options_kwargs = self._build_translate_options(where_clause)
+        bbox_log = (
+            f"{options_kwargs['spatFilter']} (order: minX, minY, maxX, maxY)"
+            if "spatFilter" in options_kwargs
+            else "None (no spatial filter)"
+        )
+
+        # Progress callback (tqdm if available, else log every ~5%)
+        progress_callback, bar = self._progress_callback()
+
+        options = gdal.VectorTranslateOptions(
+            callback=progress_callback, **options_kwargs
+        )
+
+        self._log_bbox_where(options_kwargs, where_clause)
+
+        with time_operation(
+            "GDAL VectorTranslate Extraction",
+            "GDAL extraction started",
+            "GDAL extraction completed",
+        ) as timer:
+            try:
+                # Use GDAL VectorTranslate to extract roads
+                src_ds = self._open_osm_dataset()
+                if src_ds is None:
+                    raise RuntimeError("Failed to open source dataset with GDAL OpenEx")
+                try:
+                    gdal.VectorTranslate(self.gpkg_output, src_ds, options=options)
+                finally:
+                    src_ds = None
+                    if bar is not None:
+                        try:
+                            bar.close()
+                        except Exception:
+                            pass
+
+                # Get output file size
+                if os.path.exists(self.gpkg_output):
+                    output_size_mb = os.path.getsize(self.gpkg_output) / (1024 * 1024)
+                    self.logger.info(f"Output file size: {output_size_mb:.2f} MB")
+                    self.logger.info(f"Output file saved to: {self.gpkg_output}")
+                    return True, timer
+                else:
+                    self.logger.warning("Output file not found after extraction")
+                    return False, timer
+
+            except Exception as e:
+                self.logger.error(f"GDAL VectorTranslate failed: {e}")
+                return False, timer
+
+    def create_file_geodatabase(self):
+        """Create File Geodatabase if it doesn't exist"""
+        if not os.path.exists(self.file_gdb):
+            self.logger.info(f"File Geodatabase not found: {self.file_gdb}")
+            try:
+                arcpy.management.CreateFileGDB(
+                    os.path.dirname(self.file_gdb), os.path.basename(self.file_gdb)
+                )
+                self.logger.info(f"File Geodatabase created: {self.file_gdb}")
+                return True
+            except Exception as e:
+                self.logger.error(f"Error creating File Geodatabase: {e}")
+                return False
+        else:
+            self.logger.info(f"File Geodatabase already exists: {self.file_gdb}")
+            return True
+
+    def import_to_arcgis(self):
+        """Import GPKG to ArcGIS File Geodatabase"""
+        if not os.path.exists(self.gpkg_output):
+            self.logger.error(f"GPKG file not found: {self.gpkg_output}")
+            return False, None
+
+        # Create File Geodatabase if it doesn't exist
+        if not self.create_file_geodatabase():
+            self.logger.error("Failed to create File Geodatabase, aborting import")
+            return False, None
+
+        self.logger.info(f"Importing to ArcGIS File Geodatabase...")
+
+        with time_operation(
+            "ArcGIS Import", "ArcGIS import started", "ArcGIS import completed"
+        ) as timer:
+            try:
+                # Start an indeterminate progress indicator while CopyFeatures runs
+                import threading
+
+                stop_event = threading.Event()
+
+                def _spinner():
+                    try:
+                        from tqdm import tqdm  # type: ignore
+
+                        bar = tqdm(total=100, desc="ArcGIS Import", leave=False)
+                        i = 0
+                        while not stop_event.is_set():
+                            i = (i + 5) % 100
+                            bar.n = i
+                            bar.refresh()
+                            time.sleep(0.5)
+                        bar.close()
+                    except Exception:
+                        # Fallback to periodic logging
+                        ticks = 0
+                        while not stop_event.is_set():
+                            ticks += 1
+                            if ticks % 6 == 0:
+                                self.logger.info("ArcGIS import in progress...")
+                            time.sleep(0.5)
+
+                spinner_thread = threading.Thread(target=_spinner, daemon=True)
+                spinner_thread.start()
+
+                # Input GeoPackage layer and output FGDB feature class
+                in_features = f"{self.gpkg_output}\\{self.layer_name}"
+                out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
+
+                # If output exists and overwrite is true, delete first to avoid schema conflicts
+                if arcpy.Exists(out_feature_class) and self.overwrite:
+                    self.logger.info(
+                        f"Overwriting existing feature class: {out_feature_class}"
+                    )
+                    arcpy.management.Delete(out_feature_class)
+
+                self.logger.info(f"Copying features from: {in_features}")
+                self.logger.info(f"To feature class: {out_feature_class}")
+                arcpy.management.CopyFeatures(in_features, out_feature_class)
+
+                # Stop spinner
+                stop_event.set()
+                spinner_thread.join(timeout=2)
+
+                self.logger.info(
+                    f"Successfully imported to {self.file_gdb}\\{self.layer_name}"
+                )
+                return True, timer
+
+            except Exception as e:
+                try:
+                    stop_event.set()
+                    spinner_thread.join(timeout=2)
+                except Exception:
+                    pass
+                self.logger.error(f"ArcGIS import failed: {e}")
+                return False, timer
+
+    def cleanup_temp_files(self):
+        """Clean up temporary files"""
+        if os.path.exists(self.gpkg_output):
+            import gc
+
+            # Attempt to release common locks (ArcGIS, Python refs)
+            try:
+                try:
+                    arcpy.ClearWorkspaceCache_management()
+                except Exception:
+                    pass
+                gc.collect()
+            except Exception:
+                pass
+
+            # Retry deletion with small backoff and rename fallback (Windows lock patterns)
+            attempts = 5
+            for i in range(attempts):
+                try:
+                    os.remove(self.gpkg_output)
+                    self.logger.info(f"Cleaned up temporary file: {self.gpkg_output}")
+                    return
+                except Exception as e:
+                    if i == attempts - 1:
+                        # Final attempt: try rename then delete
+                        try:
+                            temp_renamed = self.gpkg_output + ".to_delete"
+                            try:
+                                if os.path.exists(temp_renamed):
+                                    os.remove(temp_renamed)
+                            except Exception:
+                                pass
+                            os.rename(self.gpkg_output, temp_renamed)
+                            os.remove(temp_renamed)
+                            self.logger.info(
+                                f"Cleaned up temporary file after rename: {self.gpkg_output}"
+                            )
+                            return
+                        except Exception as e2:
+                            self.logger.warning(
+                                f"Could not delete temporary file {self.gpkg_output}: {e2}"
+                            )
+                            self.logger.warning(
+                                "File may be locked by another process (e.g., ArcGIS/Explorer). Close apps and try again."
+                            )
+                            return
+                    time.sleep(0.5)
+
+    def extract_oneway(self):
+        """Extracts the oneway tag from OSM roads data and puts it into its own field"""
+        out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
+        fields = arcpy.ListFields(out_feature_class)
+        field_names = [f.name for f in fields]
+        if "other_tags" not in field_names:
+            raise arcpy.ExecuteError("Roads data does not contain necessary other_tags field.")
+        arcpy.management.AddField(out_feature_class, "oneway", "SHORT")
+        arcpy.management.AddField(out_feature_class, "reversed", "SHORT")
+
+        with arcpy.da.UpdateCursor(out_feature_class, ["other_tags", "oneway", "reversed"]) as cursor:
+            for row in cursor:
+                if row[0] and "\"oneway\"" in row[0]:
+                    tags_list = row[0].split(",")
+                    for tag in tags_list:
+                        if "\"oneway\"" in tag:
+                            expression_list = tag.split("=>")
+                            oneway_value = expression_list[1]
+                            if oneway_value == "\"yes\"":
+                                row[1] = 1
+                                row[2] = 0
+                            elif oneway_value == "\"-1\"":
+                                row[1] = 1
+                                row[2] = 1
+                            else:
+                                row[1] = 0
+                                row[2] = 0
+                else:
+                    row[1] = 0
+                    row[2] = 0
+                cursor.updateRow(row)
+
+    def process(self):
+        """Main processing method that orchestrates the entire workflow"""
+        self.logger.info("=" * 50)
+        self.logger.info(f"Starting OSM Roads Planet processing for {self.layer_name}")
+        self.logger.info(f"Planet file: {self.planet_file}")
+        self.logger.info(f"Bounding box: {self.bbox}")
+        self.logger.info(f"Downloads directory: {self.downloads_dir}")
+        self.logger.info(f"Intermediate directory: {self.intermediate_dir}")
+        self.logger.info(f"Final output: {self.file_gdb}\\{self.layer_name}")
+        self.logger.info("=" * 50)
+
+        arcpy.env.overwriteOutput = True
+
+        # Track all timers for summary
+        timers = []
+
+        # Main process with total timing
+        with time_operation(
+            "Total Process",
+            "OSM Planet Processing Started",
+            "PROCESS COMPLETED SUCCESSFULLY",
+        ) as total_timer:
+            timers.append(total_timer)
+
+            # Step 1: Extract roads with GDAL
+            extraction_success, extraction_timer = self.extract_roads_with_gdal()
+            if extraction_timer:
+                timers.append(extraction_timer)
+
+            if not extraction_success:
+                self.logger.error("Failed to extract roads from planet file")
+                return False
+
+            # Step 2: Import to ArcGIS and add oneway/reversed fields
+            import_success, import_timer = self.import_to_arcgis()
+            self.extract_oneway()
+            if import_timer:
+                timers.append(import_timer)
+
+            if not import_success:
+                self.logger.error("Failed to import to ArcGIS")
+                return False
+
+            # Step 3: Cleanup temporary files (optional)
+            if not self.keep_intermediate:
+                self.cleanup_temp_files()
+            else:
+                self.logger.info(
+                    "Keeping intermediate files as requested (keep_intermediate=True)"
+                )
+
+            # Print detailed timing summary
+            print_timing_summary(
+                timers, total_timer.get_duration(), "OSM Planet Processing"
+            )
+            self.logger.info(f"Final output: {self.file_gdb}\\{self.layer_name}")
+            return True
+
+def main():
+    """Main function to run OSM Roads Planet processing"""
+    # Setup logging
+    log_file = setup_logging()
+    logger = get_logger()
+
+    # Configuration
+    planet_file = sys.argv[1]  # Update this path
+    shapefile_path = sys.argv[2]
+    layer_name = sys.argv[3]
+    overwrite = False
+    keep_intermediate = False  # Set True to keep the intermediate GPKG
+    buffer_degrees = None  # Buffer around shapefile extent
+
+    # Get bounding box from shapefile
+    logger.info(f"Getting bounding box from shapefile: {shapefile_path}")
+    bbox = get_shapefile_bbox(shapefile_path, buffer_degrees)
+    if bbox is not None:
+        logger.info(f"Shapefile-derived bbox (minX, minY, maxX, maxY): {bbox}")
+    else:
+        # Fallback to ArcPy method
+        logger.info("Trying ArcPy method for bounding box...")
+        bbox = get_shapefile_bbox_arcpy(shapefile_path, buffer_degrees)
+        if bbox is not None:
+            logger.info(f"ArcPy-derived bbox (minX, minY, maxX, maxY): {bbox}")
+        else:
+            logger.error(
+                "Failed to determine bounding box from shapefile. Aborting to avoid unbounded extraction."
+            )
+            return
+
+    # Create OSM Roads Planet processor instance
+    osm_roads = OSMRoadsPlanet(
+        planet_file=planet_file,
+        bbox=bbox,
+        layer_name=layer_name,
+        overwrite=overwrite,
+        keep_intermediate=keep_intermediate,
+    )
+
+    # Run the complete processing workflow
+    success = osm_roads.process()
+
+    if success:
+        print(f"OSM Roads Planet processing completed successfully!")
+        print(f"Log file: {log_file}")
+    else:
+        print(f"OSM Roads Planet processing failed. Check log file: {log_file}")
+
+
+if __name__ == "__main__":
+    main()
