@@ -4,35 +4,84 @@ class DataPrep:
     def __init__(
             self,
             workspace,
-            transport_dataset,
             total_roads,
-            park_roads,
-            NFS_roads,
-            harvest_sites,
+            nfs_roads,
             sawmills,
-            hs_boundary,
-            sm_boundary,
+            harvest_sites,
             park_boundaries,
+            physio_boundary,
             spat_ref
     ):
         self.workspace = workspace
-        self.transport_dataset = transport_dataset
         self.total_roads = total_roads
-        self.park_roads = park_roads
-        self.NFS_roads = NFS_roads
+        self.NFS_roads = nfs_roads
         self.harvest_sites = harvest_sites
         self.sawmills = sawmills
-        self.hs_boundary = hs_boundary
-        self.sm_boundary = sm_boundary
         self.park_boundaries = park_boundaries
+        self.physio_boundary = physio_boundary
         self.spat_ref = arcpy.SpatialReference(int(spat_ref))
 
-    def project_roads(self):
-        """Simply projects roads data into new spatial reference"""
-        # project input roads into the transportation datasest
-        output_path = os.path.join(self.transport_dataset, os.path.basename(self.total_roads))
+        self.transport_dataset = "Transportation"
+        self.park_roads = os.path.join(self.transport_dataset, "park_roads")
+        self.sm_boundaries = "sm_boundaries"
+
+    def create_new_file_gdb(self):
+        """Uses the quick import tool from Data Interoperability to create a new File GDB with roads data"""
+        arcpy.CheckOutExtension("DataInteroperability")
+        arcpy.gp.QuickImport_interop(self.total_roads, self.workspace)
+        arcpy.CheckInExtension("DataInteroperability")
+
+        arcpy.management.CreateFeatureDataset(self.workspace, self.transport_dataset, self.spat_ref)
+
+    def create_boundary_fcs(self):
+        """Creates boundary feature classes for sawmills and parks"""
+        #project physiographic region boundary and park boundaries
+        bound_proj = os.path.basename(self.physio_boundary).split(".")[0]
+        if not arcpy.Exists(bound_proj):
+            arcpy.management.Project(self.physio_boundary, bound_proj, self.spat_ref)
+        self.physio_boundary = bound_proj
+
+        park_boundaries_proj = os.path.basename(self.park_boundaries).split(".")[0]
+        if not arcpy.Exists(park_boundaries_proj):
+            arcpy.management.Project(self.park_boundaries, park_boundaries_proj)
+        self.park_boundaries = park_boundaries_proj
+
+        #create boundary for parks
+        park_boundaries_clipped = self.park_boundaries + "_clipped"
+        arcpy.management.Clip(self.park_boundaries, self.physio_boundary, park_boundaries_clipped)
+        self.park_boundaries = park_boundaries_clipped
+
+        #create boundary for sawmills (125 mile buffer)
+        arcpy.analysis.Buffer(
+            self.park_boundaries,
+            self.sm_boundaries,
+            buffer_distance_or_field="125 Miles",
+            dissolve_option="ALL"
+        )
+
+    def prep_roads(self):
+        """Projects roads data into new spatial reference, clips roads to create feature class for park roads"""
+        # project input roads into the transportation dataset
+        output_path = os.path.join(self.transport_dataset, os.path.basename(self.total_roads) + "_proj")
         if not arcpy.Exists(output_path):
             arcpy.management.Project(self.total_roads, output_path, self.spat_ref)
+        self.total_roads = output_path
+
+        #clip roads to create park roads
+        arcpy.management.Clip(
+            self.total_roads,
+            self.park_boundaries,
+            self.park_roads
+        )
+
+        #project nfs roads
+        if not arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
+            arcpy.management.Project(
+                self.NFS_roads,
+                os.path.splitext(os.path.basename(self.NFS_roads))[0],
+                self.spat_ref
+            )
+        self.NFS_roads = os.path.splitext(os.path.basename(self.NFS_roads))[0]
 
     def clean_harvest_site_data(self):
         """Projects and clips harvest site data. Also removes unwanted polygons that are too small."""
@@ -40,18 +89,16 @@ class DataPrep:
         hs_proj = os.path.splitext(os.path.basename(self.harvest_sites))[0]
         if not arcpy.Exists(hs_proj):
             arcpy.management.Project(self.harvest_sites, hs_proj, self.spat_ref)
-        bound_proj = os.path.basename(self.hs_boundary).split(".")[0]
-        if not arcpy.Exists(os.path.basename(bound_proj)):
-            arcpy.management.Project(self.hs_boundary, bound_proj, self.spat_ref)
 
         # extract the harvest site feature class inside the boundary
         arcpy.management.MakeFeatureLayer(hs_proj, "harvest_layer")
         arcpy.management.SelectLayerByLocation(
-            "harvest_layer", "WITHIN", bound_proj, selection_type="NEW_SELECTION"
+            "harvest_layer", "WITHIN", self.physio_boundary, selection_type="NEW_SELECTION"
         )
 
         # filter out for the last 5 years, FS owndership, and accomplished stage description
-        where_clause = "FY_COMPLET >= '2019' AND OWNERSHIP_ = 'FS' AND STAGE_DESC = 'Accomplished'"
+        where_clause = ("FY_COMPLET >= '2019' AND FY_COMPLET <= '2024' " +
+                        "AND OWNERSHIP_ = 'FS' AND STAGE_DESC = 'Accomplished'")
         arcpy.management.SelectLayerByAttribute(
             "harvest_layer",
             "SUBSET_SELECTION",
@@ -79,14 +126,11 @@ class DataPrep:
         sm_proj = os.path.splitext(os.path.basename(self.sawmills))[0]
         if not arcpy.Exists(sm_proj):
             arcpy.management.Project(self.sawmills, sm_proj, self.spat_ref)
-        bound_proj = os.path.basename(self.sm_boundary).split(".")[0]
-        if not arcpy.Exists(os.path.basename(bound_proj)):
-            arcpy.management.Project(self.sm_boundary, bound_proj, self.spat_ref)
 
         # extract sawmill feature class inside the boundary
         arcpy.management.MakeFeatureLayer(self.sawmills, "sawmill_layer")
         arcpy.management.SelectLayerByLocation(
-            "sawmill_layer", "WITHIN", bound_proj, selection_type="NEW_SELECTION"
+            "sawmill_layer", "WITHIN", self.sm_boundaries, selection_type="NEW_SELECTION"
         )
         sm_bound = "sawmills_bounded"
         arcpy.management.CopyFeatures("sawmill_layer", sm_bound)
@@ -95,32 +139,8 @@ class DataPrep:
         # reproject copied features to correct spatial reference
         arcpy.management.Project(sm_bound, "sawmills_bounded_proj", self.spat_ref)
 
-    def create_park_roads(self):
+    def merge_park_roads(self):
         """Merge NFS roads and OSM roads to create park roads for any relevant park"""
-        # Project all feature classes
-        if not arcpy.Exists(os.path.basename(self.park_roads)):
-            arcpy.management.Project(
-                self.park_roads,
-                os.path.join(self.workspace, os.path.basename(self.park_roads)),
-                self.spat_ref
-            )
-        if not arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
-            arcpy.management.Project(
-                self.NFS_roads,
-                os.path.join(self.workspace, os.path.splitext(os.path.basename(self.NFS_roads))[0]),
-                self.spat_ref
-            )
-        self.park_roads = os.path.basename(self.park_roads)
-        self.NFS_roads = os.path.splitext(os.path.basename(self.NFS_roads))[0]
-
-        # Project the boundary
-        if not arcpy.Exists(os.path.basename(self.park_boundaries).split(".")[0]):
-            arcpy.Project_management(
-                self.park_boundaries,
-                os.path.basename(self.park_boundaries).split(".")[0],
-                self.spat_ref
-            )
-        self.park_boundaries = os.path.basename(self.park_boundaries).split(".")[0]
         # Clip the NFS roads to the boundary
         arcpy.management.MakeFeatureLayer(self.NFS_roads, "NFS_roads")
         arcpy.management.SelectLayerByLocation("NFS_roads", "INTERSECT", self.park_boundaries)
@@ -281,3 +301,7 @@ class DataPrep:
         arcpy.management.CalculateGeometryAttributes(
             final_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
         )
+
+    def process(self):
+        """Starts and runs the process of preparing data"""
+
