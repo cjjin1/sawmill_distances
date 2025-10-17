@@ -1,23 +1,16 @@
 import sys, arcpy, os
 
-from utils import (
-    time_operation,
-    print_timing_summary,
-    setup_logging,
-    get_logger
-)
-
 class DataPrep:
     def __init__(
             self,
-            workspace,
-            total_roads,
-            nfs_roads,
-            sawmills,
-            harvest_sites,
-            park_boundaries,
-            physio_boundary,
-            spat_ref
+            workspace=None,
+            total_roads=None,
+            nfs_roads=None,
+            sawmills=None,
+            harvest_sites=None,
+            park_boundaries=None,
+            physio_boundary=None,
+            spat_ref=None
     ):
         self.workspace = workspace
         self.total_roads = total_roads
@@ -43,25 +36,35 @@ class DataPrep:
         if not arcpy.Exists(os.path.join(self.workspace, self.transport_dataset)):
             arcpy.management.CreateFeatureDataset(self.workspace, self.transport_dataset, self.spat_ref)
 
-    def create_boundary_fcs(self):
+    def create_boundary_fcs(self, new_physio=None, new_park_boundaries=None, new_sm_boundaries=None, keep_temp=False):
         """Creates boundary feature classes for sawmills and parks"""
         #project physiographic region boundary and park boundaries
-        bound_proj = os.path.basename(self.physio_boundary).split(".")[0]
+        if new_physio:
+            bound_proj = new_physio
+        else:
+            bound_proj = os.path.basename(self.physio_boundary).split(".")[0]
         if not arcpy.Exists(bound_proj):
             arcpy.management.Project(self.physio_boundary, bound_proj, self.spat_ref)
         self.physio_boundary = bound_proj
 
-        park_boundaries_proj = os.path.basename(self.park_boundaries).split(".")[0]
+        park_boundaries_proj = os.path.basename(self.park_boundaries).split(".")[0] + "_proj"
         if not arcpy.Exists(park_boundaries_proj):
             arcpy.management.Project(self.park_boundaries, park_boundaries_proj, self.spat_ref)
         self.park_boundaries = park_boundaries_proj
 
         #create boundary for parks
-        park_boundaries_clipped = self.park_boundaries + "_clipped"
+        if new_park_boundaries:
+            park_boundaries_clipped = new_park_boundaries
+        else:
+            park_boundaries_clipped = self.park_boundaries + "_clipped"
         arcpy.analysis.Clip(self.park_boundaries, self.physio_boundary, park_boundaries_clipped)
         self.park_boundaries = park_boundaries_clipped
+        if not keep_temp:
+            arcpy.management.Delete(park_boundaries_proj)
 
         #create boundary for sawmills (125 mile buffer)
+        if new_sm_boundaries:
+            self.sm_boundaries = new_sm_boundaries
         arcpy.analysis.Buffer(
             self.park_boundaries,
             self.sm_boundaries,
@@ -314,8 +317,8 @@ class DataPrep:
 
     def process(
         self,
-        create_new_gdb=True,
         create_boundaries=True,
+        create_new_gdb=True,
         road_prep=True,
         road_merge=True,
         sawmill_data=True,
@@ -366,7 +369,7 @@ def main():
 
     data_prepper.process(
         create_new_gdb=True,
-        create_boundaries=True,
+        create_boundaries=False,
         road_prep=True,
         road_merge=False,
         sawmill_data=False,
