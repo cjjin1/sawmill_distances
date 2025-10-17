@@ -467,8 +467,11 @@ class OSMRoadsPlanet:
 
 def main():
     """Main function to run OSM Roads Planet processing"""
+    osm_log = None
+    if len(sys.argv) > 5:
+        osm_log = sys.argv[5]
     # Setup logging
-    log_file = setup_logging()
+    log_file = setup_logging(log_file_path=osm_log)
     logger = get_logger()
 
     # Configuration
