@@ -1,5 +1,12 @@
 import sys, arcpy, os
 
+from utils import (
+    time_operation,
+    print_timing_summary,
+    setup_logging,
+    get_logger
+)
+
 class DataPrep:
     def __init__(
             self,
@@ -27,11 +34,14 @@ class DataPrep:
 
     def create_new_file_gdb(self):
         """Uses the quick import tool from Data Interoperability to create a new File GDB with roads data"""
-        arcpy.CheckOutExtension("DataInteroperability")
-        arcpy.gp.QuickImport_interop(self.total_roads, self.workspace)
-        arcpy.CheckInExtension("DataInteroperability")
+        if not arcpy.Exists(os.path.join(self.workspace, os.path.basename(self.total_roads))):
+            arcpy.CheckOutExtension("DataInteroperability")
+            arcpy.gp.QuickImport_interop(os.path.dirname(self.total_roads), self.workspace)
+            arcpy.CheckInExtension("DataInteroperability")
+        self.total_roads = os.path.join(self.workspace, os.path.basename(self.total_roads))
 
-        arcpy.management.CreateFeatureDataset(self.workspace, self.transport_dataset, self.spat_ref)
+        if not arcpy.Exists(os.path.join(self.workspace, self.transport_dataset)):
+            arcpy.management.CreateFeatureDataset(self.workspace, self.transport_dataset, self.spat_ref)
 
     def create_boundary_fcs(self):
         """Creates boundary feature classes for sawmills and parks"""
@@ -43,12 +53,12 @@ class DataPrep:
 
         park_boundaries_proj = os.path.basename(self.park_boundaries).split(".")[0]
         if not arcpy.Exists(park_boundaries_proj):
-            arcpy.management.Project(self.park_boundaries, park_boundaries_proj)
+            arcpy.management.Project(self.park_boundaries, park_boundaries_proj, self.spat_ref)
         self.park_boundaries = park_boundaries_proj
 
         #create boundary for parks
         park_boundaries_clipped = self.park_boundaries + "_clipped"
-        arcpy.management.Clip(self.park_boundaries, self.physio_boundary, park_boundaries_clipped)
+        arcpy.analysis.Clip(self.park_boundaries, self.physio_boundary, park_boundaries_clipped)
         self.park_boundaries = park_boundaries_clipped
 
         #create boundary for sawmills (125 mile buffer)
@@ -68,7 +78,7 @@ class DataPrep:
         self.total_roads = output_path
 
         #clip roads to create park roads
-        arcpy.management.Clip(
+        arcpy.analysis.Clip(
             self.total_roads,
             self.park_boundaries,
             self.park_roads
@@ -302,6 +312,68 @@ class DataPrep:
             final_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
         )
 
-    def process(self):
+    def process(
+        self,
+        create_new_gdb=True,
+        create_boundaries=True,
+        road_prep=True,
+        road_merge=True,
+        sawmill_data=True,
+        harvest_site_data=True,
+        road_fc=True
+    ):
         """Starts and runs the process of preparing data"""
+        if create_new_gdb:
+            self.create_new_file_gdb()
 
+        arcpy.env.workspace = self.workspace
+        arcpy.env.overwriteOutput = True
+
+        if create_boundaries:
+            self.create_boundary_fcs()
+        if road_prep:
+            self.prep_roads()
+        if road_merge:
+            self.merge_park_roads()
+        if sawmill_data:
+            self.clean_sawmill_data()
+        if harvest_site_data:
+            self.clean_harvest_site_data()
+        if road_fc:
+            self.create_road_fc()
+
+def main():
+    """Main function to run data preparation script"""
+    workspace = sys.argv[1]
+    total_roads = sys.argv[2]
+    nfs_roads = sys.argv[3]
+    sawmills = sys.argv[4]
+    harvest_sites = sys.argv[5]
+    park_boundaries = sys.argv[6]
+    physio_boundary = sys.argv[7]
+    spat_ref = sys.argv[8]
+
+    data_prepper = DataPrep(
+        workspace=workspace,
+        total_roads=total_roads,
+        nfs_roads=nfs_roads,
+        sawmills=sawmills,
+        harvest_sites=harvest_sites,
+        park_boundaries=park_boundaries,
+        physio_boundary=physio_boundary,
+        spat_ref=spat_ref,
+    )
+
+    data_prepper.process(
+        create_new_gdb=True,
+        create_boundaries=True,
+        road_prep=True,
+        road_merge=False,
+        sawmill_data=False,
+        harvest_site_data=False,
+        road_fc=False
+    )
+    print("Finished preparing data")
+
+if __name__ == "__main__":
+    main()

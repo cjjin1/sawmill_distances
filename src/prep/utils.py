@@ -112,8 +112,7 @@ def create_project_folders(base_path=None):
     """
     if base_path is None:
         # Get the parent directory of this utils.py file (osm_roads folder)
-        #TODO change this to be more dynamic
-        base_path = Path(__file__).parent.parent.parent.parent
+        base_path = Path(__file__).parent.parent
 
     # Define the folders to create
     folders = ["final", "intermediate", "downloads"]

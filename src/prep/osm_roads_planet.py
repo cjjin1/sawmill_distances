@@ -127,6 +127,7 @@ class OSMRoadsPlanet:
         planet_file,
         bbox,
         layer_name="roads",
+        base_path=None,
         overwrite=False,
         keep_intermediate=False,
     ):
@@ -146,7 +147,7 @@ class OSMRoadsPlanet:
         self.logger = get_logger()
 
         # Setup project folders and paths
-        self.project_paths = create_project_folders()
+        self.project_paths = create_project_folders(base_path)
         self.file_gdb = str(Path(self.project_paths["final"]) / "roads.gdb")
         self.downloads_dir = self.project_paths["downloads"]
         self.intermediate_dir = self.project_paths["intermediate"]
@@ -474,6 +475,7 @@ def main():
     planet_file = sys.argv[1]  # Update this path
     shapefile_path = sys.argv[2]
     layer_name = sys.argv[3]
+    base_path = sys.argv[4]
     overwrite = False
     keep_intermediate = False  # Set True to keep the intermediate GPKG
     buffer_degrees = None  # Buffer around shapefile extent
@@ -500,6 +502,7 @@ def main():
         planet_file=planet_file,
         bbox=bbox,
         layer_name=layer_name,
+        base_path=base_path,
         overwrite=overwrite,
         keep_intermediate=keep_intermediate,
     )
