@@ -1,3 +1,31 @@
+########################################################################################################################
+# data_prep.py
+# Author: James Jin
+# unity ID: cjjin
+# Purpose: Prepares all data necessary for circuity factor analysis in 5 major steps:
+#          1. Creating new File GDB for workspace and feature dataset, importing road data (all done with Quick Import)
+#          2. Creating boundary feature classes based off of the physiographic region boundary
+#          3. Cleaning sawmill data (removing unwanted sawmills)
+#          4. Cleaning harvest site data (removing unwanted harvest sites)
+#          5. Merging the Forest Service roads with OSM roads.
+#
+#          It is recommended that all steps be done at the same time but steps 3-5 can be done separately.
+#
+# Usage: <workspace (file gdb)> <OSM road data> <FS road data> <sawmill data> <harvest site data> <ranger district fc>
+#        <physiographic region boundary fc> <spatial reference: epsg code>
+#
+# IMPORTANT: The workspace must be a non-existent File GDB within an existing directory. This is because the
+#            Data Interoperability tool 'Quick Import' creates a new File GDB and cannot import into an existing
+#            File GDB. The created File GDB will serve as the workspace for this script and where all the resulting
+#            feature classes will be placed.
+#
+#            Currently, both creation of the workspace File GDB and the boundary feature classes are necessary for the
+#            other 3 processes to function, so it is recommended to complete all 5 steps at once.
+#
+#            Once this script finishes running, there will be steps that must be done within ArcGIS Pro. Restrictions
+#            must be manually added to network datasets before they can be used.
+########################################################################################################################
+
 import sys, arcpy, os
 
 class DataPrep:
@@ -24,13 +52,18 @@ class DataPrep:
         self.transport_dataset = "Transportation"
         self.park_roads = os.path.join(self.transport_dataset, "park_roads")
         self.sm_boundaries = "sm_boundaries"
+        self.combined_roads = None
 
     def create_new_file_gdb(self):
         """Uses the quick import tool from Data Interoperability to create a new File GDB with roads data"""
         if not arcpy.Exists(os.path.join(self.workspace, os.path.basename(self.total_roads))):
+            if not os.path.isdir(os.path.dirname(self.workspace)):
+                raise arcpy.ExecuteError(f"{self.workspace} is not placed in an existing directory.")
             arcpy.CheckOutExtension("DataInteroperability")
             arcpy.gp.QuickImport_interop(os.path.dirname(self.total_roads), self.workspace)
             arcpy.CheckInExtension("DataInteroperability")
+        else:
+            raise arcpy.ExecuteError(f"{self.workspace} already exists. Please provide a name for a new file GDB.")
         self.total_roads = os.path.join(self.workspace, os.path.basename(self.total_roads))
 
         if not arcpy.Exists(os.path.join(self.workspace, self.transport_dataset)):
@@ -72,31 +105,7 @@ class DataPrep:
             dissolve_option="ALL"
         )
 
-    def prep_roads(self):
-        """Projects roads data into new spatial reference, clips roads to create feature class for park roads"""
-        # project input roads into the transportation dataset
-        output_path = os.path.join(self.transport_dataset, os.path.basename(self.total_roads) + "_proj")
-        if not arcpy.Exists(output_path):
-            arcpy.management.Project(self.total_roads, output_path, self.spat_ref)
-        self.total_roads = output_path
-
-        #clip roads to create park roads
-        arcpy.analysis.Clip(
-            self.total_roads,
-            self.park_boundaries,
-            self.park_roads
-        )
-
-        #project nfs roads
-        if not arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
-            arcpy.management.Project(
-                self.NFS_roads,
-                os.path.splitext(os.path.basename(self.NFS_roads))[0],
-                self.spat_ref
-            )
-        self.NFS_roads = os.path.splitext(os.path.basename(self.NFS_roads))[0]
-
-    def clean_harvest_site_data(self):
+    def clean_harvest_site_data(self, keep_temp=False):
         """Projects and clips harvest site data. Also removes unwanted polygons that are too small."""
         # project harvest site data and boundary
         hs_proj = os.path.splitext(os.path.basename(self.harvest_sites))[0]
@@ -133,7 +142,13 @@ class DataPrep:
                 uc.deleteRow()
         del uc, row
 
-    def clean_sawmill_data(self):
+        arcpy.management.Rename(hs_bound, "harvest_sites")
+        self.harvest_sites = "harvest_sites"
+
+        if not keep_temp:
+            arcpy.management.Delete(hs_proj)
+
+    def clean_sawmill_data(self, keep_temp=False):
         """Projects and clips sawmill data. Removes closed and announced sawmills."""
         # project sawmill data and boundary
         sm_proj = os.path.splitext(os.path.basename(self.sawmills))[0]
@@ -152,13 +167,62 @@ class DataPrep:
         # reproject copied features to correct spatial reference
         arcpy.management.Project(sm_bound, "sawmills_bounded_proj", self.spat_ref)
 
-    def merge_park_roads(self):
+        arcpy.management.Rename("sawmills_bounded_proj", "sawmills")
+        self.sawmills = "sawmills"
+        if not keep_temp:
+            arcpy.management.Delete("sawmills_bounded_proj")
+            arcpy.management.Delete(sm_bound)
+            arcpy.management.Delete(sm_proj)
+
+    def prep_roads(self, keep_temp=False):
+        """Projects roads data into new spatial reference, clips roads to create feature class for park roads"""
+        # project input roads into the transportation dataset
+        roads_basename = os.path.basename(self.total_roads)
+        output_path = os.path.join(self.transport_dataset, os.path.basename(self.total_roads) + "_proj")
+        if not arcpy.Exists(output_path):
+            arcpy.management.Project(self.total_roads, output_path, self.spat_ref)
+        self.total_roads = output_path
+
+        #clip roads to the boundaries for sawmills
+        clipped_roads = os.path.join(self.transport_dataset, roads_basename + "_clipped")
+        if arcpy.Exists(clipped_roads):
+            arcpy.management.Delete(clipped_roads)
+        arcpy.analysis.Clip(
+            self.total_roads,
+            self.sm_boundaries,
+            clipped_roads
+        )
+        self.total_roads = clipped_roads
+
+        #clip roads to create park roads
+        if arcpy.Exists(self.park_roads):
+            arcpy.management.Delete(self.park_roads)
+        arcpy.analysis.Clip(
+            self.total_roads,
+            self.park_boundaries,
+            self.park_roads
+        )
+
+        #project nfs roads
+        if not arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
+            arcpy.management.Project(
+                self.NFS_roads,
+                os.path.splitext(os.path.basename(self.NFS_roads))[0],
+                self.spat_ref
+            )
+        self.NFS_roads = os.path.splitext(os.path.basename(self.NFS_roads))[0]
+
+        if not keep_temp:
+            arcpy.management.Delete(output_path)
+            arcpy.management.Delete(roads_basename)
+
+    def merge_park_roads(self, keep_temp=False):
         """Merge NFS roads and OSM roads to create park roads for any relevant park"""
         # Clip the NFS roads to the boundary
         arcpy.management.MakeFeatureLayer(self.NFS_roads, "NFS_roads")
         arcpy.management.SelectLayerByLocation("NFS_roads", "INTERSECT", self.park_boundaries)
         self.NFS_roads = "NFS_bounded"
-        arcpy.management.Project("NFS_roads", self.NFS_roads, self.spat_ref)
+        arcpy.management.CopyFeatures("NFS_roads", self.NFS_roads)
 
         # generate points along each NFS road
         points = "NFS_points"
@@ -183,9 +247,9 @@ class DataPrep:
         # mark every NFS road as a duplicate if more than 20 points is near a public road (> 80%)
         near_dict = {}
         very_near_dict = {}
-        arcpy.management.AddField(self.park_roads, "DUPLICATE", "SHORT")
+        arcpy.management.AddField(self.NFS_roads, "DUPLICATE", "SHORT")
         sc = arcpy.da.SearchCursor(points, ["ORIG_FID", "IS_NEAR", "VERY_NEAR"])
-        uc = arcpy.da.UpdateCursor(self.park_roads, ["OBJECTID", "DUPLICATE"])
+        uc = arcpy.da.UpdateCursor(self.NFS_roads, ["OBJECTID", "DUPLICATE"])
         for row in sc:
             if not near_dict.get(row[0]):
                 near_dict[row[0]] = row[1]
@@ -257,26 +321,23 @@ class DataPrep:
             )
 
             orig_fid_dict = {}
-            sc = arcpy.da.SearchCursor("end_points_neg", ["ORIG_FID"])
-            for row in sc:
-                if orig_fid_dict.get(row[0]):
-                    orig_fid_dict[row[0]] += 1
-                else:
-                    orig_fid_dict[row[0]] = 1
-            del row, sc
+            with arcpy.da.SearchCursor("end_points_neg", ["ORIG_FID"]) as sc:
+                for row in sc:
+                    if orig_fid_dict.get(row[0]):
+                        orig_fid_dict[row[0]] += 1
+                    else:
+                        orig_fid_dict[row[0]] = 1
 
-            sc = arcpy.da.SearchCursor("joined_lyr", ["ORIG_FID"])
-            for row in sc:
-                if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
-                    orig_fid_dict[row[0]] -= 1
-            del row, sc
+            with arcpy.da.SearchCursor("joined_lyr", ["ORIG_FID"]) as sc:
+                for row in sc:
+                    if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+                        orig_fid_dict[row[0]] -= 1
 
-            uc = arcpy.da.UpdateCursor(self.NFS_roads, ["OBJECTID"])
-            for row in uc:
-                if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
-                    uc.deleteRow()
-                    remove_count += 1
-            del row, uc
+            with arcpy.da.UpdateCursor(self.NFS_roads, ["OBJECTID"]) as uc:
+                for row in uc:
+                    if orig_fid_dict.get(row[0]) and orig_fid_dict[row[0]] == 2:
+                        uc.deleteRow()
+                        remove_count += 1
             arcpy.management.Delete("joined_lyr")
             arcpy.management.Delete("spatial_join_output")
             arcpy.management.Delete("end_points_neg")
@@ -291,60 +352,83 @@ class DataPrep:
         # integrate the roads dataset then convert to line so that each line ends at an intersection
         arcpy.management.Integrate(output_roads, cluster_tolerance="0.5 Feet")
         arcpy.management.FeatureToLine(output_roads, os.path.join(self.transport_dataset, "osm_nfs_combined"))
+        self.combined_roads = os.path.join(self.transport_dataset, "osm_nfs_combined")
 
-    def create_road_fc(self):
+        if not keep_temp:
+            arcpy.management.Delete(output_roads)
+            arcpy.management.Delete(end_points)
+            arcpy.management.Delete(points)
+            arcpy.management.Delete("NFS_bounded")
+            arcpy.management.Delete("road_points")
+            arcpy.management.Delete("NFS_cleaned")
+
+    def create_road_fc(self, keep_temp=False):
         """Cleans and merges the roads feature classes, then creates a network dataset out of the result"""
         # set workspace to transportation feature dataset
-        arcpy.env.workspace = self.transport_dataset
+        arcpy.env.workspace = os.path.join(self.workspace, self.transport_dataset)
 
         # erase the osm-nfs combined roads from the larger roads data
-        osm_nfs_roads = "osm_nfs_combined"
+        if arcpy.Exists("roads_erased"):
+            arcpy.management.Delete("roads_erased")
         erasing_fc = os.path.basename(self.total_roads)
-        arcpy.analysis.Erase(erasing_fc, osm_nfs_roads, "roads_erased")
+        arcpy.analysis.Erase(erasing_fc, os.path.basename(self.combined_roads), "roads_erased")
 
         # merge road feature classes
         final_roads = "merged_roads"
-        arcpy.management.Merge(["roads_erased", osm_nfs_roads], final_roads)
-        arcpy.management.FeatureToLine(final_roads, "complete_roads")
-        final_roads = "complete_roads"
-        arcpy.management.RepairGeometry(final_roads)
+        if arcpy.Exists(final_roads):
+            arcpy.management.Delete(final_roads)
+        arcpy.management.Merge(["roads_erased", os.path.basename(self.combined_roads)], final_roads)
+        complete_roads = "complete_roads"
+        if arcpy.Exists(complete_roads):
+            arcpy.management.Delete(complete_roads)
+        arcpy.management.FeatureToLine(final_roads, complete_roads)
+        arcpy.management.RepairGeometry(complete_roads)
 
         # add and calculate distance field
-        arcpy.management.AddField(final_roads, "distance", "DOUBLE")
+        arcpy.management.AddField(complete_roads, "distance", "DOUBLE")
         arcpy.management.CalculateGeometryAttributes(
-            final_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
+            complete_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
         )
+
+        if not keep_temp:
+            arcpy.management.Delete("merged_roads")
+            arcpy.management.Delete("roads_erased")
 
     def process(
         self,
-        create_boundaries=True,
-        create_new_gdb=True,
-        road_prep=True,
-        road_merge=True,
         sawmill_data=True,
         harvest_site_data=True,
-        road_fc=True
+        merge_road_creation=True
     ):
         """Starts and runs the process of preparing data"""
-        if create_new_gdb:
-            self.create_new_file_gdb()
+        arcpy.AddMessage("Beginning Data Preparation")
+        arcpy.AddMessage("Importing Road Data and Creating File GDB")
+        self.create_new_file_gdb()
 
         arcpy.env.workspace = self.workspace
         arcpy.env.overwriteOutput = True
 
-        if create_boundaries:
-            self.create_boundary_fcs()
-        if road_prep:
-            self.prep_roads()
-        if road_merge:
-            self.merge_park_roads()
+        arcpy.AddMessage("Creating Boundary Feature Classes")
+        self.create_boundary_fcs()
         if sawmill_data:
+            arcpy.AddMessage("Cleaning Sawmill Data")
             self.clean_sawmill_data()
+        else:
+            arcpy.AddMessage("Sawmill Data Cleaning Skipped")
         if harvest_site_data:
+            arcpy.AddMessage("Cleaning Harvest Site Data")
             self.clean_harvest_site_data()
-        if road_fc:
+        else:
+            arcpy.AddMessage("Harvest Site Data Cleaning Skipped")
+        if merge_road_creation:
+            arcpy.AddMessage("Starting Road Data Merging Process")
+            self.prep_roads()
+            arcpy.AddMessage("Merging Forest Service Roads with OSM Roads")
+            self.merge_park_roads()
+            arcpy.AddMessage("Combining All Road Feature Classes")
             self.create_road_fc()
-
+        else:
+            arcpy.AddMessage("Road Data Merging Process Skipped")
 def main():
     """Main function to run data preparation script"""
     workspace = sys.argv[1]
@@ -368,13 +452,9 @@ def main():
     )
 
     data_prepper.process(
-        create_new_gdb=True,
-        create_boundaries=False,
-        road_prep=True,
-        road_merge=False,
-        sawmill_data=False,
-        harvest_site_data=False,
-        road_fc=False
+        sawmill_data=True,
+        harvest_site_data=True,
+        merge_road_creation=True
     )
     print("Finished preparing data")
 

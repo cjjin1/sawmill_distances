@@ -39,19 +39,34 @@ data_prepper = DataPrep(
 #check if region name has been given
 #call create_boundary_fcs()
 #delete intermediate files
+#project back to NAD 83
 if region_name:
     data_prepper.create_boundary_fcs(
         new_physio=f"proj_physio_{region_name}.shp",
         new_park_boundaries=f"park_boundaries_{region_name}.shp",
-        new_sm_boundaries=f"sm_boundaries_{region_name}.shp"
+        new_sm_boundaries=f"sm_boundaries_temp_{region_name}.shp"
     )
     arcpy.management.Delete(f"park_boundaries_{region_name}.shp")
     arcpy.management.Delete(f"proj_physio_{region_name}.shp")
+
+    arcpy.management.Project(
+        f"sm_boundaries_temp_{region_name}.shp",
+        f"sm_boundaries_{region_name}.shp",
+        arcpy.SpatialReference(4269)
+    )
+    arcpy.management.Delete(f"sm_boundaries_temp_{region_name}.shp")
 else:
     data_prepper.create_boundary_fcs(
         new_physio="proj_physio.shp",
         new_park_boundaries="park_boundaries.shp",
-        new_sm_boundaries="sm_boundaries.shp"
+        new_sm_boundaries="sm_boundaries_temp.shp"
     )
     arcpy.management.Delete("park_boundaries.shp")
     arcpy.management.Delete("proj_physio.shp")
+
+    arcpy.management.Project(
+        f"sm_boundaries_temp.shp",
+        f"sm_boundaries.shp",
+        arcpy.SpatialReference(4269)
+    )
+    arcpy.management.Delete(f"sm_boundaries_temp.shp")

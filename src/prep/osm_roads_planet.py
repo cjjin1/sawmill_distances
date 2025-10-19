@@ -471,7 +471,7 @@ def main():
     if len(sys.argv) > 5:
         osm_log = sys.argv[5]
     # Setup logging
-    log_file = setup_logging(log_file_path=osm_log)
+    log_file = setup_logging(osm_log)
     logger = get_logger()
 
     # Configuration
@@ -479,7 +479,7 @@ def main():
     shapefile_path = sys.argv[2]
     layer_name = sys.argv[3]
     base_path = sys.argv[4]
-    overwrite = False
+    overwrite = True
     keep_intermediate = False  # Set True to keep the intermediate GPKG
     buffer_degrees = None  # Buffer around shapefile extent
 
