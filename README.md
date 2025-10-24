@@ -77,12 +77,7 @@ Data preparation:
       - Use the EPSG code for spatial reference
     
 BEFORE CALCULATIONS:
-1. First, the Create Network dataset tool must be run. Inputs include:
-  - Feature dataset (containing the complete merged roads (complete_roads) feature class)
-  - Dataset name (call it streets_nd)
-  - Source feature class (select the merged_roads feature class created in data_prep.py)
-  - Select no elevation model
-2. Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follow these steps:
+1. Oneway functionality must be manually implemented in ArcGIS Pro. To do so, follow these steps:
   - Open the streets_nd network dataset properties in the catalog
   - Create a new travel mode called "Driving Distance"
     - Under costs, ensure length is used for impedance
@@ -100,5 +95,5 @@ BEFORE CALCULATIONS:
         def evaluator(oneway, reversed):
           return oneway == 1 and reversed == 0
   - Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
-3. Build the network using the Build Network tool
+2. Build the network using the Build Network tool
 
