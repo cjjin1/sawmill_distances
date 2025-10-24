@@ -6,10 +6,9 @@ Data preparation:
 - Three scripts must be run in order.
 1. create_boundaries.py (optional)
   - This script is very simple and can be done manually instead. 
-    - Simply clip the ranger districts feature class using the physiographic region.
-    - Then buffer the resulting feature class by 125 miles.
-  - This script does these two steps as well but puts it into one script
-  - The output needs to be a shapefile, it cannot be feature class in a File GDB. By default, the script puts the output
+    - Simply clip the ranger districts shapefile using the physiographic region.
+    - Then buffer the resulting shapefile by 125 miles.
+  - The output needs to be a shapefile, it cannot be a feature class in a File GDB. By default, the script puts the output
     in the same directory as the physiographic region feature class. If this is a File GDB, use the full path for the 
     output file. Otherwise, just the basename is acceptable.
   - Input:
