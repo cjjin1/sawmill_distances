@@ -472,11 +472,11 @@ def main():
     )
 
     data_prepper.process(
-        create_gdb=False,
-        create_boundaries=False,
-        sawmill_data=False,
-        harvest_site_data=False,
-        merge_road_creation=False,
+        create_gdb=True,
+        create_boundaries=True,
+        sawmill_data=True,
+        harvest_site_data=True,
+        merge_road_creation=True,
         create_nw_ds=True
     )
     print("Finished preparing data")
