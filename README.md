@@ -54,6 +54,7 @@ Data preparation:
   - Input:
     - New File GDB
       - This File GDB will be created by using Data Interoperability's Quick Import tool.
+        - This cannot be an existing File GDB. It also must be a File GDB.
       - This File GDB will also act as the workspace and store all other output files
       - A feature dataset called 'Transportation' is created in this File GDB which will contain the network dataset
     - total roads feature class
