@@ -6,8 +6,10 @@
 #          all park boundaries within the designated physiographic region. The output shapefile will go into the
 #          directory the physiographic boundary shapefile is in. All other intermediate files will be deleted.
 # Usage: <park boundaries (ranger_districts.shp)> <physiographic shapefile/fc> <output name>
-#        Important note: the output name can only be the basename + extension (no extension if in File GDB), although a
-#        full file path is a valid output name.
+#        Important note: The output needs to be a shapefile, it cannot be feature class in a File GDB. By default, the
+#                        script puts the output in the same directory as the physiographic region feature class.
+#                        If this is a File GDB, use the full path for the output file.
+#                        Otherwise, just the basename is acceptable.
 ########################################################################################################################
 
 import sys,os,arcpy

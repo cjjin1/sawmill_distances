@@ -1,68 +1,81 @@
 Documentation:
-For the data prepration scripts, use in the order shown below.
+For the data preparation scripts, use in the order shown below.
 
-Data prep:
-- All input files are done as full path
-1. osm_roads.py
-  - IMPORTANT: This script needs to be run twice if the study area is very large:
-    - Once for the entire study area: this includes paths to every desirable sawmill
-    - Second time is for a smaller study area, which encapsulates where the NFS roads will
-      need to be connected to OSM roads. roads_data_prep.py will not run properly if the roads data set is too large
-  - Uses OSM data to retrieve road data
-  - Depending on size of location chosen, may take several minutes
-  - Inputs:
-      - output roads File GDB (must be created beforehand)
-      - Area of Interest:
-        - two options for inputs: name of place or shapefile
-      - for third argument, use either the keyword "aoi" or "shapefile" to signify which method to use
-      - Output name
-    - Example Input:
-      - C:/timber_project/data/nc_va_roads.gdb 
-      - C:/timber_project/data/boundaries/nc_va_boundaries
-      - shapefile
-      - osm_roads
+Data preparation:
+- All input files are done as full path unless specified otherwise
+- Three scripts must be run in order.
+1. create_boundaries.py (optional)
+  - This script is very simple and can be done manually instead. 
+    - Simply clip the ranger districts feature class using the physiographic region.
+    - Then buffer the resulting feature class by 125 miles.
+  - This script does these two steps as well but puts it into one script
+  - The output needs to be a shapefile, it cannot be feature class in a File GDB. By default, the script puts the output
+    in the same directory as the physiographic region feature class. If this is a File GDB, use the full path for the 
+    output file. Otherwise, just the basename is acceptable.
+  - Input:
+    - park boundaries (ranger_districts.shp)
+      - the ranger_districts.shp shapefile contains data for all of US. Every run of this tool (and following tools) 
+        should use this shapefile
+    - physiographic shapefile/fc
+      - This shapefile/fc should be the desired physiographic region (boundaries for desired harvest sites.)
+    - output name
+      - The output name for the new boundary shapefile. This will be used to get roads for osm_roads_planet.py. 
 
-2. road_data_prep.py
-  - Handles combining NFS roads and OSM roads
-  - Inputs: 
-      - Workspace (FileGDB to store data)
-      - Feature Dataset (Feature Dataset within the File GDB, must be created beforehand)
-      - Roads feature class (path to smaller roads dataset created in osm_roads.py)
-      - NFS Roads feature class (dataset of NFS roads)
-      - Boundary feature class (to clip the NFS roads fc)
-      - Spatial reference (Input needs to be the WKID/SRID code)
-      - output name (for the output roads data)
-  - Example Input:
-      - C:/timber_project/scratch/App_test/app_nd.gdb
-      - C:/timber_project/scratch/App_test/app_nd.gdb/Transportation
-      - C:/timber_project/data/nc_va_roads.gdb/osm_roads 
-      - C:/timber_project/data/RoadCore_FS.shp
-      - C:/timber_project/data/boundaries/nc_va_boundaries.shp
-      - 3404
-      - nc_va_osm_NFS_roads
+2. osm_roads_planet.py
+  - This script returns osm roads for a bounding box derived from a boundary shapefile
+  - Input:
+    - osm planet file
+      - This will be a file ending in .osm.pbf, usually called us-<yymmdd>.osm.pbf. This file is for the entire US,
+        this input should not change unless the file path changes.
+    - boundary file
+      - Defines the bounding box for obtaining roads. Must be a shapefile. This is obtained from the 
+        create_boundaries.py script but can also be obtained manually.
+    - output name
+      - Name of the created feature class. Use only the basename as the script will create a File GDB to store the
+        output. Do not include an extension.
+    - directory path
+      - Full path for a directory to store the results. Does not need to be empty but is recommended to store all 
+        outputs from multiple runs of this script separately.
+    - log file path (optional)
+      - Full file path and file name for where to store the log. If no option is selected, the default location
+        is the project folder for where the script is in and is called 'osm_road.log'
 
-3. data_prep
-  - Handles projecting and cleaning harvest site and sawmill data
-  - Merges the combined NFS/OSM roads with the larger OSM road feature class
-  - Inputs:
-    - Workspace (FileGDB to store data)
-    - Feature Dataset (same feature dataset the combined NFS/OSM road feature class is in)
-    - roads (the larger roads feature class created by osm_roads.py)
-    - harvest sites
-    - sawmills
-    - harvest site boundary (to clip harvest sites)
-    - sawmill boundary (to clip sawmill data)
-    - Spatial Reference (Input needs to be the WKID/SRID code)
-  - Example Input:
-    - C:/timber_project/scratch/App_test/app_nd.gdb
-    - C:/timber_project/scratch/App_test/app_nd.gdb/Transportation
-    - C:/timber_project/data/app_roads.gdb/osm_roads
-    - C:/timber_project/data/Activity_TimberHarvest.shp
-    - C:/timber_project/data/sawmills.shp
-    - C:/timber_project/data/boundaries/app_boundaries.shp
-    - C:/timber_project/data/boundaries/app_study_area.shp
-    - 3404
-
+3. data_prep.py
+  - This script does the bulk of the data preparation:
+    - cleaning harvest site data
+    - cleaning sawmill data
+    - merging the roads 
+    - creating the network dataset
+  - This script DOES NOT build the network nor does it implement the one way restriction. Those must be done manually.
+    - Go to the BEFORE CALCULATIONS selection for more details.
+  - In this script, there is a process function that has parameters for skipping steps. By default the entire process 
+    will run. DO NOT change this as some functions are required to be run first before others. This is more for 
+    testing purposes.
+  - Input:
+    - New File GDB
+      - This File GDB will be created by using Data Interoperability's Quick Import tool.
+      - This File GDB will also act as the workspace and store all other output files
+      - A feature dataset called 'Transportation' is created in this File GDB which will contain the network dataset
+    - total roads feature class
+      - This is the file path for the osm roads feature class created by the osm_roads_planet.py script
+    - NFS roads (RoadCore_FS.shp)
+      - This argument should always be the RoadCore_FS.shp shapefile as it covers the entire US
+    - sawmill dataset (forisk_sawmills_US_only.shp)
+      - This argument should always be the forisk_sawmills_US_only.shp shapefile as it covers the entire US. 
+      - The exact shapefile may be under a different name.
+    - harvest site dataset (Activity_TimberHarvest.shp)
+      - This argument should always be Activity_TimberHarvest.shp shapefile as it covers the entire US.
+      - The exact shapefile may be under a different name
+    - park boundaries (ranger_districts.shp)
+      - The ranger district shapefile will likely be under a different name
+      - This shapefile will be the boundaries for all forests containing harvest sites.
+      - This is the same shapefile used in create_boundaries.py
+    - physiographic shapefile/fc
+      - This shapefile/fc should be the desired physiographic region (boundaries for desired harvest sites.)
+      - This is the same argument used in create_boundaries.py
+    - spatial reference
+      - Use the EPSG code for spatial reference
+    
 BEFORE CALCULATIONS:
 1. First, the Create Network dataset tool must be run. Inputs include:
   - Feature dataset (containing the complete merged roads (complete_roads) feature class)
@@ -89,17 +102,3 @@ BEFORE CALCULATIONS:
   - Go back to the travel mode tab and for driving distance, make sure the Oneway restriction is checked
 3. Build the network using the Build Network tool
 
-Circuity Factor calculation:
-circuity_factor.py
-  - Calculates straight line distance for every harvest site to the nearest sawmill of each type
-  - Randomly selects a number (specified by user) of site-to-sawmill pairs for each type and calculates road distance
-  - Runs OLS analysis using straight line distance and road distance
-  - Inputs:
-    - Workspace (FileGDB to store data)
-    - Network dataset (created manually using the merged roads feature class)
-    - sawmills (the modified feature class created by data_prep.py)
-    - harvest sites (the modified feature class created by data_prep.py)
-    - output directory (to store results)
-    - Number of site-to-sawmill pairs per mill type (recommended at least 30)
-    - Keep Output Paths? (simply true or false for if the output paths should be kept)
-    - sawmill type (for if a single sawmill type is desired)

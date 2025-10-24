@@ -396,20 +396,29 @@ class DataPrep:
 
     def process(
         self,
+        create_gdb=True,
+        create_boundaries=True,
         sawmill_data=True,
         harvest_site_data=True,
-        merge_road_creation=True
+        merge_road_creation=True,
+        create_nw_ds=True
     ):
         """Starts and runs the process of preparing data"""
         arcpy.AddMessage("Beginning Data Preparation")
-        arcpy.AddMessage("Importing Road Data and Creating File GDB")
-        self.create_new_file_gdb()
+        if create_gdb:
+            arcpy.AddMessage("Importing Road Data and Creating File GDB")
+            self.create_new_file_gdb()
+        else:
+            arcpy.AddMessage("Skipping Road Data import and File GDB creation")
 
         arcpy.env.workspace = self.workspace
         arcpy.env.overwriteOutput = True
 
-        arcpy.AddMessage("Creating Boundary Feature Classes")
-        self.create_boundary_fcs()
+        if create_boundaries:
+            arcpy.AddMessage("Creating Boundary Feature Classes")
+            self.create_boundary_fcs()
+        else:
+            arcpy.AddMessage("Skipping Boundary Feature Class creation")
         if sawmill_data:
             arcpy.AddMessage("Cleaning Sawmill Data")
             self.clean_sawmill_data()
@@ -429,6 +438,16 @@ class DataPrep:
             self.create_road_fc()
         else:
             arcpy.AddMessage("Road Data Merging Process Skipped")
+        if create_nw_ds:
+            arcpy.AddMessage("Creating Network Dataset")
+            arcpy.na.CreateNetworkDataset(
+                os.path.join(self.workspace, self.transport_dataset),
+                "streets_nd",
+                "complete_roads",
+                "NO_ELEVATION"
+            )
+        else:
+            arcpy.AddMessage("Network Dataset Creation Skipped")
 
 def main():
     """Main function to run data preparation script"""
@@ -453,9 +472,12 @@ def main():
     )
 
     data_prepper.process(
-        sawmill_data=True,
-        harvest_site_data=True,
-        merge_road_creation=True
+        create_gdb=False,
+        create_boundaries=False,
+        sawmill_data=False,
+        harvest_site_data=False,
+        merge_road_creation=False,
+        create_nw_ds=True
     )
     print("Finished preparing data")
 
