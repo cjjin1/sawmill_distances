@@ -149,7 +149,7 @@ class DataPrep:
             arcpy.management.Delete(hs_proj)
 
     def clean_sawmill_data(self, keep_temp=False):
-        """Projects and clips sawmill data. Removes closed and announced sawmills."""
+        """Projects and clips sawmill data."""
         # project sawmill data and boundary
         sm_proj = os.path.splitext(os.path.basename(self.sawmills))[0]
         if not arcpy.Exists(sm_proj):
