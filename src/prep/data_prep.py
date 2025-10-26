@@ -288,13 +288,13 @@ class DataPrep:
         arcpy.management.CreateFeatureclass(
             arcpy.env.workspace, "road_points", "POINT", spatial_reference=self.spat_ref
         )
-        sc = arcpy.da.SearchCursor(end_points, ["SHAPE@", "NEAR_X", "NEAR_Y"])
+        sc = arcpy.da.SearchCursor(end_points, ["NEAR_X", "NEAR_Y"])
         ic = arcpy.da.InsertCursor("road_points", ["SHAPE@"])
-        for shape, near_x, near_y in sc:
+        for near_x, near_y in sc:
             road_point = arcpy.PointGeometry(arcpy.Point(near_x, near_y), self.spat_ref)
             if near_x != -1 and near_y != -1:
                 ic.insertRow([road_point])
-        del sc, ic, shape, near_x, near_y
+        del sc, ic, near_x, near_y
 
         # remove NFS_roads that won't snap to any public road
         remove_count = 1
