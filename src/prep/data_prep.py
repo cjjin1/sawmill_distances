@@ -285,7 +285,7 @@ class DataPrep:
             location="LOCATION",
             distance_unit="Miles"
         )
-        arcpy.CreateFeatureclass_management(
+        arcpy.management.CreateFeatureclass(
             arcpy.env.workspace, "road_points", "POINT", spatial_reference=self.spat_ref
         )
         sc = arcpy.da.SearchCursor(end_points, ["SHAPE@", "NEAR_X", "NEAR_Y"])
