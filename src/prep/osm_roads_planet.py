@@ -407,6 +407,51 @@ class OSMRoadsPlanet:
                     row[2] = 0
                 cursor.updateRow(row)
 
+    def extract_max_speed(self):
+        """Extracts the max speed tag from OSM roads data and puts it into its own field. Will populate will default
+           values if no max speed tag is provided."""
+        default_speed_limits = {
+            "motorway":65,
+            "trunk": 55,
+            "primary": 45,
+            "secondary": 35,
+            "tertiary": 35,
+            "unclassified": 25,
+            "residential": 25,
+            "service": 15,
+            "road":25
+        }
+
+        out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
+        fields = arcpy.ListFields(out_feature_class)
+        field_names = [f.name for f in fields]
+        if "other_tags" not in field_names:
+            raise arcpy.ExecuteError("Roads data does not contain necessary other_tags field.")
+        arcpy.management.AddField(out_feature_class, "maxspeed", "LONG")
+
+        with arcpy.da.UpdateCursor(out_feature_class, ["other_tags", "highway", "maxspeed"]) as cursor:
+            for row in cursor:
+                if row[0] and "\"maxspeed\"" in row[0]:
+                    tags_list = row[0].split(",")
+                    for tag in tags_list:
+                        if "\"maxspeed\"" in tag:
+                            expression_list = tag.split("=>")
+                            speed_value = expression_list[1]
+                            speed_value = speed_value.strip("\"")
+                            try:
+                                speed_value = int(speed_value[:2].strip())
+                            except ValueError:
+                                continue
+                            if speed_value % 5 == 0:
+                                row[2] = speed_value
+                            else:
+                                road_type = row[1]
+                                row[2] = default_speed_limits[road_type]
+                else:
+                    road_type = row[1]
+                    row[2] = default_speed_limits[road_type]
+                cursor.updateRow(row)
+
     def process(self):
         """Main processing method that orchestrates the entire workflow"""
         self.logger.info("=" * 50)
@@ -443,6 +488,7 @@ class OSMRoadsPlanet:
             # Step 2: Import to ArcGIS and add oneway/reversed fields
             import_success, import_timer = self.import_to_arcgis()
             self.extract_oneway()
+            self.extract_max_speed()
             if import_timer:
                 timers.append(import_timer)
 
