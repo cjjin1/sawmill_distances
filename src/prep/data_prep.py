@@ -179,8 +179,9 @@ class DataPrep:
         # project input roads into the transportation dataset
         roads_basename = os.path.basename(self.total_roads)
         output_path = os.path.join(self.transport_dataset, os.path.basename(self.total_roads) + "_proj")
-        if not arcpy.Exists(output_path):
-            arcpy.management.Project(self.total_roads, output_path, self.spat_ref)
+        if arcpy.Exists(output_path):
+            arcpy.management.Delete(output_path)
+        arcpy.management.Project(self.total_roads, output_path, self.spat_ref)
         self.total_roads = output_path
 
         #clip roads to the boundaries for sawmills
@@ -204,12 +205,13 @@ class DataPrep:
         )
 
         #project nfs roads
-        if not arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
-            arcpy.management.Project(
-                self.NFS_roads,
-                os.path.splitext(os.path.basename(self.NFS_roads))[0],
-                self.spat_ref
-            )
+        if arcpy.Exists(os.path.splitext(os.path.basename(self.NFS_roads))[0]):
+            arcpy.management.Delete(os.path.splitext(os.path.basename(self.NFS_roads))[0])
+        arcpy.management.Project(
+            self.NFS_roads,
+            os.path.splitext(os.path.basename(self.NFS_roads))[0],
+            self.spat_ref
+        )
         self.NFS_roads = os.path.splitext(os.path.basename(self.NFS_roads))[0]
 
         if not keep_temp:
@@ -364,6 +366,11 @@ class DataPrep:
 
     def create_road_fc(self, keep_temp=False):
         """Cleans and merges the roads feature classes, then creates a network dataset out of the result"""
+        # deletes network dataset if it already exists
+        if arcpy.Exists(os.path.join(self.workspace, self.transport_dataset, "streets_nd")):
+            arcpy.management.Delete(os.path.join(self.workspace, self.transport_dataset, "streets_nd"))
+            arcpy.management.Delete(os.path.join(self.workspace, self.transport_dataset, "streets_nd_Junctions"))
+
         # set workspace to transportation feature dataset
         arcpy.env.workspace = os.path.join(self.workspace, self.transport_dataset)
 
@@ -389,6 +396,15 @@ class DataPrep:
         arcpy.management.CalculateGeometryAttributes(
             complete_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
         )
+
+        # add and calculate travel time field
+        arcpy.management.AddField(complete_roads, "travel_time", "DOUBLE")
+        with arcpy.da.UpdateCursor(complete_roads, ["distance", "maxspeed", "travel_time"]) as uc:
+            for row in uc:
+                if not row[1]:
+                    row[1] = 25
+                row[2] = float(row[0]) / float(row[1])
+                uc.updateRow(row)
 
         if not keep_temp:
             arcpy.management.Delete("merged_roads")
@@ -440,6 +456,9 @@ class DataPrep:
             arcpy.AddMessage("Road Data Merging Process Skipped")
         if create_nw_ds:
             arcpy.AddMessage("Creating Network Dataset")
+            if arcpy.Exists(os.path.join(self.workspace, self.transport_dataset, "streets_nd")):
+                arcpy.management.Delete(os.path.join(self.workspace, self.transport_dataset, "streets_nd"))
+                arcpy.management.Delete(os.path.join(self.workspace, self.transport_dataset, "streets_nd_Junctions"))
             arcpy.na.CreateNetworkDataset(
                 os.path.join(self.workspace, self.transport_dataset),
                 "streets_nd",
