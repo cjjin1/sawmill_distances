@@ -126,6 +126,7 @@ class OSMRoadsPlanet:
         self,
         planet_file,
         bbox,
+        state_fc,
         layer_name="roads",
         base_path=None,
         overwrite=False,
@@ -141,6 +142,7 @@ class OSMRoadsPlanet:
         """
         self.planet_file = planet_file
         self.bbox = bbox
+        self.states = state_fc
         self.layer_name = layer_name
         self.overwrite = overwrite
         self.keep_intermediate = keep_intermediate
@@ -161,6 +163,284 @@ class OSMRoadsPlanet:
         self.logger.info(f"Planet file: {planet_file}")
         self.logger.info(f"Layer name: {layer_name}")
         self.logger.info(f"Overwrite mode: {overwrite}")
+
+        self.speed_limit_dict = {
+            "North Carolina": {
+                "motorway": 65,
+                "trunk": 55,
+                "primary": 45,
+                "secondary": 45,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 15
+            },
+            "South Carolina": {
+                "motorway": 70,
+                "trunk": 45,
+                "primary": 45,
+                "secondary": 45,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 10,
+                "road": 25
+            },
+            "Georgia": {
+                "motorway": 70,
+                "trunk": 55,
+                "primary": 45,
+                "secondary": 45,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Alabama": {
+                "motorway": 70,
+                "trunk": 55,
+                "primary": 45,
+                "secondary": 45,
+                "tertiary": 45,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Florida": {
+                "motorway": 70,
+                "trunk": 45,
+                "primary": 45,
+                "secondary": 45,
+                "tertiary": 30,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Virginia": {
+                "motorway": 55,
+                "trunk": 45,
+                "primary": 45,
+                "secondary": 35,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 5,
+                "road": 25
+            },
+            "West Virginia": {
+                "motorway": 70,
+                "trunk": 65,
+                "primary": 55,
+                "secondary": 55,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 25,
+                "road": 25
+            },
+            "Tennessee": {
+                "motorway": 70,
+                "trunk": 55,
+                "primary": 45,
+                "secondary": 40,
+                "tertiary": 30,
+                "residential": 25,
+                "unclassified": 30,
+                "service": 10,
+                "road": 25
+            },
+            "Texas": {
+                "motorway": 65,
+                "trunk": 75,
+                "primary": 45,
+                "secondary": 40,
+                "tertiary": 30,
+                "residential": 30,
+                "unclassified": 30,
+                "service": 10,
+                "road": 25
+            },
+            "Louisiana": {
+                "motorway": 70,
+                "trunk": 50,
+                "primary": 55,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Oregon": {
+                "motorway": 65,
+                "trunk": 55,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 25,
+                "residential": 20,
+                "unclassified": 20,
+                "service": 15,
+                "road": 25
+            },
+            "California": {
+                "motorway": 65,
+                "trunk": 65,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 70
+            },
+            "Washington": {
+                "motorway": 60,
+                "trunk": 60,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Idaho": {
+                "motorway": 80,
+                "trunk": 65,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 25,
+                "residential": 20,
+                "unclassified": 25,
+                "service": 10,
+                "road": 25
+            },
+            "Nevada": {
+                "motorway": 65,
+                "trunk": 55,
+                "primary": 45,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Montana": {
+                "motorway": 80,
+                "trunk": 70,
+                "primary": 70,
+                "secondary": 45,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Oklahoma": {
+                "motorway": 75,
+                "trunk": 65,
+                "primary": 65,
+                "secondary": 40,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 45,
+                "service": 45,
+                "road": 45
+            },
+            "Missouri": {
+                "motorway": 70,
+                "trunk": 65,
+                "primary": 40,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Kentucky": {
+                "motorway": 70,
+                "trunk": 55,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 5
+            },
+            "Indiana": {
+                "motorway": 70,
+                "trunk": 60,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 30,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Ohio": {
+                "motorway": 65,
+                "trunk": 55,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 35,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Pennsylvania": {
+                "motorway": 55,
+                "trunk": 45,
+                "primary": 35,
+                "secondary": 35,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Maryland": {
+                "motorway": 55,
+                "trunk": 55,
+                "primary": 30,
+                "secondary": 30,
+                "tertiary": 25,
+                "residential": 25,
+                "unclassified": 25,
+                "service": 15,
+                "road": 25
+            },
+            "Mississippi": {
+                "motorway": 70,
+                "trunk": 65,
+                "primary": 45,
+                "secondary": 55,
+                "tertiary": 30,
+                "residential": 20,
+                "unclassified": 30,
+                "service": 10,
+                "road": 25
+            },
+            "Arkansas": {
+                "motorway": 75,
+                "trunk": 65,
+                "primary": 45,
+                "secondary": 35,
+                "tertiary": 30,
+                "residential": 20,
+                "unclassified": 20,
+                "service": 10,
+                "road": 25,
+            }
+        }
 
     def extract_roads_with_gdal(self):
         """Extract roads using GDAL VectorTranslate directly"""
@@ -296,6 +576,7 @@ class OSMRoadsPlanet:
 
                 # Input GeoPackage layer and output FGDB feature class
                 in_features = f"{self.gpkg_output}\\{self.layer_name}"
+                temp_feature_class = f"{self.file_gdb}\\{self.layer_name}_temp"
                 out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
 
                 # If output exists and overwrite is true, delete first to avoid schema conflicts
@@ -304,10 +585,23 @@ class OSMRoadsPlanet:
                         f"Overwriting existing feature class: {out_feature_class}"
                     )
                     arcpy.management.Delete(out_feature_class)
+                if arcpy.Exists(temp_feature_class):
+                    arcpy.management.Delete(temp_feature_class)
 
                 self.logger.info(f"Copying features from: {in_features}")
-                self.logger.info(f"To feature class: {out_feature_class}")
-                arcpy.management.CopyFeatures(in_features, out_feature_class)
+                self.logger.info(f"To feature class: {temp_feature_class}")
+                arcpy.management.CopyFeatures(in_features, temp_feature_class)
+
+                self.logger.info(f"Spatially joining states to roads")
+                arcpy.analysis.SpatialJoin(
+                    target_features=temp_feature_class,
+                    join_features=self.states,
+                    out_feature_class=out_feature_class,
+                    join_operation="JOIN_ONE_TO_ONE",
+                    join_type="KEEP_ALL",
+                    match_option="INTERSECT"
+                )
+                arcpy.management.Delete(temp_feature_class)
 
                 # Stop spinner
                 stop_event.set()
@@ -410,18 +704,6 @@ class OSMRoadsPlanet:
     def extract_max_speed(self):
         """Extracts the max speed tag from OSM roads data and puts it into its own field. Will populate will default
            values if no max speed tag is provided."""
-        default_speed_limits = {
-            "motorway":65,
-            "trunk": 55,
-            "primary": 45,
-            "secondary": 35,
-            "tertiary": 35,
-            "unclassified": 25,
-            "residential": 25,
-            "service": 15,
-            "road":25
-        }
-
         out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
         fields = arcpy.ListFields(out_feature_class)
         field_names = [f.name for f in fields]
@@ -429,7 +711,8 @@ class OSMRoadsPlanet:
             raise arcpy.ExecuteError("Roads data does not contain necessary other_tags field.")
         arcpy.management.AddField(out_feature_class, "maxspeed", "LONG")
 
-        with arcpy.da.UpdateCursor(out_feature_class, ["other_tags", "highway", "maxspeed"]) as cursor:
+        fields = ["other_tags", "highway", "maxspeed", "STATE_NAME"]
+        with arcpy.da.UpdateCursor(out_feature_class, fields) as cursor:
             for row in cursor:
                 if row[0] and "\"maxspeed\"" in row[0]:
                     tags_list = row[0].split(",")
@@ -446,10 +729,10 @@ class OSMRoadsPlanet:
                                 row[2] = speed_value
                             else:
                                 road_type = row[1]
-                                row[2] = default_speed_limits[road_type]
+                                row[2] = self.speed_limit_dict[row[3]][road_type]
                 else:
                     road_type = row[1]
-                    row[2] = default_speed_limits[road_type]
+                    row[2] = self.speed_limit_dict[row[3]][road_type]
                 cursor.updateRow(row)
 
     def process(self):
@@ -514,8 +797,8 @@ class OSMRoadsPlanet:
 def main():
     """Main function to run OSM Roads Planet processing"""
     osm_log = None
-    if len(sys.argv) > 5:
-        osm_log = sys.argv[5]
+    if len(sys.argv) > 6:
+        osm_log = sys.argv[6]
     # Setup logging
     log_file = setup_logging(osm_log)
     logger = get_logger()
@@ -523,8 +806,9 @@ def main():
     # Configuration
     planet_file = sys.argv[1]  # Update this path
     shapefile_path = sys.argv[2]
-    layer_name = sys.argv[3]
-    base_path = sys.argv[4]
+    state_fc = sys.argv[3]
+    layer_name = sys.argv[4]
+    base_path = sys.argv[5]
     overwrite = True
     keep_intermediate = False  # Set True to keep the intermediate GPKG
     buffer_degrees = None  # Buffer around shapefile extent
@@ -550,10 +834,11 @@ def main():
     osm_roads = OSMRoadsPlanet(
         planet_file=planet_file,
         bbox=bbox,
+        state_fc=state_fc,
         layer_name=layer_name,
         base_path=base_path,
         overwrite=overwrite,
-        keep_intermediate=keep_intermediate,
+        keep_intermediate=keep_intermediate
     )
 
     # Run the complete processing workflow
