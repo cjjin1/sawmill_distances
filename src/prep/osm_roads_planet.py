@@ -174,7 +174,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 25,
-                "road": 25,
+                "road": 5,
             },
             "Florida": {
                 "motorway": 70,
@@ -185,7 +185,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Illinois": {
                 "motorway": 70,
@@ -196,7 +196,7 @@ class OSMRoadsPlanet:
                 "residential": 30,
                 "unclassified": 30,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Minnesota": {
                 "motorway": 60,
@@ -207,7 +207,7 @@ class OSMRoadsPlanet:
                 "residential": 20,
                 "unclassified": 20,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Maryland": {
                 "motorway": 55,
@@ -218,7 +218,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Rhode Island": {
                 "motorway": 55,
@@ -229,7 +229,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 15,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Idaho": {
                 "motorway": 80,
@@ -240,7 +240,7 @@ class OSMRoadsPlanet:
                 "residential": 20,
                 "unclassified": 25,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "New Hampshire": {
                 "motorway": 65,
@@ -251,7 +251,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 30,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "North Carolina": {
                 "motorway": 65,
@@ -273,7 +273,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 25,
-                "road": 25,
+                "road": 5,
             },
             "Connecticut": {
                 "motorway": 65,
@@ -284,7 +284,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 20,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Delaware": {
                 "motorway": 65,
@@ -295,7 +295,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "New Mexico": {
                 "motorway": 75,
@@ -328,7 +328,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Wisconsin": {
                 "motorway": 70,
@@ -339,7 +339,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Oregon": {
                 "motorway": 65,
@@ -350,7 +350,7 @@ class OSMRoadsPlanet:
                 "residential": 20,
                 "unclassified": 20,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Nebraska": {
                 "motorway": 75,
@@ -361,7 +361,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 50,
                 "service": 25,
-                "road": 25,
+                "road": 5,
             },
             "Pennsylvania": {
                 "motorway": 55,
@@ -372,7 +372,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Washington": {
                 "motorway": 60,
@@ -394,7 +394,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Georgia": {
                 "motorway": 70,
@@ -405,7 +405,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Alabama": {
                 "motorway": 70,
@@ -416,7 +416,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Utah": {
                 "motorway": 70,
@@ -427,7 +427,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Ohio": {
                 "motorway": 65,
@@ -438,7 +438,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Texas": {
                 "motorway": 65,
@@ -449,7 +449,7 @@ class OSMRoadsPlanet:
                 "residential": 30,
                 "unclassified": 30,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Colorado": {
                 "motorway": 75,
@@ -471,7 +471,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Oklahoma": {
                 "motorway": 75,
@@ -493,7 +493,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 30,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Wyoming": {
                 "motorway": 75,
@@ -504,7 +504,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 45,
                 "service": 45,
-                "road": 25,
+                "road": 5,
             },
             "Hawaii": {
                 "motorway": 55,
@@ -515,7 +515,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 5,
-                "road": 25,
+                "road": 5,
             },
             "North Dakota": {
                 "motorway": 80,
@@ -526,7 +526,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 55,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Kentucky": {
                 "motorway": 70,
@@ -548,7 +548,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Arkansas": {
                 "motorway": 75,
@@ -559,7 +559,7 @@ class OSMRoadsPlanet:
                 "residential": 20,
                 "unclassified": 20,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Mississippi": {
                 "motorway": 70,
@@ -570,7 +570,7 @@ class OSMRoadsPlanet:
                 "residential": 20,
                 "unclassified": 30,
                 "service": 10,
-                "road": 25,
+                "road": 5,
             },
             "Missouri": {
                 "motorway": 70,
@@ -581,7 +581,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Montana": {
                 "motorway": 80,
@@ -592,7 +592,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Kansas": {
                 "motorway": 75,
@@ -603,7 +603,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 45,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Indiana": {
                 "motorway": 70,
@@ -614,7 +614,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "South Dakota": {
                 "motorway": 80,
@@ -625,7 +625,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Massachusetts": {
                 "motorway": 65,
@@ -636,7 +636,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 25,
-                "road": 25,
+                "road": 5,
             },
             "Virginia": {
                 "motorway": 55,
@@ -647,7 +647,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 5,
-                "road": 25,
+                "road": 5,
             },
             "District of Columbia": {
                 "motorway": 50,
@@ -658,7 +658,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 10,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Maine": {
                 "motorway": 70,
@@ -669,7 +669,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 5,
-                "road": 25,
+                "road": 5,
             },
             "New York": {
                 "motorway": 65,
@@ -680,7 +680,7 @@ class OSMRoadsPlanet:
                 "residential": 30,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Nevada": {
                 "motorway": 65,
@@ -691,7 +691,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 15,
-                "road": 25,
+                "road": 5,
             },
             "Alaska": {
                 "motorway": 65,
@@ -702,7 +702,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 5,
-                "road": 25,
+                "road": 5,
             },
             "Iowa": {
                 "motorway": 65,
@@ -713,7 +713,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 20,
-                "road": 25,
+                "road": 5,
             },
             "Arizona": {
                 "motorway": 65,
@@ -724,7 +724,7 @@ class OSMRoadsPlanet:
                 "residential": 25,
                 "unclassified": 25,
                 "service": 25,
-                "road": 25,
+                "road": 5,
             }
         }
 
