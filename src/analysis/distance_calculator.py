@@ -13,9 +13,9 @@ import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
 
-def calculate_route_distance(harvest_site, network_ds, sawmill, output_path):
+def calculate_route_distance(harvest_site, network_ds, sawmill, output_path, cost):
     """Finds the route from harvest site to sawmill then calculates distance"""
-    calculate_road_distance_nd(harvest_site, network_ds, sawmill, output_path)
+    calculate_road_distance_nd(harvest_site, network_ds, sawmill, output_path, cost)
     road_dist = calculate_distance_for_fc(output_path)
     arcpy.analysis.Near(harvest_site, output_path, search_radius="3 Miles", distance_unit="Miles")
     sc = arcpy.da.SearchCursor(harvest_site, ["NEAR_DIST"])
@@ -25,14 +25,14 @@ def calculate_route_distance(harvest_site, network_ds, sawmill, output_path):
     del sc, row
     return road_dist
 
-def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path):
+def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_path, cost):
     """Finds the road distance from a starting point to a sawmill destination using network analyst"""
     arcpy.CheckOutExtension("Network")
     route_layer_name = "sawmill_route"
     result = arcpy.na.MakeRouteLayer(
         network_dataset,
         route_layer_name,
-        "Length",
+        cost,
     )
     route_layer = result.getOutput(0)
     try:

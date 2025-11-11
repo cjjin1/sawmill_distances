@@ -14,15 +14,18 @@ import pandas as pd
 import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 
+random.seed(20)
+
 sl_dist_csv = sys.argv[1]
 output_dir = sys.argv[2]
 network_dataset = sys.argv[3]
 sawmills = sys.argv[4]
 harvest_sites = sys.argv[5]
 pairs_per_type = int(sys.argv[6])
-single_sawmill_type = sys.argv[7]
-keep_output_paths = sys.argv[8]
-calculate_road_distances = sys.argv[9]
+cost = sys.argv[7]
+single_sawmill_type = sys.argv[8]
+keep_output_paths = sys.argv[9]
+calculate_road_distances = sys.argv[10]
 
 #set string inputs to proper boolean values
 if keep_output_paths.lower() == "true":
@@ -43,7 +46,7 @@ try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
 except OSError:
-    workspace = sys.argv[10]
+    workspace = sys.argv[11]
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
@@ -159,7 +162,8 @@ if calculate_road_distances:
                     f"harvest_site_{rand_id}",
                     network_dataset,
                     f"sawmill_layer_{rand_id}",
-                    out_path
+                    out_path,
+                    cost
                 )
                 time.sleep(0.5)
                 gc.collect()

@@ -1,5 +1,5 @@
 ########################################################################################################################
-# test_distance_calculator.py
+# test_na_road_distance.py
 # Author: James Jin
 # unity ID: cjjin
 # Purpose: Tests the calculate_road_distance_nd function in distance_calculator.py
@@ -7,7 +7,7 @@
 
 import unittest
 import arcpy, sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "analysis")))
 import distance_calculator
 
 class TestDistanceCalculator(unittest.TestCase):
