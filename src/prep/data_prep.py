@@ -154,6 +154,7 @@ class DataPrep:
                     "physio_layer",
                     selection_type="NEW_SELECTION"
                 )
+                arcpy.management.Delete("physio_layer")
 
                 # filter out for the last 5 years, FS owndership, and accomplished stage description
                 where_clause = (f"DATE_COMPL >= DATE '{five_years_before}' AND DATE_COMPL <= DATE '{latest_date}' " +
@@ -163,6 +164,9 @@ class DataPrep:
                     "SUBSET_SELECTION",
                     where_clause
                 )
+                if arcpy.management.GetCount("harvest_layer") == 0:
+                    arcpy.management.Delete("harvest_layer")
+                    continue
 
                 hs_bound = "harvest_sites_bounded"
                 arcpy.management.CopyFeatures("harvest_layer", hs_bound)
@@ -181,9 +185,6 @@ class DataPrep:
                 if arcpy.Exists(f"harvest_sites_{row[0]}"):
                     arcpy.management.Delete(f"harvest_sites_{row[0]}")
                 arcpy.management.Rename(hs_bound, f"harvest_sites_{row[0]}")
-
-                arcpy.management.Delete("harvest_layer")
-                arcpy.management.Delete("physio_layer")
 
         if not keep_temp:
             arcpy.management.Delete(hs_proj)
@@ -531,12 +532,12 @@ def main():
     )
 
     data_prepper.process(
-        create_gdb=False,
-        create_boundaries=False,
-        sawmill_data=False,
+        create_gdb=True,
+        create_boundaries=True,
+        sawmill_data=True,
         harvest_site_data=True,
-        merge_road_creation=False,
-        create_nw_ds=False
+        merge_road_creation=True,
+        create_nw_ds=True
     )
     print("Finished preparing data")
 
