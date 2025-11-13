@@ -39,7 +39,7 @@ class TestDistanceCalculator(unittest.TestCase):
             self.network_dataset,
             "sawmill_layer",
             output_path,
-            "TimeCost"
+            "Time"
         )
         print(f"Test {sawmill_type} result: {dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
@@ -65,7 +65,7 @@ class TestDistanceCalculator(unittest.TestCase):
             self.network_dataset,
             "sawmill_layer",
             output_path,
-            "TimeCost"
+            "Time"
         )
         print(f"Test {sawmill_type} result: {dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
@@ -91,7 +91,7 @@ class TestDistanceCalculator(unittest.TestCase):
             self.network_dataset,
             "sawmill_layer",
             output_path,
-            "TimeCost"
+            "Time"
         )
         print(f"Test {sawmill_type} result: {dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
@@ -117,7 +117,7 @@ class TestDistanceCalculator(unittest.TestCase):
             self.network_dataset,
             "sawmill_layer",
             output_path,
-            "TimeCost"
+            "Time"
         )
         print(f"Test {sawmill_type} result: {dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")
@@ -143,7 +143,7 @@ class TestDistanceCalculator(unittest.TestCase):
             self.network_dataset,
             "sawmill_layer",
             output_path,
-            "TimeCost"
+            "Time"
         )
         print(f"Test {sawmill_type} result: {dist:.4f}")
         arcpy.management.Delete("harvest_site_layer")

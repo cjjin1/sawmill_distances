@@ -81,7 +81,7 @@ BEFORE CALCULATIONS:
   - Open the streets_nd network dataset properties in the catalog
   - Create a new travel mode called "Driving Distance"
   - Under the Costs tab, create a new cost by clicking the 3 lines in the top right and selecting "New"
-    - name the cost "TimeCost"
+    - name the cost "Time"
     - Set the units to hours
     - For evaluators:
       - set the type as "Field Script" for both Along and Against

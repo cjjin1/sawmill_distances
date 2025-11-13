@@ -118,7 +118,6 @@ class DataPrep:
         #find the latest date that has passed in the harvest site data
         today = datetime.today()
         date_string = today.strftime("%y-%m-%d")
-        print(date_string)
         date_list = []
         with arcpy.da.SearchCursor(
                 self.harvest_sites,
@@ -129,7 +128,6 @@ class DataPrep:
             for row in sc:
                 date_list.append(row[0])
         latest_date = max(date_list)
-        print(latest_date)
         five_years_before = latest_date - relativedelta(years=5)
 
         #get the id field
