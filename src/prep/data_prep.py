@@ -27,6 +27,8 @@
 ########################################################################################################################
 
 import sys, arcpy, os
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 class DataPrep:
     def __init__(
@@ -106,44 +108,82 @@ class DataPrep:
         )
 
     def clean_harvest_site_data(self, keep_temp=False):
-        """Projects and clips harvest site data. Also removes unwanted polygons that are too small."""
+        """Projects and clips harvest site data. Also removes unwanted polygons that are too small.
+           Creates separate harvest site data for each polygon in boundary input."""
         # project harvest site data and boundary
         hs_proj = os.path.splitext(os.path.basename(self.harvest_sites))[0]
         if not arcpy.Exists(hs_proj):
             arcpy.management.Project(self.harvest_sites, hs_proj, self.spat_ref)
 
-        # extract the harvest site feature class inside the boundary
-        arcpy.management.MakeFeatureLayer(hs_proj, "harvest_layer")
-        arcpy.management.SelectLayerByLocation(
-            "harvest_layer", "WITHIN", self.physio_boundary, selection_type="NEW_SELECTION"
-        )
+        #find the latest date that has passed in the harvest site data
+        today = datetime.today()
+        date_string = today.strftime("%y-%m-%d")
+        print(date_string)
+        date_list = []
+        with arcpy.da.SearchCursor(
+                self.harvest_sites,
+                ["DATE_COMPL"],
+                where_clause=f"DATE_COMPL <= DATE '{date_string}'",
+                sql_clause=(None, "ORDER BY DATE_COMPL DESC")
+        ) as sc:
+            for row in sc:
+                date_list.append(row[0])
+        latest_date = max(date_list)
+        print(latest_date)
+        five_years_before = latest_date - relativedelta(years=5)
 
-        # filter out for the last 5 years, FS owndership, and accomplished stage description
-        where_clause = ("FY_COMPLET >= '2019' AND FY_COMPLET <= '2024' " +
-                        "AND OWNERSHIP_ = 'FS' AND STAGE_DESC = 'Accomplished'")
-        arcpy.management.SelectLayerByAttribute(
-            "harvest_layer",
-            "SUBSET_SELECTION",
-            where_clause
-        )
+        #get the id field
+        fields = arcpy.ListFields(self.physio_boundary)
+        fid = fields[0].name
 
-        hs_bound = "harvest_sites_bounded"
-        arcpy.management.CopyFeatures("harvest_layer", hs_bound)
-        arcpy.management.Delete("harvest_layer")
+        with arcpy.da.SearchCursor(self.physio_boundary, "*") as sc:
+            for row in sc:
+                #select physio boundary polygon for getting harvest sites in the specific region
+                arcpy.management.MakeFeatureLayer(self.physio_boundary, "physio_layer")
+                arcpy.management.SelectLayerByAttribute(
+                    "physio_layer",
+                    "NEW_SELECTION",
+                    f"{fid} = {row[0]}"
+                )
 
-        # remove all harvest sites under 60 square feet
-        arcpy.management.AddField(hs_bound, "area", "DOUBLE")
-        arcpy.management.CalculateGeometryAttributes(
-            hs_bound, [["area", "AREA_GEODESIC"]], area_unit="SQUARE_FEET_US"
-        )
-        uc = arcpy.da.UpdateCursor(hs_bound, ["area"])
-        for row in uc:
-            if row[0] < 60:
-                uc.deleteRow()
-        del uc, row
+                # extract the harvest site feature class inside the boundary
+                arcpy.management.MakeFeatureLayer(hs_proj, "harvest_layer")
+                arcpy.management.SelectLayerByLocation(
+                    "harvest_layer",
+                    "WITHIN",
+                    "physio_layer",
+                    selection_type="NEW_SELECTION"
+                )
 
-        arcpy.management.Rename(hs_bound, "harvest_sites")
-        self.harvest_sites = "harvest_sites"
+                # filter out for the last 5 years, FS owndership, and accomplished stage description
+                where_clause = (f"DATE_COMPL >= DATE '{five_years_before}' AND DATE_COMPL <= DATE '{latest_date}' " +
+                                "AND OWNERSHIP_ = 'FS' AND STAGE_DESC = 'Accomplished'")
+                arcpy.management.SelectLayerByAttribute(
+                    "harvest_layer",
+                    "SUBSET_SELECTION",
+                    where_clause
+                )
+
+                hs_bound = "harvest_sites_bounded"
+                arcpy.management.CopyFeatures("harvest_layer", hs_bound)
+                arcpy.management.Delete("harvest_layer")
+
+                # remove all harvest sites under 60 square feet
+                arcpy.management.AddField(hs_bound, "area", "DOUBLE")
+                arcpy.management.CalculateGeometryAttributes(
+                    hs_bound, [["area", "AREA_GEODESIC"]], area_unit="SQUARE_FEET_US"
+                )
+                with arcpy.da.UpdateCursor(hs_bound, ["area"]) as uc:
+                    for r in uc:
+                        if r[0] < 60:
+                            uc.deleteRow()
+
+                if arcpy.Exists(f"harvest_sites_{row[0]}"):
+                    arcpy.management.Delete(f"harvest_sites_{row[0]}")
+                arcpy.management.Rename(hs_bound, f"harvest_sites_{row[0]}")
+
+                arcpy.management.Delete("harvest_layer")
+                arcpy.management.Delete("physio_layer")
 
         if not keep_temp:
             arcpy.management.Delete(hs_proj)
@@ -491,12 +531,12 @@ def main():
     )
 
     data_prepper.process(
-        create_gdb=True,
-        create_boundaries=True,
-        sawmill_data=True,
+        create_gdb=False,
+        create_boundaries=False,
+        sawmill_data=False,
         harvest_site_data=True,
-        merge_road_creation=True,
-        create_nw_ds=True
+        merge_road_creation=False,
+        create_nw_ds=False
     )
     print("Finished preparing data")
 
