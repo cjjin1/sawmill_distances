@@ -77,18 +77,25 @@ Data preparation:
       - Use the EPSG code for spatial reference
     
 BEFORE CALCULATIONS:
-1. Time cost functionality must be manually implemented in ArcGSI Pro. To do so, follow these steps:
-  - Open the streets_nd network dataset properties in the catalog
-  - Create a new travel mode called "Driving Distance"
-  - Under the Costs tab, create a new cost by clicking the 3 lines in the top right and selecting "New"
-    - name the cost "Time"
+1. Two travel modes must be created for both distance and time cost to be available. To do so:
+  - Open the streets_nd network dataset properties in the catalog, without the dataset in the contents pane
+  - Create two travel modes, one called "Length", one called "Time"'
+  - Ensure "Type" is set to Driving
+  - Go to the Costs tab
+    - For the default "Length" cost
+    - Set the units to Miles
+    - For evaluators:
+      - set the type as "Field Script" for both Along and Against
+      - for both Along and Against, set the value to the !distance! field
+  - Create a new cost by clicking the 3 lines in the top right and selecting "New"
+    - Name the cost "Time"
     - Set the units to hours
     - For evaluators:
       - set the type as "Field Script" for both Along and Against
       - for both Along and Against, set the value to the !travel_time! field
-  - While at the Costs tab, ensure the created distance field is used for the default "Length" cost with Miles as units
-  - It is not necessary to select this new time cost in the "Travel Modes" tab
-2. Oneway functionality must also be manually implemented in ArcGIS Pro. To do so, follow these steps:
+  - Go back to the Travel Modes tab
+    - For the Impedance selection, select the proper cost for the respective travel mode
+2. Implement oneway functionality for the network dataset. To do so, follow these steps:
   - Under the Restrictions tab, create a new restriction called "Oneway"
     - usage Type: prohibited (-1)
     - under evaluators, for the Along source, set the type to field script and use this value and code block
