@@ -14,8 +14,6 @@ import pandas as pd
 import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 
-random.seed(20)
-
 sl_dist_csv = sys.argv[1]
 output_dir = sys.argv[2]
 network_dataset = sys.argv[3]
