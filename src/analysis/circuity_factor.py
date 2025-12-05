@@ -69,16 +69,6 @@ else:
         os.makedirs(output_dir)
     output_dir = os.path.abspath(output_dir)
 
-# convert harvest sites to points if given as polygons
-desc = arcpy.Describe(harvest_sites)
-if desc.shapeType == "Polygon":
-    if arcpy.Exists("hs_points"):
-        arcpy.management.Delete("hs_points")
-    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
-    harvest_sites = "hs_points"
-elif desc.shapeType != "Point":
-    raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
-
 # dict to store straight line distance and ids
 dist_id_dict = {
     "Lumber/Solid Wood": {},
