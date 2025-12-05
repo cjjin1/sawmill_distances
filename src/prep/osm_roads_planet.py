@@ -1016,10 +1016,29 @@ class OSMRoadsPlanet:
         fields = ["other_tags", "highway", "maxspeed", "STATE_NAME"]
         with arcpy.da.UpdateCursor(out_feature_class, fields) as cursor:
             for row in cursor:
-                if row[0] and "\"maxspeed\"" in row[0]:
+                if row[0] and ("\"maxspeed\"" in row[0] or "\"maxspeed:hgv\"" in row[0]):
                     tags_list = row[0].split(",")
                     for tag in tags_list:
-                        if "\"maxspeed\"" in tag:
+                        get_maxspeed_instead = False
+                        if "\"maxspeed:hgv\"" in tag:
+                            expression_list = tag.split("=>")
+                            speed_value = expression_list[1]
+                            speed_value = speed_value.strip("\"")
+                            try:
+                                speed_value = int(speed_value[:2].strip())
+                                if speed_value % 5 == 0:
+                                    row[2] = speed_value
+                                else:
+                                    road_type = row[1]
+                                    if row[3]:
+                                        row[2] = self.speed_limit_dict[row[3]][road_type]
+                                    else:
+                                        row[2] = overall_default_speeds[road_type]
+                            except ValueError:
+                                get_maxspeed_instead = True
+                        else:
+                            get_maxspeed_instead = True
+                        if "\"maxspeed\"" in tag and get_maxspeed_instead:
                             expression_list = tag.split("=>")
                             speed_value = expression_list[1]
                             speed_value = speed_value.strip("\"")

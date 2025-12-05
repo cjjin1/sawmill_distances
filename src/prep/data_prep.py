@@ -255,7 +255,6 @@ class DataPrep:
 
         if not keep_temp:
             arcpy.management.Delete(output_path)
-            arcpy.management.Delete(roads_basename)
 
     def merge_park_roads(self, keep_temp=False):
         """Merge NFS roads and OSM roads to create park roads for any relevant park"""
@@ -436,12 +435,37 @@ class DataPrep:
             complete_roads, [["distance", "LENGTH_GEODESIC"]], "MILES_US"
         )
 
+        surface_speed_dict = {
+            "NAT": 10,
+            "IMP": 10,
+            "FSOIL": 10,
+            "SOD": 10,
+            "CSOIL": 10,
+            "GRA": 10,
+            "OTHER": 10,
+            "AGG": 20,
+            "PIT": 20,
+            "CIN":20,
+            "AC": 30,
+            "BST": 30,
+            "P": 30,
+            "PCC": 30
+        }
+
         # add and calculate travel time field
         arcpy.management.AddField(complete_roads, "travel_time", "DOUBLE")
-        with arcpy.da.UpdateCursor(complete_roads, ["distance", "maxspeed", "travel_time"]) as uc:
+        fields = ["distance", "maxspeed", "travel_time", "SURFACE_TY"]
+        with arcpy.da.UpdateCursor(complete_roads, fields) as uc:
             for row in uc:
                 if not row[1]:
-                    row[1] = 25
+                    if not row[3]:
+                        row[1] = 10
+                    else:
+                        road_type = row[3].split(" ")[0]
+                        if not road_type:
+                            row[1] = 10
+                        else:
+                            row[1] = surface_speed_dict[road_type]
                 row[2] = float(row[0]) / float(row[1])
                 uc.updateRow(row)
 
@@ -465,6 +489,7 @@ class DataPrep:
             self.create_new_file_gdb()
         else:
             arcpy.AddMessage("Skipping Road Data import and File GDB creation")
+            self.total_roads = os.path.join(self.workspace, os.path.basename(self.total_roads))
 
         arcpy.env.workspace = self.workspace
         arcpy.env.overwriteOutput = True
@@ -474,6 +499,8 @@ class DataPrep:
             self.create_boundary_fcs()
         else:
             arcpy.AddMessage("Skipping Boundary Feature Class creation")
+            self.physio_boundary = os.path.basename(self.physio_boundary).split(".")[0]
+            self.park_boundaries = self.park_boundaries + "_clipped"
         if sawmill_data:
             arcpy.AddMessage("Cleaning Sawmill Data")
             self.clean_sawmill_data()
