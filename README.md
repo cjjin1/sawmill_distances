@@ -79,7 +79,7 @@ Data preparation:
 BEFORE CALCULATIONS:
 1. Two travel modes must be created for both distance and time cost to be available. To do so:
   - Open the streets_nd network dataset properties in the catalog, without the dataset in the contents pane
-  - Create two travel modes, one called "Length", one called "Time"'
+  - Create two travel modes, one called "Length", one called "Time"
   - Ensure "Type" is set to Driving
   - Go to the Costs tab
     - For the default "Length" cost
