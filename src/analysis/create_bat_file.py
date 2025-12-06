@@ -11,15 +11,6 @@ python_exe = os.path.join(sys.base_prefix, "python.exe")
 python_script = os.path.join(os.path.dirname(__file__), "cf_all_sites.py")
 
 bat_path = sys.argv[1]
-sl_dist_csv = sys.argv[2]
-output_dir = sys.argv[3]
-network_dataset = sys.argv[4]
-sawmills = sys.argv[5]
-harvest_sites = sys.argv[6]
-cost = sys.argv[7]
-single_sawmill_type = sys.argv[8]
-keep_output_paths = sys.argv[9]
-calculate_road_distances = sys.argv[10]
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
@@ -32,3 +23,5 @@ cmd += "\npause\n"
 with open(bat_path, "w") as f:
     f.write("@echo off\n")
     f.write(cmd)
+
+arcpy.AddMessage(f"To run circuity analysis, run the .bat file found at {bat_path}")
