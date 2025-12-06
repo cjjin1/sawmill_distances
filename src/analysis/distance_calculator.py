@@ -6,7 +6,7 @@
 #          distance calculations into csv files
 ########################################################################################################################
 
-import arcpy, csv, os, random, time, gc
+import arcpy, csv, os
 import statsmodels.api as sm
 import numpy as np
 import pandas as pd
@@ -68,6 +68,7 @@ def calculate_road_distance_nd(starting_point, network_dataset, sawmill, output_
     arcpy.management.CopyFeatures(sub_layers["Routes"], output_path)
     arcpy.management.Delete(route_layer_name)
     arcpy.management.Delete(route_layer)
+    del result, route_layer
     arcpy.CheckInExtension("Network")
 
 def calculate_distance_for_fc(fc_path):
