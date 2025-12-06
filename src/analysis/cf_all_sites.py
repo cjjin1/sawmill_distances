@@ -40,11 +40,7 @@ if not calculate_road_distances and output_dir == "#":
     raise arcpy.ExecuteError("An directory input is required if road distances are not to be calculated.")
 
 #set workspace
-try:
-    proj = arcpy.mp.ArcGISProject("CURRENT")
-    workspace = proj.defaultGeodatabase
-except OSError:
-    workspace = sys.argv[10]
+workspace = sys.argv[10]
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
