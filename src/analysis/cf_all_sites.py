@@ -169,7 +169,7 @@ if calculate_road_distances:
                 # delete temporary layers, feature classes, and solvers
                 arcpy.management.Delete(f"harvest_site_{oid}")
                 arcpy.management.Delete(f"sawmill_layer_{oid}")
-                for name in arcpy.ListFeatureClasses("*Solver*"):
+                for name in arcpy.ListDatasets("*Solver*"):
                     arcpy.management.Delete(name)
                 time.sleep(0.5)
                 gc.collect()
