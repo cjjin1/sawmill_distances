@@ -8,16 +8,23 @@
 import arcpy, sys, os
 
 python_exe = os.path.join(sys.base_prefix, "python.exe")
-python_script = os.path.join(os.path.dirname(__file__), "cf_all_sites.py")
 
 bat_path = sys.argv[1]
+sampling = sys.argv[2]
+if sampling.lower() == "true":
+    params = sys.argv[3:8] + ["30"] + sys.argv[8:12]
+    python_script = os.path.join(os.path.dirname(__file__), "circuity_factor.py")
+else:
+    params = sys.argv[3:12]
+    python_script = os.path.join(os.path.dirname(__file__), "cf_all_sites.py")
+
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
     workspace = proj.defaultGeodatabase
 except OSError:
-    workspace = sys.argv[11]
+    workspace = sys.argv[12]
 
-cmd = " ".join([python_exe, python_script] + sys.argv[2:11] + [workspace])
+cmd = " ".join([python_exe, python_script] + params + [workspace])
 cmd += "\npause\n"
 
 with open(bat_path, "w") as f:
