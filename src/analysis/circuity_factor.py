@@ -52,10 +52,10 @@ arcpy.env.addOutputsToMap = False
 #convert harvest sites to points if given as polygons
 desc = arcpy.Describe(harvest_sites)
 if desc.shapeType == "Polygon":
-    if arcpy.Exists("hs_points"):
-        arcpy.management.Delete("hs_points")
-    arcpy.management.FeatureToPoint(harvest_sites, "hs_points", "INSIDE")
-    harvest_sites = "hs_points"
+    if arcpy.Exists(f"{harvest_sites}_points"):
+        arcpy.management.Delete(f"{harvest_sites}_points")
+    arcpy.management.FeatureToPoint(harvest_sites, f"{harvest_sites}_points", "INSIDE")
+    harvest_sites = f"{harvest_sites}_points"
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
