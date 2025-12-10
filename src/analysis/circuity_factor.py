@@ -138,7 +138,7 @@ if calculate_road_distances:
             try:
                 #calculate route distance between harvest site and sawmill
                 #store results in dictionary and CSV file
-                time.sleep(0.5)
+                #time.sleep(0.5)
                 gc.collect()
                 arcpy.management.MakeFeatureLayer(harvest_sites, f"harvest_site_{rand_id}")
                 arcpy.management.MakeFeatureLayer(sawmills, f"sawmill_layer_{rand_id}")
@@ -169,7 +169,7 @@ if calculate_road_distances:
                             elif row[1]:
                                 rang_district = row[1]
                             break
-                time.sleep(0.5)
+                #time.sleep(0.5)
                 gc.collect()
                 if not keep_output_paths:
                     arcpy.management.Delete(out_path)
@@ -210,7 +210,7 @@ if calculate_road_distances:
                 arcpy.management.Delete(f"sawmill_layer_{rand_id}")
                 for name in arcpy.ListDatasets("*Solver*"):
                     arcpy.management.Delete(name)
-                time.sleep(0.5)
+                #time.sleep(0.5)
                 gc.collect()
                 arcpy.management.ClearWorkspaceCache()
             count += 1
