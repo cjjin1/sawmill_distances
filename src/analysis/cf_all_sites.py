@@ -45,6 +45,14 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
 
+record_district = True
+field_list = arcpy.ListFields(harvest_sites)
+field_names_list = [f.name for f in field_list]
+hs_districts_fields = ["ADMIN_DIST", "DISTRICTNA"]
+for hs_d_field in hs_districts_fields:
+    if hs_d_field not in field_names_list:
+        record_district = False
+
 #convert harvest sites to points if given as polygons
 desc = arcpy.Describe(harvest_sites)
 if desc.shapeType == "Polygon":
@@ -135,6 +143,15 @@ if calculate_road_distances:
                     out_path,
                     cost
                 )
+                if record_district:
+                    rang_district = ""
+                    with arcpy.da.SearchCursor(f"harvest_site_{oid}", hs_districts_fields) as sc:
+                        for row in sc:
+                            if row[0].strip():
+                                rang_district = row[0]
+                            elif row[1]:
+                                rang_district = row[1]
+                            break
                 time.sleep(0.5)
                 gc.collect()
                 if not keep_output_paths:
@@ -143,12 +160,21 @@ if calculate_road_distances:
                     raise arcpy.ExecuteError("Solve resulted in failure")
                 if road_dist > 120:
                     raise arcpy.ExecuteError("Route is longer than 120 miles")
-                output_writer.writerow(
-                    [oid,
-                     dist_id_dict[sm_type][oid][0],
-                     dist_id_dict[sm_type][oid][1],
-                     road_dist]
-                )
+                if record_district:
+                    output_writer.writerow(
+                        [oid,
+                         dist_id_dict[sm_type][oid][0],
+                         dist_id_dict[sm_type][oid][1],
+                         road_dist,
+                         rang_district]
+                    )
+                else:
+                    output_writer.writerow(
+                        [oid,
+                         dist_id_dict[sm_type][oid][0],
+                         dist_id_dict[sm_type][oid][1],
+                         road_dist]
+                    )
                 multiplier = road_dist / float(dist_id_dict[sm_type][oid][1])
                 multi_dict[sm_type].append(multiplier)
             except arcpy.ExecuteError as e:
