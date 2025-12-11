@@ -83,16 +83,6 @@ dist_id_dict = {
     "Plywood/Veneer": {}
 }
 
-# dictionary to store multipliers
-multi_dict = {
-    "Lumber/Solid Wood": [],
-    "Pellet": [],
-    "Chip": [],
-    "Pulp/Paper": [],
-    "Composite Panel/Engineered Wood Product": [],
-    "Plywood/Veneer": []
-}
-
 #read in straight line distances
 dc.read_sl_distance_csv(sl_dist_csv, dist_id_dict)
 
@@ -100,7 +90,6 @@ dc.read_sl_distance_csv(sl_dist_csv, dist_id_dict)
 if single_sawmill_type != "All":
     temp_dict = dist_id_dict[single_sawmill_type]
     dist_id_dict = {single_sawmill_type: temp_dict}
-    multi_dict = {single_sawmill_type: []}
 
 # Z-score and margin of error values
 z = 1.96
@@ -176,7 +165,6 @@ if calculate_road_distances:
                          road_dist]
                     )
                 multiplier = road_dist / float(dist_id_dict[sm_type][oid][1])
-                multi_dict[sm_type].append(multiplier)
             except arcpy.ExecuteError as e:
                 arcpy.AddWarning(f"{sm_type}:{oid},{dist_id_dict[sm_type][oid][0]} failed: {str(e)}")
                 if i < len(oid_list) - 1:
@@ -214,7 +202,7 @@ pdf = PdfPages(os.path.join(output_dir, "histograms.pdf"))
 cf_list = []
 
 #find circuity factor for individual sawmill types
-for sm_type in multi_dict:
+for sm_type in dist_id_dict:
     multiplier_list = []
     csv_in = os.path.join(output_dir, f"{sm_type[:3]}_distance.csv")
     input_file = open(csv_in, "r", newline="\n")
