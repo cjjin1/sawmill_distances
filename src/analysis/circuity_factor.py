@@ -295,14 +295,14 @@ if single_sawmill_type == "All":
     multiplier_list = [rd / ed for rd, ed in zip(rd_list, ed_list)]
     cf_list.append(["All", b1, b2, b3, statistics.mean(multiplier_list), statistics.median(multiplier_list)])
 
-output_csv = open(os.path.join(output_dir, "total_results.csv"), "w", newline="\n")
-output_writer = csv.writer(output_csv)
-output_writer.writerow(["Sawmill Type", "OLS regression with sl, sl_sq, and intercept",
-                        "OLS regression with sl and intercept", "OLS regression with sl", "Mean Multiplier",
-                        "Median Multiplier"])
-for row in cf_list:
-    output_writer.writerow(row)
-output_csv.close()
+    output_csv = open(os.path.join(output_dir, "total_results.csv"), "w", newline="\n")
+    output_writer = csv.writer(output_csv)
+    output_writer.writerow(["Sawmill Type", "OLS regression with sl, sl_sq, and intercept",
+                            "OLS regression with sl and intercept", "OLS regression with sl", "Mean Multiplier",
+                            "Median Multiplier"])
+    for row in cf_list:
+        output_writer.writerow(row)
+    output_csv.close()
 
-#close pdf
-pdf.close()
+    # close pdf
+    pdf.close()
