@@ -5,15 +5,17 @@
 # Purpose: Finds circuity factors for ranger districts
 ########################################################################################################################
 
-import csv, os, sys
+import csv, os, sys, arcpy
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
 class DistrictCF:
 
-    def __init__(self, csv_dir):
+    def __init__(self, csv_dir, ranger_districts, write_out=False):
         self.csv_dir = csv_dir
+        self.ranger_districts = ranger_districts
+        self.write_out = write_out
         self.district_dict = {
             "Lumber/Solid Wood": {},
             "Pellet": {},
@@ -82,16 +84,16 @@ class DistrictCF:
     def process(self):
         self.compile_data()
         self.build_results_dict()
-        self.write_csv_output()
+        if self.write_out:
+            self.write_csv_output()
 
 def main():
     try:
-        sys.argv[1]
+        dg = DistrictCF(sys.argv[1], sys.argv[2])
+        dg.process()
     except IndexError:
-        print("Provide a directory to retrieve all necessary data.")
+        print("Provide a directory to retrieve all necessary data and ranger district feature class.")
         exit(1)
-    dg = DistrictCF(sys.argv[1])
-    dg.process()
 
 if __name__ == "__main__":
     main()
