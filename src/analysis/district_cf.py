@@ -68,6 +68,14 @@ class DistrictCF:
 
                 self.district_results_dict[sm_type][district] = (result, len(ed_list))
 
+    def get_district_dict(self):
+        """Getter function for all Euclidean and road distances"""
+        return self.district_dict
+
+    def get_district_results_dict(self):
+        """Getter function for all results"""
+        return self.district_results_dict
+
     def write_csv_output(self):
         """Writes out the circuity factor results into csv files"""
         for sm_type in self.district_results_dict:
