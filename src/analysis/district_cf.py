@@ -12,9 +12,8 @@ import statsmodels.api as sm
 
 class DistrictCF:
 
-    def __init__(self, csv_dir, ranger_districts, write_out=False):
+    def __init__(self, csv_dir, write_out=False):
         self.csv_dir = csv_dir
-        self.ranger_districts = ranger_districts
         self.write_out = write_out
         self.district_dict = {
             "Lumber/Solid Wood": {},
@@ -89,7 +88,7 @@ class DistrictCF:
 
 def main():
     try:
-        dg = DistrictCF(sys.argv[1], sys.argv[2])
+        dg = DistrictCF(sys.argv[1])
         dg.process()
     except IndexError:
         print("Provide a directory to retrieve all necessary data and ranger district feature class.")
