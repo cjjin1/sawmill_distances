@@ -160,8 +160,8 @@ if calculate_road_distances:
                     out_path,
                     cost
                 )
+                rang_district = ""
                 if record_district:
-                    rang_district = ""
                     with arcpy.da.SearchCursor(f"harvest_site_{rand_id}", hs_districts_fields) as sc:
                         for row in sc:
                             if row[0].strip():
@@ -250,47 +250,9 @@ for sm_type in multi_dict:
 
 #find circuity factor for all sawmill types combined
 if single_sawmill_type == "All":
-    road_distance = np.array(rd_list)
-    euclidean_distance = np.array(ed_list)
-
-    dc.generate_histogram(road_distance, "Road Distance", "All Sawmills", 40, pdf)
-    dc.generate_histogram(euclidean_distance, "Euclidean Distance", "All Sawmills", 40, pdf)
-    dc.generate_overlaid_histogram(
-        [road_distance, euclidean_distance],
-        ["Road Distance", "Euclidean Distance"],
-        "All Sawmills",
-        60,
-        pdf
+    b1, b2, b3 = dc.calculate_circuity_factor_from_lists(
+        ed_list, rd_list, os.path.join(output_dir, f"All_circuity_factor.txt"), "All Sawmills", pdf
     )
-
-    df = pd.DataFrame({
-        'sl': euclidean_distance,
-        'sl_sq': euclidean_distance ** 2,
-        'rd': road_distance
-    })
-
-    X1 = sm.add_constant(df[['sl', 'sl_sq']])
-    y = df['rd']
-
-    model1 = sm.OLS(y, X1).fit()
-
-    X2 = sm.add_constant(df[['sl']])
-    model2 = sm.OLS(y, X2).fit()
-
-    X3 = df[['sl']]
-    model3 = sm.OLS(y, X3).fit()
-
-    b1 = model1.params['sl']
-    b2 = model2.params['sl']
-    b3 = model3.params['sl']
-    arcpy.AddMessage(f"Circuity Factor for all types: {b3}")
-
-    results_file = open(os.path.join(output_dir, "circuity_factor_all.txt"), "w+")
-    results_file.write(str(model1.summary()) + "\n")
-    results_file.write(str(model2.summary()) + "\n")
-    results_file.write(str(model3.summary()) + "\n")
-    results_file.write(f"Circuity factor: {b3}")
-    results_file.close()
 
     multiplier_list = [rd / ed for rd, ed in zip(rd_list, ed_list)]
     cf_list.append(["All", b1, b2, b3, statistics.mean(multiplier_list), statistics.median(multiplier_list)])
@@ -304,5 +266,5 @@ if single_sawmill_type == "All":
         output_writer.writerow(row)
     output_csv.close()
 
-    # close pdf
-    pdf.close()
+# close pdf
+pdf.close()
