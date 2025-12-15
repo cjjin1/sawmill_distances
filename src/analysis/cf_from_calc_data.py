@@ -112,6 +112,15 @@ class CfFromDataCalculator:
         self.cf_list.append(["All Sawmills", b1, b2, b3, mean_multiplier, median_multiplier])
         pdf.close()
 
+        output_csv = open(os.path.join(self.out_dir, "total_results.csv"), "w", newline="\n")
+        output_writer = csv.writer(output_csv)
+        output_writer.writerow(["Sawmill Type", "OLS regression with sl, sl_sq, and intercept",
+                                "OLS regression with sl and intercept", "OLS regression with sl", "Mean Multiplier",
+                                "Median Multiplier"])
+        for row in self.cf_list:
+            output_writer.writerow(row)
+        output_csv.close()
+
     def process(self):
         """Runs the full process"""
         if not os.path.exists(self.out_dir):
