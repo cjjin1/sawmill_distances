@@ -58,6 +58,7 @@ for hs_d_field in hs_districts_fields:
 
 #convert harvest sites to points if given as polygons
 desc = arcpy.Describe(harvest_sites)
+oid_field = desc.OIDFieldName
 if desc.shapeType == "Polygon":
     if arcpy.Exists(f"{harvest_sites}_points"):
         arcpy.management.Delete(f"{harvest_sites}_points")
@@ -65,11 +66,6 @@ if desc.shapeType == "Polygon":
     harvest_sites = f"{harvest_sites}_points"
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
-
-#set the id to use based on if the harvest site fc is a shapefile
-object_id = "OBJECTID"
-if harvest_sites.endswith(".shp"):
-    object_id = "FID"
 
 #Setup output directory
 if output_dir != "#":
@@ -125,7 +121,7 @@ if calculate_road_distances:
                 arcpy.management.SelectLayerByAttribute(
                     f"harvest_site_{oid}",
                     "NEW_SELECTION",
-                    f"{object_id} = {oid}"
+                    f"{oid_field} = {oid}"
                 )
                 arcpy.management.SelectLayerByAttribute(
                     f"sawmill_layer_{oid}",
