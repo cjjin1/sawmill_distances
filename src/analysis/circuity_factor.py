@@ -49,12 +49,16 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
 
+#check if the necessary fields are present to record districts
 record_district = True
 field_list = arcpy.ListFields(harvest_sites)
+field_name_list = [field.name for field in field_list]
 hs_districts_fields = ["ADMIN_DIST", "DISTRICTNA"]
 for hs_d_field in hs_districts_fields:
-    if hs_d_field not in field_list:
+    if hs_d_field not in field_name_list:
+        print("Not recording districts")
         record_district = False
+        break
 
 #convert harvest sites to points if given as polygons
 desc = arcpy.Describe(harvest_sites)
