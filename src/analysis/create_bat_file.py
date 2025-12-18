@@ -24,7 +24,8 @@ try:
 except OSError:
     workspace = sys.argv[12]
 
-cmd = " ".join([python_exe, python_script] + params + [workspace])
+cmd = ["\"" + path + "\"" for path in [python_exe, python_script] + params + [workspace]]
+cmd = " ".join(cmd)
 cmd += "\npause\n"
 
 with open(bat_path, "w") as f:
