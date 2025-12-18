@@ -45,13 +45,16 @@ arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 arcpy.env.addOutputsToMap = False
 
+#check if the necessary fields are present to record districts
 record_district = True
 field_list = arcpy.ListFields(harvest_sites)
-field_names_list = [f.name for f in field_list]
+field_name_list = [field.name for field in field_list]
 hs_districts_fields = ["ADMIN_DIST", "DISTRICTNA"]
 for hs_d_field in hs_districts_fields:
-    if hs_d_field not in field_names_list:
+    if hs_d_field not in field_name_list:
+        print("Not recording districts")
         record_district = False
+        break
 
 #convert harvest sites to points if given as polygons
 desc = arcpy.Describe(harvest_sites)
@@ -62,6 +65,11 @@ if desc.shapeType == "Polygon":
     harvest_sites = f"{harvest_sites}_points"
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
+
+#set the id to use based on if the harvest site fc is a shapefile
+object_id = "OBJECTID"
+if harvest_sites.endswith(".shp"):
+    object_id = "FID"
 
 #Setup output directory
 if output_dir != "#":
@@ -117,7 +125,7 @@ if calculate_road_distances:
                 arcpy.management.SelectLayerByAttribute(
                     f"harvest_site_{oid}",
                     "NEW_SELECTION",
-                    f"OBJECTID = {oid}"
+                    f"{object_id} = {oid}"
                 )
                 arcpy.management.SelectLayerByAttribute(
                     f"sawmill_layer_{oid}",

@@ -70,6 +70,11 @@ if desc.shapeType == "Polygon":
 elif desc.shapeType != "Point":
     raise arcpy.ExecuteError("Invalid harvest site: site must be polygon or point")
 
+#set the id to use based on if the harvest site fc is a shapefile
+object_id = "OBJECTID"
+if harvest_sites.endswith(".shp"):
+    object_id = "FID"
+
 #Setup output directory
 if output_dir != "#":
     if not os.path.exists(output_dir):
@@ -149,7 +154,7 @@ if calculate_road_distances:
                 arcpy.management.SelectLayerByAttribute(
                     f"harvest_site_{rand_id}",
                     "NEW_SELECTION",
-                    f"OBJECTID = {rand_id}"
+                    f"{object_id} = {rand_id}"
                 )
                 arcpy.management.SelectLayerByAttribute(
                     f"sawmill_layer_{rand_id}",
