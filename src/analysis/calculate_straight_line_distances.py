@@ -119,7 +119,7 @@ class StraightLineDistanceCalculator:
                             sl_writer.writerow([sm_t, row[0], n_fid, n_dist])
                             break
 
-                print(f"{row[0]} distances completed")
+                arcpy.AddMessage(f"{row[0]} distances completed")
                 arcpy.management.Delete("sawmill_layer")
             arcpy.management.Delete("harvest_site_layer")
         sl_out.close()
@@ -142,7 +142,7 @@ def main():
             arcpy.AddMessage("Invalid subset size, harvest site feature class will not be subset.")
             subset_size = 0
     except ValueError:
-        arcpy.AddWarning("Invalid subset size, harvest site feature class will not be subset.")
+        arcpy.AddMessage("Invalid subset size, harvest site feature class will not be subset.")
         subset_size = 0
     try:
         proj = arcpy.mp.ArcGISProject("CURRENT")

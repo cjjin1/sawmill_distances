@@ -10,13 +10,8 @@ import arcpy, sys, os
 python_exe = os.path.join(sys.base_prefix, "python.exe")
 
 bat_path = sys.argv[1]
-sampling = sys.argv[2]
-if sampling.lower() == "true":
-    params = sys.argv[3:8] + ["30"] + sys.argv[8:12]
-    python_script = os.path.join(os.path.dirname(__file__), "circuity_factor.py")
-else:
-    params = sys.argv[3:12]
-    python_script = os.path.join(os.path.dirname(__file__), "cf_all_sites.py")
+python_script = os.path.join(os.path.dirname(__file__), "circuity_factor.py")
+params = sys.argv[2:12]
 
 try:
     proj = arcpy.mp.ArcGISProject("CURRENT")
