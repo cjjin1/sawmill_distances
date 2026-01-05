@@ -7,9 +7,135 @@
 
 
 import sys, csv, os, random, math, statistics
-import distance_calculator as dc
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+
+def calculate_circuity_factor_from_csv(rd_csv, output_name, op_dir, sawmill_type, pdf_file):
+    """Reads in road distance csv created by the road distance calculation functions. Returns coefficent
+       for each regression."""
+    rd_list = []
+    ed_list = []
+
+    rd_in = open(rd_csv, "r", newline="\n")
+    rd_reader = csv.reader(rd_in)
+    for row in rd_reader:
+        ed_list.append(float(row[2]))
+        rd_list.append(float(row[3]))
+    rd_in.close()
+
+    road_distance = np.array(rd_list)
+    euclidean_distance = np.array(ed_list)
+
+    generate_histogram(road_distance, "Road Distance", sawmill_type, 40, pdf_file)
+    generate_histogram(euclidean_distance, "Euclidean Distance", sawmill_type, 40, pdf_file)
+    generate_overlaid_histogram(
+        [road_distance, euclidean_distance],
+        ["Road Distance", "Euclidean Distance"],
+        sawmill_type,
+        60,
+        pdf_file
+    )
+
+    df = pd.DataFrame({
+        'sl': euclidean_distance,
+        'sl_sq': euclidean_distance ** 2,
+        'rd': road_distance
+    })
+
+    X1 = sm.add_constant(df[['sl', 'sl_sq']])
+    y = df['rd']
+
+    model1 = sm.OLS(y, X1).fit()
+
+    X2 = sm.add_constant(df[['sl']])
+    model2 = sm.OLS(y, X2).fit()
+
+    X3 = df[['sl']]
+    model3 = sm.OLS(y, X3).fit()
+
+    b1 = model1.params['sl']
+    b2 = model2.params['sl']
+    b3 = model3.params['sl']
+
+    results_file = open(os.path.join(op_dir, output_name), "w+")
+    results_file.write(str(model1.summary()) + "\n")
+    results_file.write(str(model2.summary()) + "\n")
+    results_file.write(str(model3.summary()) + "\n")
+    results_file.write(f"Circuity factor: {b3}")
+    results_file.close()
+
+    return b1, b2, b3
+
+def calculate_circuity_factor_from_lists(ed_list, rd_list, output_name, sawmill_type, pdf_file):
+    """Reads in road distance csv created by the road distance calculation functions. Returns coefficent
+       for each regression."""
+    road_distance = np.array(rd_list)
+    euclidean_distance = np.array(ed_list)
+
+    generate_histogram(road_distance, "Road Distance", sawmill_type, 40, pdf_file)
+    generate_histogram(euclidean_distance, "Euclidean Distance", sawmill_type, 40, pdf_file)
+    generate_overlaid_histogram(
+        [road_distance, euclidean_distance],
+        ["Road Distance", "Euclidean Distance"],
+        sawmill_type,
+        60,
+        pdf_file
+    )
+
+    df = pd.DataFrame({
+        'sl': euclidean_distance,
+        'sl_sq': euclidean_distance ** 2,
+        'rd': road_distance
+    })
+
+    X1 = sm.add_constant(df[['sl', 'sl_sq']])
+    y = df['rd']
+
+    model1 = sm.OLS(y, X1).fit()
+
+    X2 = sm.add_constant(df[['sl']])
+    model2 = sm.OLS(y, X2).fit()
+
+    X3 = df[['sl']]
+    model3 = sm.OLS(y, X3).fit()
+
+    b1 = model1.params['sl']
+    b2 = model2.params['sl']
+    b3 = model3.params['sl']
+
+    results_file = open(output_name, "w+")
+    results_file.write(str(model1.summary()) + "\n")
+    results_file.write(str(model2.summary()) + "\n")
+    results_file.write(str(model3.summary()) + "\n")
+    results_file.write(f"Circuity factor: {b3}")
+    results_file.close()
+
+    return b1, b2, b3
+
+def generate_histogram(arr, value_name, sm_type, bin_num, pdf):
+    """Generates a histogram based off an array for a sawmill type. Outputs to a pdf file."""
+    plt.hist(arr, bins=bin_num, edgecolor="black", linewidth=1.2)
+    plt.xlim(0, 120)
+    plt.xlabel(value_name + " (Miles)")
+    plt.ylabel("Frequency")
+    plt.title(f"Histogram of {value_name} for {sm_type}")
+    pdf.savefig()
+    plt.close()
+
+def generate_overlaid_histogram(arr_list, value_list, sm_type, bin_num, pdf):
+    """Generates an overlaid histogram based off two arrays (of both road and eucldiean distance for a sawmill type.
+       Outputs to a pdf file."""
+    plt.hist(arr_list, label=value_list, bins=bin_num, edgecolor="black", linewidth=0.5, color=["blue", "red"])
+    plt.xlim(0, 120)
+    plt.xlabel("Distance (Miles)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.title(f"Histogram of Road and Euclidean Distances for {sm_type}")
+    pdf.savefig()
+    plt.close()
 
 class CfFromDataCalculator:
 
@@ -81,7 +207,7 @@ class CfFromDataCalculator:
         """Calculates the circuity factor and outputs the results"""
         pdf = PdfPages(os.path.join(self.out_dir, "histograms.pdf"))
         for sm_type in self.samples_dict:
-            b1, b2, b3 = dc.calculate_circuity_factor_from_csv(
+            b1, b2, b3 = calculate_circuity_factor_from_csv(
                 os.path.join(self.out_dir, f"{sm_type[:3]}_distance.csv"),
                 f"{sm_type[:3]}_circuity_factor.txt",
                 self.out_dir,
@@ -103,7 +229,7 @@ class CfFromDataCalculator:
             type_rd_list = [float(sample[3]) for sample in self.samples_dict[sm_type]]
             ed_list += type_ed_list
             rd_list += type_rd_list
-        b1, b2, b3 = dc.calculate_circuity_factor_from_lists(
+        b1, b2, b3 = calculate_circuity_factor_from_lists(
             ed_list, rd_list, os.path.join(self.out_dir, f"All_circuity_factor.txt"), "All Sawmills", pdf
         )
         multiplier_list = [ed / rd for rd, ed in zip(rd_list, ed_list)]
