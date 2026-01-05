@@ -7,11 +7,8 @@
 #          factor for each sawmill type.
 ########################################################################################################################
 
-import sys, arcpy, csv, os, time, gc, statistics
+import sys, arcpy, csv, os, gc, statistics
 import distance_calculator as dc
-import statsmodels.api as sm
-import numpy as np
-import pandas as pd
 import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 

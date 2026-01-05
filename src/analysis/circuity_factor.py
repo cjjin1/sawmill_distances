@@ -6,11 +6,9 @@
 #          sawmills. Outputs mean and median multipliers as well as circuity factor for each sawmill type.
 ########################################################################################################################
 
-import sys, arcpy, csv, os, random, time, gc, math, statistics
+import sys, arcpy, csv, os, random, gc, math, statistics
 import distance_calculator as dc
-import statsmodels.api as sm
 import numpy as np
-import pandas as pd
 import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 
