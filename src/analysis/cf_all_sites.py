@@ -95,10 +95,6 @@ if single_sawmill_type != "All":
     temp_dict = dist_id_dict[single_sawmill_type]
     dist_id_dict = {single_sawmill_type: temp_dict}
 
-# Z-score and margin of error values
-z = 1.96
-E = 0.1
-
 if calculate_road_distances:
     arcpy.AddMessage("Starting Road Distance Calculations")
     for sm_type in dist_id_dict:
@@ -136,8 +132,8 @@ if calculate_road_distances:
                     out_path,
                     cost
                 )
+                rang_district = ""
                 if record_district:
-                    rang_district = ""
                     with arcpy.da.SearchCursor(f"harvest_site_{oid}", hs_districts_fields) as sc:
                         for row in sc:
                             if row[0].strip():

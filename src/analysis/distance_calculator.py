@@ -87,6 +87,7 @@ def calculate_distance_for_fc(fc_path):
     del row, sc
     return distance
 
+#unused
 def calculate_sl_distances(hv_sites, sawmill_data, sm_ts, op_dir):
     """Calculates straight line distance from every harvest site to every sawmill for every sawmill type"""
     csv_sl_out = os.path.join(op_dir, f"sl_distances_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv")
