@@ -5,7 +5,7 @@
 # Purpose: Finds circuity factors for ranger districts
 ########################################################################################################################
 
-import csv, os, sys, arcpy
+import csv, os, sys
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
