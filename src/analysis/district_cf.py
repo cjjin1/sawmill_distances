@@ -5,17 +5,18 @@
 # Purpose: Finds circuity factors for ranger districts
 ########################################################################################################################
 
-import csv, os, sys
+import csv, os, sys, arcpy
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 
 class DistrictCF:
 
-    def __init__(self, output_dir, csv_dir_list, write_out=False):
+    def __init__(self, output_dir, ranger_districts, csv_dir_list, write_out=False):
         self.output_dir = output_dir
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.ranger_districts = ranger_districts
         self.csv_dir_list = csv_dir_list
         self.write_out = write_out
         #sm_type: {district: [(hs_oid, sm_oid, ed, rd), (hs_oid, sm_oid, ed, rd), ...]}
@@ -36,6 +37,8 @@ class DistrictCF:
             "Composite Panel/Engineered Wood Product": {},
             "Plywood/Veneer": {}
         }
+        # district: (cf, sample size)
+        self.district_total_results = {}
 
     def compile_data(self):
         """Reads in the data from the csv outputs from circuity_factor.py/cf_all_sites.py"""
@@ -131,6 +134,7 @@ class DistrictCF:
             model = sm.OLS(df['rd'], df[['sl']]).fit()
             result = model.params['sl']
             out_writer.writerow([district, result, len(ed_list)])
+            self.district_total_results[district] = (result, len(ed_list))
         output_file.close()
 
     def write_compiled_data_out(self):
@@ -145,6 +149,58 @@ class DistrictCF:
                     out_writer.writerow([sm_type, district, data_entry[2], data_entry[3]])
         output_file.close()
 
+    def join_with_district_fc(self):
+        """Joins the circuity factor results with ranger districts feature class"""
+        if not os.path.exists(os.path.join(self.output_dir, "spatial_data")):
+            os.makedirs(os.path.join(self.output_dir, "spatial_data"))
+        arcpy.env.workspace = os.path.join(self.output_dir, "spatial_data")
+        arcpy.env.overwriteOutput = True
+
+        for sm_type in self.district_results_dict:
+            out_fc = f"districts_with_cf_{sm_type[:3]}.shp"
+            arcpy.management.CopyFeatures(self.ranger_districts, out_fc)
+            arcpy.management.AddField(
+                f"districts_with_cf_{sm_type[:3]}.shp",
+                "CIRCUITYFA",
+                "DOUBLE"
+            )
+            arcpy.management.AddField(
+                f"districts_with_cf_{sm_type[:3]}.shp",
+                "NUM_SITES",
+                "LONG"
+            )
+            with arcpy.da.UpdateCursor(out_fc, ["DISTRICTNA", "CIRCUITYFA", "NUM_SITES"]) as uc:
+                for row in uc:
+                    try:
+                        cf, num = self.district_results_dict[sm_type][row[0]]
+                        row[1] = cf
+                        row[2] = num
+                        uc.updateRow(row)
+                    except KeyError:
+                        continue
+
+        total_fc = f"districts_with_cf_total.shp"
+        arcpy.management.CopyFeatures(self.ranger_districts, total_fc)
+        arcpy.management.AddField(
+            f"districts_with_cf_total.shp",
+            "CIRCUITYFA",
+            "DOUBLE"
+        )
+        arcpy.management.AddField(
+            f"districts_with_cf_total.shp",
+            "NUM_SITES",
+            "LONG"
+        )
+        with arcpy.da.UpdateCursor(total_fc, ["DISTRICTNA", "CIRCUITYFA", "NUM_SITES"]) as uc:
+            for row in uc:
+                try:
+                    cf, num = self.district_total_results[row[0]]
+                    row[1] = cf
+                    row[2] = num
+                    uc.updateRow(row)
+                except KeyError:
+                    continue
+
     def process(self):
         self.compile_data()
         self.build_results_dict()
@@ -152,12 +208,14 @@ class DistrictCF:
             self.write_csv_output()
             self.write_total_cf_output()
             self.write_compiled_data_out()
+            self.join_with_district_fc()
 
 def main():
     try:
         output_dir = sys.argv[1]
-        csv_dir_list = sys.argv[2:]
-        dg = DistrictCF(output_dir, csv_dir_list, True)
+        ranger_districts = sys.argv[2]
+        csv_dir_list = sys.argv[3:]
+        dg = DistrictCF(output_dir, ranger_districts, csv_dir_list, True)
         dg.process()
     except IndexError:
         print("Provide at least one directory to retrieve all necessary data.")
