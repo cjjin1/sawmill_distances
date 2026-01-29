@@ -53,6 +53,11 @@ from utils import (
 
 class OSMRoadsPlanet:
     def _build_where_clause(self):
+        # return (
+        #     "highway IN ("
+        #     "'motorway','trunk','primary','secondary','tertiary',"
+        #     "'residential','unclassified','road','service','track')"
+        # )
         return (
             "highway IN ("
             "'motorway','trunk','primary','secondary','tertiary',"
@@ -175,6 +180,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 25,
                 "road": 5,
+                "track": 20
             },
             "Florida": {
                 "motorway": 70,
@@ -186,6 +192,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Illinois": {
                 "motorway": 70,
@@ -197,6 +204,7 @@ class OSMRoadsPlanet:
                 "unclassified": 30,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Minnesota": {
                 "motorway": 60,
@@ -208,6 +216,7 @@ class OSMRoadsPlanet:
                 "unclassified": 20,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Maryland": {
                 "motorway": 55,
@@ -219,6 +228,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Rhode Island": {
                 "motorway": 55,
@@ -230,6 +240,7 @@ class OSMRoadsPlanet:
                 "unclassified": 15,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Idaho": {
                 "motorway": 80,
@@ -241,6 +252,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "New Hampshire": {
                 "motorway": 65,
@@ -252,6 +264,7 @@ class OSMRoadsPlanet:
                 "unclassified": 30,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "North Carolina": {
                 "motorway": 65,
@@ -263,6 +276,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 15,
+                "track": 20
             },
             "Vermont": {
                 "motorway": 65,
@@ -274,6 +288,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 25,
                 "road": 5,
+                "track": 20
             },
             "Connecticut": {
                 "motorway": 65,
@@ -285,6 +300,7 @@ class OSMRoadsPlanet:
                 "unclassified": 20,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Delaware": {
                 "motorway": 65,
@@ -296,6 +312,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "New Mexico": {
                 "motorway": 75,
@@ -307,6 +324,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 5,
                 "road": 5,
+                "track": 20
             },
             "California": {
                 "motorway": 65,
@@ -318,6 +336,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 70,
+                "track": 20
             },
             "New Jersey": {
                 "motorway": 65,
@@ -329,6 +348,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Wisconsin": {
                 "motorway": 70,
@@ -340,6 +360,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Oregon": {
                 "motorway": 65,
@@ -351,6 +372,7 @@ class OSMRoadsPlanet:
                 "unclassified": 20,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Nebraska": {
                 "motorway": 75,
@@ -362,6 +384,7 @@ class OSMRoadsPlanet:
                 "unclassified": 50,
                 "service": 25,
                 "road": 5,
+                "track": 20
             },
             "Pennsylvania": {
                 "motorway": 55,
@@ -373,6 +396,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Washington": {
                 "motorway": 60,
@@ -384,6 +408,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 25,
+                "track": 20
             },
             "Louisiana": {
                 "motorway": 70,
@@ -395,6 +420,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Georgia": {
                 "motorway": 70,
@@ -406,6 +432,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Alabama": {
                 "motorway": 70,
@@ -417,6 +444,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Utah": {
                 "motorway": 70,
@@ -428,6 +456,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Ohio": {
                 "motorway": 65,
@@ -439,6 +468,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Texas": {
                 "motorway": 65,
@@ -450,6 +480,7 @@ class OSMRoadsPlanet:
                 "unclassified": 30,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Colorado": {
                 "motorway": 75,
@@ -461,6 +492,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 20,
+                "track": 20
             },
             "South Carolina": {
                 "motorway": 70,
@@ -472,6 +504,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Oklahoma": {
                 "motorway": 75,
@@ -483,6 +516,7 @@ class OSMRoadsPlanet:
                 "unclassified": 45,
                 "service": 45,
                 "road": 45,
+                "track": 20
             },
             "Tennessee": {
                 "motorway": 70,
@@ -494,6 +528,7 @@ class OSMRoadsPlanet:
                 "unclassified": 30,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Wyoming": {
                 "motorway": 75,
@@ -505,6 +540,7 @@ class OSMRoadsPlanet:
                 "unclassified": 45,
                 "service": 45,
                 "road": 5,
+                "track": 20
             },
             "Hawaii": {
                 "motorway": 55,
@@ -516,6 +552,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 5,
                 "road": 5,
+                "track": 20
             },
             "North Dakota": {
                 "motorway": 80,
@@ -527,6 +564,7 @@ class OSMRoadsPlanet:
                 "unclassified": 55,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Kentucky": {
                 "motorway": 70,
@@ -538,6 +576,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Michigan": {
                 "motorway": 70,
@@ -549,6 +588,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Arkansas": {
                 "motorway": 75,
@@ -560,6 +600,7 @@ class OSMRoadsPlanet:
                 "unclassified": 20,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Mississippi": {
                 "motorway": 70,
@@ -571,6 +612,7 @@ class OSMRoadsPlanet:
                 "unclassified": 30,
                 "service": 10,
                 "road": 5,
+                "track": 20
             },
             "Missouri": {
                 "motorway": 70,
@@ -582,6 +624,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Montana": {
                 "motorway": 80,
@@ -593,6 +636,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Kansas": {
                 "motorway": 75,
@@ -604,6 +648,7 @@ class OSMRoadsPlanet:
                 "unclassified": 45,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Indiana": {
                 "motorway": 70,
@@ -615,6 +660,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "South Dakota": {
                 "motorway": 80,
@@ -626,6 +672,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Massachusetts": {
                 "motorway": 65,
@@ -637,6 +684,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 25,
                 "road": 5,
+                "track": 20
             },
             "Virginia": {
                 "motorway": 55,
@@ -648,6 +696,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 5,
                 "road": 5,
+                "track": 20
             },
             "District of Columbia": {
                 "motorway": 50,
@@ -659,6 +708,7 @@ class OSMRoadsPlanet:
                 "unclassified": 10,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Maine": {
                 "motorway": 70,
@@ -670,6 +720,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 5,
                 "road": 5,
+                "track": 20
             },
             "New York": {
                 "motorway": 65,
@@ -681,6 +732,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Nevada": {
                 "motorway": 65,
@@ -692,6 +744,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 15,
                 "road": 5,
+                "track": 20
             },
             "Alaska": {
                 "motorway": 65,
@@ -703,6 +756,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 5,
                 "road": 5,
+                "track": 20
             },
             "Iowa": {
                 "motorway": 65,
@@ -725,6 +779,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 25,
                 "road": 5,
+                "track": 20
             }
         }
 
@@ -890,9 +945,6 @@ class OSMRoadsPlanet:
                 )
                 arcpy.management.Delete(temp_feature_class)
 
-                self.extract_oneway()
-                self.extract_max_speed()
-
                 # Stop spinner
                 stop_event.set()
                 spinner_thread.join(timeout=2)
@@ -1004,6 +1056,7 @@ class OSMRoadsPlanet:
             "unclassified": 25,
             "service": 25,
             "road": 25,
+            "track": 20
         }
 
         out_feature_class = f"{self.file_gdb}\\{self.layer_name}"
@@ -1029,7 +1082,7 @@ class OSMRoadsPlanet:
                                 if speed_value % 5 == 0:
                                     row[2] = speed_value
                                 else:
-                                    road_type = row[1]
+                                    road_type = row[1].lower()
                                     if row[3]:
                                         row[2] = self.speed_limit_dict[row[3]][road_type]
                                     else:
@@ -1049,13 +1102,13 @@ class OSMRoadsPlanet:
                             if speed_value % 5 == 0:
                                 row[2] = speed_value
                             else:
-                                road_type = row[1]
+                                road_type = row[1].lower()
                                 if row[3]:
                                     row[2] = self.speed_limit_dict[row[3]][road_type]
                                 else:
                                     row[2] = overall_default_speeds[road_type]
                 else:
-                    road_type = row[1]
+                    road_type = row[1].lower()
                     if row[3]:
                         row[2] = self.speed_limit_dict[row[3]][road_type]
                     else:
@@ -1103,6 +1156,14 @@ class OSMRoadsPlanet:
             if not import_success:
                 self.logger.error("Failed to import to ArcGIS")
                 return False
+
+            self.logger.info("Starting Oneway Extraction Process")
+            self.extract_oneway()
+            self.logger.info("Finished Oneway Extraction Process")
+            
+            self.logger.info("Started Max Speed Extraction Process")
+            self.extract_max_speed()
+            self.logger.info("Finished Max Speed Extraction Process")
 
             # Step 3: Cleanup temporary files (optional)
             if not self.keep_intermediate:
