@@ -1079,7 +1079,7 @@ class OSMRoadsPlanet:
                             speed_value = speed_value.strip("\"")
                             try:
                                 speed_value = int(speed_value[:2].strip())
-                                if speed_value % 5 == 0:
+                                if speed_value % 5 == 0 and speed_value != 0:
                                     row[2] = speed_value
                                 else:
                                     road_type = row[1].lower()
@@ -1097,11 +1097,10 @@ class OSMRoadsPlanet:
                             speed_value = speed_value.strip("\"")
                             try:
                                 speed_value = int(speed_value[:2].strip())
-                            except ValueError:
-                                continue
-                            if speed_value % 5 == 0:
+                                if speed_value == 0 or speed_value % 5 != 0:
+                                    raise ValueError
                                 row[2] = speed_value
-                            else:
+                            except ValueError:
                                 road_type = row[1].lower()
                                 if row[3]:
                                     row[2] = self.speed_limit_dict[row[3]][road_type]
