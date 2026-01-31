@@ -768,6 +768,7 @@ class OSMRoadsPlanet:
                 "unclassified": 25,
                 "service": 20,
                 "road": 5,
+                "track": 20
             },
             "Arizona": {
                 "motorway": 65,
