@@ -2,7 +2,7 @@
 # create_bat_file.py
 # Author: James Jin
 # unity ID: cjjin
-# Purpose: Simple script that constructs a .bat file that can be used to run the cf_all_sites.py script.
+# Purpose: Simple script that constructs a .bat file that can be used to run the circuity_factor.py script.
 ########################################################################################################################
 
 import arcpy, sys, os
