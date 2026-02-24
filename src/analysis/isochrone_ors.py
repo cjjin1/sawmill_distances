@@ -10,27 +10,6 @@ import openrouteservice
 import json
 import arcpy, sys, os
 
-def set_symbology(shp_file):
-    """Update the output isochrone polygon to have graduated colors"""
-    proj_file = arcpy.mp.ArcGISProject("CURRENT")
-    m = proj_file.activeMap
-
-    m.addDataFromPath(shp_file)
-
-    layer = m.listLayers(os.path.splitext(os.path.basename(shp_file))[0])[0]
-    sym = layer.symbology
-    sym.updateRenderer("GraduatedColorsRenderer")
-
-    renderer = sym.renderer
-    renderer.classification = "FromBreak"
-    renderer.breakCount = int(arcpy.management.GetCount(shp_file)[0])
-    renderer.classificationMethod = "NaturalBreaks"
-
-    ramps = proj_file.listColorRamps("Oranges (Continuous)")
-    renderer.colorRamp = ramps[0]
-
-    layer.symbology = sym
-
 lat = float(sys.argv[1])
 lon = float(sys.argv[2])
 output_dir = sys.argv[3]
