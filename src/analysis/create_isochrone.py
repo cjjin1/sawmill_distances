@@ -136,7 +136,8 @@ class Isochrone:
                     json_out = "convex_hull_" + json_out
                 arcpy.conversion.FeaturesToJSON(
                     temp_layer,
-                    out_json_file=os.path.join(self.output_dir, json_out)
+                    out_json_file=os.path.join(self.output_dir, json_out),
+                    geoJSON="GEOJSON"
                 )
         arcpy.management.Delete(temp_layer)
 
