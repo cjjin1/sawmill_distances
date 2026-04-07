@@ -57,13 +57,14 @@ class DataPrep:
         self.combined_roads = None
 
     def create_new_file_gdb(self):
-        """Uses the quick import tool from Data Interoperability to create a new File GDB with roads data"""
+        """Creates a new File Geodatabase and imports the data with FeatureClassToFeatureClass"""
         if not arcpy.Exists(os.path.join(self.workspace, os.path.basename(self.total_roads))):
             if not os.path.isdir(os.path.dirname(self.workspace)):
                 raise arcpy.ExecuteError(f"{self.workspace} is not placed in an existing directory.")
-            arcpy.CheckOutExtension("DataInteroperability")
-            arcpy.gp.QuickImport_interop(os.path.dirname(self.total_roads), self.workspace)
-            arcpy.CheckInExtension("DataInteroperability")
+            arcpy.management.CreateFileGDB(os.path.dirname(self.workspace), os.path.basename(self.workspace))
+            arcpy.conversion.FeatureClassToFeatureClass(
+                self.total_roads, self.workspace, os.path.basename(self.total_roads)
+            )
         else:
             raise arcpy.ExecuteError(f"{self.workspace} already exists. Please provide a name for a new file GDB.")
         self.total_roads = os.path.join(self.workspace, os.path.basename(self.total_roads))
