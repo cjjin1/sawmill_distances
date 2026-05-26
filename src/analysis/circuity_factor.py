@@ -630,11 +630,12 @@ class CircuityFactorAnalyzer:
             output_csv.close()
 
     def process(self):
-        self.read_sl_distance_csv()
-        if self.calculate_all:
-            self.calculate_road_distances_all_sites()
-        else:
-            self.calculate_road_distances_with_sampling()
+        if self.calculate_road_distances:
+            self.read_sl_distance_csv()
+            if self.calculate_all:
+                self.calculate_road_distances_all_sites()
+            else:
+                self.calculate_road_distances_with_sampling()
         self.calculate_circuity_factor()
         self.pdf.close()
 
