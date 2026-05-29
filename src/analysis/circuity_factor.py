@@ -157,7 +157,6 @@ class CircuityCalculator:
         b1 = model1.params['sl']
         b2 = model2.params['sl']
         b3 = model3.params['sl']
-        arcpy.AddMessage(f"Circuity Factor for {os.path.basename(self.output_name)}: {b3}")
 
         results_file = open(self.output_name, "w+")
         results_file.write(str(model1.summary()) + "\n")
@@ -201,7 +200,6 @@ class CircuityCalculator:
         b1 = model1.params['sl']
         b2 = model2.params['sl']
         b3 = model3.params['sl']
-        arcpy.AddMessage(f"Circuity Factor for {os.path.basename(self.output_name)}: {b3}")
 
         results_file = open(self.output_name, "w+")
         results_file.write(str(model1.summary()) + "\n")
@@ -349,6 +347,34 @@ class CircuityFactorAnalyzer:
 
         # create a pdf for histograms
         self.pdf = PdfPages(os.path.join(output_dir, "histograms.pdf"))
+        # counts for successful/failed calculations
+        self.calc_counts = {
+            "Lumber/Solid Wood": 0,
+            "Pellet": 0,
+            "Chip": 0,
+            "Pulp/Paper": 0,
+            "Composite Panel/Engineered Wood Product": 0,
+            "Plywood/Veneer": 0,
+            "All": 0
+        }
+        self.dist_fail_counts = {
+            "Lumber/Solid Wood": 0,
+            "Pellet": 0,
+            "Chip": 0,
+            "Pulp/Paper": 0,
+            "Composite Panel/Engineered Wood Product": 0,
+            "Plywood/Veneer": 0,
+            "All": 0
+        }
+        self.con_fail_counts = {
+            "Lumber/Solid Wood": 0,
+            "Pellet": 0,
+            "Chip": 0,
+            "Pulp/Paper": 0,
+            "Composite Panel/Engineered Wood Product": 0,
+            "Plywood/Veneer": 0,
+            "All": 0
+        }
 
     def read_sl_distance_csv(self):
         """Reads in from straight line distance csv file"""
@@ -435,8 +461,12 @@ class CircuityFactorAnalyzer:
                     if not self.keep_output_paths:
                         arcpy.management.Delete(out_path)
                     if road_dist == 0:
+                        self.con_fail_counts[sm_type] += 1
+                        self.con_fail_counts["All"] += 1
                         raise arcpy.ExecuteError("Solve resulted in failure")
                     if road_dist > 120:
+                        self.dist_fail_counts[sm_type] += 1
+                        self.dist_fail_counts["All"] += 1
                         raise arcpy.ExecuteError("Route is longer than 120 miles")
                     if self.record_district:
                         output_writer.writerow(
@@ -455,13 +485,17 @@ class CircuityFactorAnalyzer:
                         )
                     multiplier = road_dist / float(self.dist_id_dict[sm_type][rand_id][1])
                     self.multi_dict[sm_type].append(multiplier)
+                    self.calc_counts[sm_type] += 1
+                    self.calc_counts["All"] += 1
                 except arcpy.ExecuteError as e:
-                    arcpy.AddWarning(f"{sm_type}:{rand_id},{self.dist_id_dict[sm_type][rand_id][0]} failed: {str(e)}")
+                    if str(e) != "Route is longer than 120 miles" and str(e) != "Solve resulted in failure":
+                        self.con_fail_counts[sm_type] += 1
+                        self.con_fail_counts["All"] += 1
+                    warning = f"{sm_type}:{rand_id},{self.dist_id_dict[sm_type][rand_id][0]} failed: {str(e)}"
+                    arcpy.AddWarning(warning)
                     if i < len(rand_id_list) - 1:
                         attempt_id = self.dist_id_dict[sm_type][rand_id_list[i + 1]][0]
-                        arcpy.AddMessage(
-                            f"Attempting new ID: {rand_id_list[i + 1]}, {attempt_id}"
-                        )
+                        arcpy.AddMessage(f"Attempting new ID: {rand_id_list[i + 1]}, {attempt_id}")
                         continue
                     else:
                         arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
@@ -534,8 +568,12 @@ class CircuityFactorAnalyzer:
                     if not self.keep_output_paths:
                         arcpy.management.Delete(out_path)
                     if road_dist == 0:
+                        self.con_fail_counts[sm_type] += 1
+                        self.con_fail_counts["All"] += 1
                         raise arcpy.ExecuteError("Solve resulted in failure")
                     if road_dist > 120:
+                        self.dist_fail_counts[sm_type] += 1
+                        self.dist_fail_counts["All"] += 1
                         raise arcpy.ExecuteError("Route is longer than 120 miles")
                     if self.record_district:
                         output_writer.writerow(
@@ -554,12 +592,17 @@ class CircuityFactorAnalyzer:
                         )
                     multiplier = road_dist / float(self.dist_id_dict[sm_type][oid][1])
                     self.multi_dict[sm_type].append(multiplier)
+                    self.calc_counts[sm_type] += 1
+                    self.calc_counts["All"] += 1
                 except arcpy.ExecuteError as e:
-                    arcpy.AddWarning(f"{sm_type}:{oid},{self.dist_id_dict[sm_type][oid][0]} failed: {str(e)}")
+                    if str(e) != "Route is longer than 120 miles" and str(e) != "Solve resulted in failure":
+                        self.con_fail_counts[sm_type] += 1
+                        self.con_fail_counts["All"] += 1
+                    warning = f"{sm_type}:{oid},{self.dist_id_dict[sm_type][oid][0]} failed: {str(e)}"
+                    arcpy.AddWarning(warning)
                     if i < len(oid_list) - 1:
-                        arcpy.AddMessage(
-                            f"Attempting new ID: {oid_list[i + 1]}, {self.dist_id_dict[sm_type][oid_list[i + 1]][0]}"
-                        )
+                        msg = f"Attempting new ID: {oid_list[i + 1]}, {self.dist_id_dict[sm_type][oid_list[i + 1]][0]}"
+                        arcpy.AddMessage(msg)
                         continue
                     else:
                         arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
@@ -576,7 +619,8 @@ class CircuityFactorAnalyzer:
                 count += 1
                 if count % 5 == 0:
                     arcpy.AddMessage(f"{count} calculations done for {sm_type}.")
-            arcpy.AddMessage(f"{sm_type} calculations have been completed. Sample size has been set to {count}.")
+            msg = f"{sm_type} calculations have been completed. Sample size has been set to {count}."
+            arcpy.AddMessage(msg)
             output_file.close()
 
     def calculate_circuity_factor(self):
@@ -602,6 +646,7 @@ class CircuityFactorAnalyzer:
                 os.path.join(self.output_dir, f"{sm_type[:3]}_circuity_factor.txt"), sm_type, self.pdf, rd_csv=csv_in
             )
             b1, b2, b3 = circuity_results.process()
+            arcpy.AddMessage(f"Circuity Factor for {sm_type}: {b3}")
             mean_multiplier = statistics.mean(multiplier_list)
             median_multiplier = statistics.median(multiplier_list)
             cf_list.append([sm_type, b1, b2, b3, mean_multiplier, median_multiplier])
@@ -616,6 +661,7 @@ class CircuityFactorAnalyzer:
                 ed_list=ed_list
             )
             b1, b2, b3 = total_circuity_results.process()
+            arcpy.AddMessage(f"Circuity Factor for all sawmills: {b3}")
 
             multiplier_list = [rd / ed for rd, ed in zip(rd_list, ed_list)]
             cf_list.append(["All", b1, b2, b3, statistics.mean(multiplier_list), statistics.median(multiplier_list)])
@@ -629,6 +675,24 @@ class CircuityFactorAnalyzer:
                 output_writer.writerow(row)
             output_csv.close()
 
+    def print_counts(self):
+        """Prints successful and failed calculation counts"""
+        arcpy.AddMessage("Success/Fail counts:")
+        arcpy.AddMessage("Key: distance failure count / connectivity failure count / success count")
+        for sm_type in self.calc_counts:
+            pass_count = self.calc_counts[sm_type]
+            con_fail_count = self.con_fail_counts[sm_type]
+            dist_fail_count = self.dist_fail_counts[sm_type]
+            total = pass_count + con_fail_count + dist_fail_count
+            count_str = f"{sm_type}: {dist_fail_count} / {con_fail_count} / {pass_count} ({total} total calculations)"
+            arcpy.AddMessage(count_str)
+
+    def print_log(self):
+        """Prints log"""
+        log_file = os.path.join(self.output_dir, f"log_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
+        with open(log_file, "w") as f:
+            f.write(arcpy.GetMessages())
+
     def process(self):
         if self.calculate_road_distances:
             self.read_sl_distance_csv()
@@ -638,6 +702,8 @@ class CircuityFactorAnalyzer:
                 self.calculate_road_distances_with_sampling()
         self.calculate_circuity_factor()
         self.pdf.close()
+        self.print_counts()
+        self.print_log()
 
 def main():
     sl_dist_csv = sys.argv[1]
