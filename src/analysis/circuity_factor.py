@@ -347,6 +347,8 @@ class CircuityFactorAnalyzer:
 
         # create a pdf for histograms
         self.pdf = PdfPages(os.path.join(output_dir, "histograms.pdf"))
+        # string for printing to log file
+        self.log_str = ""
         # counts for successful/failed calculations
         self.calc_counts = {
             "Lumber/Solid Wood": 0,
@@ -376,6 +378,14 @@ class CircuityFactorAnalyzer:
             "All": 0
         }
 
+    def print_arc(self, string, warning=False):
+        """Prints to ArcGIS and adds string to log"""
+        if warning:
+            arcpy.AddWarning(string)
+        else:
+            arcpy.AddMessage(string)
+        self.log_str = self.log_str + string + "\n"
+
     def read_sl_distance_csv(self):
         """Reads in from straight line distance csv file"""
         sl_in = open(self.sl_dist_csv, "r", newline="\n")
@@ -396,9 +406,9 @@ class CircuityFactorAnalyzer:
         z = 1.96
         E = 0.1
 
-        arcpy.AddMessage("Starting Road Distance Calculations")
+        self.print_arc("Starting Road Distance Calculations")
         for sm_type in self.dist_id_dict:
-            arcpy.AddMessage(f"Starting Calculations for {sm_type}")
+            self.print_arc(f"Starting Calculations for {sm_type}")
             # output file for distance results so the full script doesn't have to run every time
             csv_out = os.path.join(self.output_dir, f"{sm_type[:3]}_distance.csv")
             output_file = open(csv_out, "w+", newline="\n")
@@ -417,8 +427,8 @@ class CircuityFactorAnalyzer:
                     n = math.ceil(n)
                     if n > sample_size:
                         sample_size = n
-                        arcpy.AddMessage(f"Calculated sample size for {sm_type} is greater than {self.pairs_per_type}.")
-                        arcpy.AddMessage(f"New sample size for {sm_type} is {n}.")
+                        self.print_arc(f"Calculated sample size for {sm_type} is greater than {self.pairs_per_type}.")
+                        self.print_arc(f"New sample size for {sm_type} is {n}.")
                 if count == sample_size:
                     break
                 try:
@@ -492,13 +502,13 @@ class CircuityFactorAnalyzer:
                         self.con_fail_counts[sm_type] += 1
                         self.con_fail_counts["All"] += 1
                     warning = f"{sm_type}:{rand_id},{self.dist_id_dict[sm_type][rand_id][0]} failed: {str(e)}"
-                    arcpy.AddWarning(warning)
+                    self.print_arc(warning, True)
                     if i < len(rand_id_list) - 1:
                         attempt_id = self.dist_id_dict[sm_type][rand_id_list[i + 1]][0]
-                        arcpy.AddMessage(f"Attempting new ID: {rand_id_list[i + 1]}, {attempt_id}")
+                        self.print_arc(f"Attempting new ID: {rand_id_list[i + 1]}, {attempt_id}")
                         continue
                     else:
-                        arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
+                        self.print_arc("No more IDs to try, skipping this distance calculation", True)
                         break
                 finally:
                     # delete temporary layers, feature classes, and solvers
@@ -511,15 +521,15 @@ class CircuityFactorAnalyzer:
                     arcpy.management.ClearWorkspaceCache()
                 count += 1
                 if count % 5 == 0:
-                    arcpy.AddMessage(f"{count} calculations done for {sm_type}.")
-            arcpy.AddMessage(f"{sm_type} calculations have been completed. Sample size has been set to {sample_size}.")
+                    self.print_arc(f"{count} calculations done for {sm_type}.")
+            self.print_arc(f"{sm_type} calculations have been completed. Sample size has been set to {sample_size}.")
             output_file.close()
 
     def calculate_road_distances_all_sites(self):
         """Calculates the road distances for every harvest site"""
-        arcpy.AddMessage("Starting Road Distance Calculations")
+        self.print_arc("Starting Road Distance Calculations")
         for sm_type in self.dist_id_dict:
-            arcpy.AddMessage(f"Starting Calculations for {sm_type}")
+            self.print_arc(f"Starting Calculations for {sm_type}")
             # output file for distance results so the full script doesn't have to run every time
             csv_out = os.path.join(self.output_dir, f"{sm_type[:3]}_distance.csv")
             output_file = open(csv_out, "w+", newline="\n")
@@ -599,13 +609,13 @@ class CircuityFactorAnalyzer:
                         self.con_fail_counts[sm_type] += 1
                         self.con_fail_counts["All"] += 1
                     warning = f"{sm_type}:{oid},{self.dist_id_dict[sm_type][oid][0]} failed: {str(e)}"
-                    arcpy.AddWarning(warning)
+                    self.print_arc(warning, True)
                     if i < len(oid_list) - 1:
                         msg = f"Attempting new ID: {oid_list[i + 1]}, {self.dist_id_dict[sm_type][oid_list[i + 1]][0]}"
-                        arcpy.AddMessage(msg)
+                        self.print_arc(msg)
                         continue
                     else:
-                        arcpy.AddWarning("No more IDs to try, skipping this distance calculation")
+                        self.print_arc("No more IDs to try, skipping this distance calculation", True)
                         break
                 finally:
                     # delete temporary layers, feature classes, and solvers
@@ -618,9 +628,9 @@ class CircuityFactorAnalyzer:
                     arcpy.management.ClearWorkspaceCache()
                 count += 1
                 if count % 5 == 0:
-                    arcpy.AddMessage(f"{count} calculations done for {sm_type}.")
+                    self.print_arc(f"{count} calculations done for {sm_type}.")
             msg = f"{sm_type} calculations have been completed. Sample size has been set to {count}."
-            arcpy.AddMessage(msg)
+            self.print_arc(msg)
             output_file.close()
 
     def calculate_circuity_factor(self):
@@ -646,7 +656,7 @@ class CircuityFactorAnalyzer:
                 os.path.join(self.output_dir, f"{sm_type[:3]}_circuity_factor.txt"), sm_type, self.pdf, rd_csv=csv_in
             )
             b1, b2, b3 = circuity_results.process()
-            arcpy.AddMessage(f"Circuity Factor for {sm_type}: {b3}")
+            self.print_arc(f"Circuity Factor for {sm_type}: {b3}")
             mean_multiplier = statistics.mean(multiplier_list)
             median_multiplier = statistics.median(multiplier_list)
             cf_list.append([sm_type, b1, b2, b3, mean_multiplier, median_multiplier])
@@ -661,7 +671,7 @@ class CircuityFactorAnalyzer:
                 ed_list=ed_list
             )
             b1, b2, b3 = total_circuity_results.process()
-            arcpy.AddMessage(f"Circuity Factor for all sawmills: {b3}")
+            self.print_arc(f"Circuity Factor for all sawmills: {b3}")
 
             multiplier_list = [rd / ed for rd, ed in zip(rd_list, ed_list)]
             cf_list.append(["All", b1, b2, b3, statistics.mean(multiplier_list), statistics.median(multiplier_list)])
@@ -677,21 +687,21 @@ class CircuityFactorAnalyzer:
 
     def print_counts(self):
         """Prints successful and failed calculation counts"""
-        arcpy.AddMessage("Success/Fail counts:")
-        arcpy.AddMessage("Key: distance failure count / connectivity failure count / success count")
+        self.print_arc("Success/Fail counts:")
+        self.print_arc("Key: distance failure count / connectivity failure count / success count")
         for sm_type in self.calc_counts:
             pass_count = self.calc_counts[sm_type]
             con_fail_count = self.con_fail_counts[sm_type]
             dist_fail_count = self.dist_fail_counts[sm_type]
             total = pass_count + con_fail_count + dist_fail_count
             count_str = f"{sm_type}: {dist_fail_count} / {con_fail_count} / {pass_count} ({total} total calculations)"
-            arcpy.AddMessage(count_str)
+            self.print_arc(count_str)
 
     def print_log(self):
         """Prints log"""
         log_file = os.path.join(self.output_dir, f"log_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
         with open(log_file, "w") as f:
-            f.write(arcpy.GetMessages())
+            f.write(self.log_str)
 
     def process(self):
         if self.calculate_road_distances:
