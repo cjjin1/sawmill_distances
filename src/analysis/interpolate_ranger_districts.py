@@ -229,6 +229,10 @@ def main():
         raster_list.append(interpolated_rast)
         arcpy.management.Delete(f"district_layer_{oid}")
         arcpy.management.Delete(f"r_district_{oid}_points")
+        arcpy.management.Delete("district_layer_buffered")
+        arcpy.management.Delete("district_layer_fishnet")
+        arcpy.management.Delete("district_layer_fishnet_label")
+        arcpy.management.Delete("district_points")
     arcpy.management.MosaicToNewRaster(
         raster_list,
         working_gdb,
