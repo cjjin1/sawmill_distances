@@ -1,3 +1,10 @@
+########################################################################################################################
+# interpolate_range_districts.py
+# Author: James Jin
+# unity ID: cjjin
+# Purpose: Creates a distance to sawmill cost surface raster dataset for ranger districts using interpolation.
+########################################################################################################################
+
 import os, arcpy, sys
 from arcpy.sa import *
 
