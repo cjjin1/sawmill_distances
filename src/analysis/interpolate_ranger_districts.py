@@ -171,33 +171,16 @@ def project_districts(r_district, workspace):
     arcpy.management.Project(r_district, os.path.join(workspace, "ranger_districts"), arcpy.SpatialReference(102004))
     return os.path.join(workspace, "ranger_districts")
 
-###############################################Test Variables###########################################################
-PNW_ND = "C:/timber_project/scratch/pa_nw/pa_nw.gdb/Transportation/streets_nd"
-R_DISTRICT_SHP = "C:/timber_project/data/ranger_districts.shp"
-PNW_SAWMILLS = "C:/timber_project/scratch/pa_nw/pa_nw.gdb/sawmills"
-PROJECTION = False
-WORKING_GDB = "C:/timber_project/scratch/testing/interpolating.gdb"
-TEST_R_DISTRICT = os.path.join(WORKING_GDB, "test_districts")
-USE_TEST_VARIABLES = True
-###############################################Test Variables###########################################################
-
 def main():
-    if USE_TEST_VARIABLES:
-        network_dataset = PNW_ND
-        ranger_districts = TEST_R_DISTRICT
-        sawmills = PNW_SAWMILLS
-        projection = PROJECTION
-        working_gdb = WORKING_GDB
+    network_dataset = sys.argv[1]
+    ranger_districts = sys.argv[2]
+    sawmills = sys.argv[3]
+    projection = sys.argv[4]
+    if projection.lower() == "false":
+        projection = False
     else:
-        network_dataset = sys.argv[1]
-        ranger_districts = sys.argv[2]
-        sawmills = sys.argv[3]
-        projection = sys.argv[4]
-        if projection.lower() == "false":
-            projection = False
-        else:
-            projection = True
-        working_gdb = sys.argv[5]
+        projection = True
+    working_gdb = sys.argv[5]
 
     if projection:
         ranger_districts = project_districts(ranger_districts, working_gdb)
