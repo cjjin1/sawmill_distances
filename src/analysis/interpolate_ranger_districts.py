@@ -157,7 +157,7 @@ def interpolate_ranger_district(points_fc, clip_polygon):
     krig_out = Kriging(
         points_fc,
         "rd_dist_to_sawmill",
-        KrigingModelOrdinary("SPHERICAL"),
+        KrigingModelUniversal("QUADRATICDRIFT"),
         100,
         RadiusVariable(12)
     )
