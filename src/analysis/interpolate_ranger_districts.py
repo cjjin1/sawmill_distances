@@ -5,7 +5,7 @@
 # Purpose: Creates a distance to sawmill cost surface raster dataset for ranger districts using interpolation.
 ########################################################################################################################
 
-import os, arcpy, sys
+import os, arcpy, sys, time
 from arcpy.sa import *
 
 METERS_TO_MILES = 0.0006213712
@@ -172,6 +172,7 @@ def project_districts(r_district, workspace):
     return os.path.join(workspace, "ranger_districts")
 
 def main():
+    start = time.perf_counter()
     network_dataset = sys.argv[1]
     ranger_districts = sys.argv[2]
     sawmills = sys.argv[3]
@@ -214,7 +215,7 @@ def main():
 
         interpolated_rast = interpolate_ranger_district(
             points_fc=os.path.join(working_gdb, f"r_district_{oid}_points"),
-            clip_polygon=TEST_R_DISTRICT
+            clip_polygon=f"district_layer_{oid}"
         )
         raster_list.append(interpolated_rast)
         arcpy.management.Delete(f"district_layer_{oid}")
@@ -230,6 +231,8 @@ def main():
         cellsize=100,
         number_of_bands=1
     )
+    end = time.perf_counter()
+    print(f"Total Time: {(end-start) / 60:.10f} minutes")
 
 if __name__ == "__main__":
     main()
