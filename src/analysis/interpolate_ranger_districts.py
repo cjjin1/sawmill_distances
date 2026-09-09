@@ -153,17 +153,22 @@ class MakeODCostMatrix:
         return self.output_path
 
 def interpolate_ranger_district(points_fc, clip_polygon):
-    """Uses Kriging to interpolate distance to sawmill cost surface using points. Clips the result to a polygon."""
-    krig_out = Kriging(
-        points_fc,
-        "rd_dist_to_sawmill",
-        KrigingModelUniversal("QUADRATICDRIFT"),
-        100,
-        RadiusVariable(12)
-    )
-    mask_rast = ExtractByMask(krig_out, clip_polygon)
-    arcpy.management.Delete(krig_out)
-    del krig_out
+    """Uses IDW to interpolate distance to sawmill cost surface using points. Clips the result to a polygon."""
+    # rast_out = Kriging(
+    #     points_fc,
+    #     "rd_dist_to_sawmill",
+    #     KrigingModelUniversal("QUADRATICDRIFT"),
+    #     100,
+    #     RadiusVariable(12)
+    # )
+    rast_out = Idw(points_fc, "rd_dist_to_sawmill", 100, 2.8, RadiusVariable(8))
+
+    arcpy.analysis.Buffer(clip_polygon, "temp_buffer", "100 Meters")
+
+    mask_rast = ExtractByMask(rast_out, "temp_buffer")
+    arcpy.management.Delete(rast_out)
+    arcpy.management.Delete("temp_buffer")
+    del rast_out
     return mask_rast
 
 def project_districts(r_district, workspace):
@@ -228,8 +233,11 @@ def main():
         raster_list,
         working_gdb,
         "interpolated_rast_mosaic",
+        coordinate_system_for_the_raster=arcpy.SpatialReference(102004),
+        pixel_type="32_BIT_FLOAT",
         cellsize=100,
-        number_of_bands=1
+        number_of_bands=1,
+        mosaic_method="MINIMUM"
     )
     end = time.perf_counter()
     print(f"Total Time: {(end-start) / 60:.10f} minutes")
