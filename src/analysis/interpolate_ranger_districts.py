@@ -188,9 +188,13 @@ def main():
         for row in sc:
             r_district_id_list.append(row[0])
 
+    print(f"Starting cost surface calculations for {len(r_district_id_list)} districts.")
+    print(f"Ranger districts: {ranger_districts}")
+    print(f"Sawmills: {sawmills}")
+
     raster_list = []
     for oid in r_district_id_list:
-        print(f"Interpolated ranger district ID: {oid}")
+
         arcpy.management.MakeFeatureLayer(ranger_districts, f"district_layer_{oid}")
         arcpy.management.SelectLayerByAttribute(
             f"district_layer_{oid}",
@@ -217,6 +221,7 @@ def main():
         arcpy.management.Delete("district_layer_fishnet")
         arcpy.management.Delete("district_layer_fishnet_label")
         arcpy.management.Delete("district_points")
+        print(f"Interpolated ranger district ID: {oid}")
     print("Creating new mosaic from interpolated rasters")
     arcpy.management.MosaicToNewRaster(
         raster_list,
