@@ -190,6 +190,7 @@ def main():
 
     raster_list = []
     for oid in r_district_id_list:
+        print(f"Interpolated ranger district ID: {oid}")
         arcpy.management.MakeFeatureLayer(ranger_districts, f"district_layer_{oid}")
         arcpy.management.SelectLayerByAttribute(
             f"district_layer_{oid}",
@@ -216,6 +217,7 @@ def main():
         arcpy.management.Delete("district_layer_fishnet")
         arcpy.management.Delete("district_layer_fishnet_label")
         arcpy.management.Delete("district_points")
+    print("Creating new mosaic from interpolated rasters")
     arcpy.management.MosaicToNewRaster(
         raster_list,
         working_gdb,
@@ -227,7 +229,7 @@ def main():
         mosaic_method="MINIMUM"
     )
     end = time.perf_counter()
-    print(f"Total Time: {(end-start) / 60:.10f} minutes")
+    print(f"Cost surface calculation completed in {(end-start) / 60:.2f} minutes.")
 
 if __name__ == "__main__":
     main()
