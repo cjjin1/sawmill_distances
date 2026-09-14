@@ -171,25 +171,12 @@ def interpolate_ranger_district(points_fc, clip_polygon):
     del rast_out
     return mask_rast
 
-def project_districts(r_district, workspace):
-    """Project the ranger districts input file to the workspace."""
-    arcpy.management.Project(r_district, os.path.join(workspace, "ranger_districts"), arcpy.SpatialReference(102004))
-    return os.path.join(workspace, "ranger_districts")
-
 def main():
     start = time.perf_counter()
     network_dataset = sys.argv[1]
     ranger_districts = sys.argv[2]
     sawmills = sys.argv[3]
-    projection = sys.argv[4]
-    if projection.lower() == "false":
-        projection = False
-    else:
-        projection = True
-    working_gdb = sys.argv[5]
-
-    if projection:
-        ranger_districts = project_districts(ranger_districts, working_gdb)
+    working_gdb = sys.argv[4]
 
     arcpy.env.workspace = working_gdb
     arcpy.env.overwriteOutput = True
