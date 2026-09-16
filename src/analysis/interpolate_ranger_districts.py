@@ -82,14 +82,14 @@ class MakeODCostMatrix:
             sub_layer="Origins",
             in_table=self.origins,
             append="CLEAR",
-            search_tolerance="20 Miles"
+            search_tolerance="50 Miles"
         )
         arcpy.na.AddLocations(
             in_network_analysis_layer="r_district_ODCM",
             sub_layer="Destinations",
             in_table=self.sawmills,
             append="APPEND",
-            search_tolerance="20 Miles"
+            search_tolerance="50 Miles"
         )
         try:
             arcpy.na.Solve(lines_layer, ignore_invalids="SKIP")
@@ -154,13 +154,6 @@ class MakeODCostMatrix:
 
 def interpolate_ranger_district(points_fc, clip_polygon):
     """Uses IDW to interpolate distance to sawmill cost surface using points. Clips the result to a polygon."""
-    # rast_out = Kriging(
-    #     points_fc,
-    #     "rd_dist_to_sawmill",
-    #     KrigingModelUniversal("QUADRATICDRIFT"),
-    #     100,
-    #     RadiusVariable(12)
-    # )
     rast_out = Idw(points_fc, "rd_dist_to_sawmill", 100, 2.8, RadiusVariable(8))
 
     arcpy.analysis.Buffer(clip_polygon, "temp_buffer", "100 Meters")
