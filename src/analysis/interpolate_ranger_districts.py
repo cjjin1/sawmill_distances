@@ -159,6 +159,7 @@ def interpolate_ranger_district(points_fc, clip_polygon):
     arcpy.analysis.Buffer(clip_polygon, "temp_buffer", "100 Meters")
 
     mask_rast = ExtractByMask(rast_out, "temp_buffer")
+    mask_rast.save(f"interpolated_rast_{clip_polygon.split("_")[2]}")
     arcpy.management.Delete(rast_out)
     arcpy.management.Delete("temp_buffer")
     del rast_out
@@ -226,6 +227,8 @@ def main():
         number_of_bands=1,
         mosaic_method="MINIMUM"
     )
+    for rast in raster_list:
+        arcpy.management.Delete(rast)
     end = time.perf_counter()
     print(f"Cost surface calculation completed in {(end-start) / 60:.2f} minutes.")
 
