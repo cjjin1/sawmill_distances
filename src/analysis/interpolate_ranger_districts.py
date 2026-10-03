@@ -170,7 +170,8 @@ def main():
     network_dataset = sys.argv[1]
     ranger_districts = sys.argv[2]
     sawmills = sys.argv[3]
-    working_gdb = sys.argv[4]
+    output_name = sys.argv[4]
+    working_gdb = sys.argv[5]
 
     arcpy.env.workspace = working_gdb
     arcpy.env.overwriteOutput = True
@@ -220,7 +221,7 @@ def main():
     arcpy.management.MosaicToNewRaster(
         raster_list,
         working_gdb,
-        "interpolated_rast_mosaic",
+        output_name,
         coordinate_system_for_the_raster=arcpy.SpatialReference(102004),
         pixel_type="32_BIT_FLOAT",
         cellsize=100,
