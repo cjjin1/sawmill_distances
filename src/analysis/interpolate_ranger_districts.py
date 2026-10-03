@@ -72,7 +72,7 @@ class MakeODCostMatrix:
             in_network_dataset=self.network_ds,
             out_network_analysis_layer="r_district_ODCM",
             impedance_attribute="Time",
-            default_cutoff=10,
+            default_cutoff=6,
             default_number_destinations_to_find=1,
             accumulate_attribute_name=["Length", "Time"]
         )
@@ -159,7 +159,7 @@ def interpolate_ranger_district(points_fc, clip_polygon):
     arcpy.analysis.Buffer(clip_polygon, "temp_buffer", "100 Meters")
 
     mask_rast = ExtractByMask(rast_out, "temp_buffer")
-    mask_rast.save(f"interpolated_rast_{clip_polygon.split("_")[2]}")
+    mask_rast.save(f"interpolated_rast_{int(clip_polygon.split("_")[2]) + 6}")
     arcpy.management.Delete(rast_out)
     arcpy.management.Delete("temp_buffer")
     del rast_out
