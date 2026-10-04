@@ -159,7 +159,7 @@ def interpolate_ranger_district(points_fc, clip_polygon):
     arcpy.analysis.Buffer(clip_polygon, "temp_buffer", "100 Meters")
 
     mask_rast = ExtractByMask(rast_out, "temp_buffer")
-    mask_rast.save(f"interpolated_rast_{int(clip_polygon.split("_")[2]) + 6}")
+    mask_rast.save(f"interpolated_rast_{int(clip_polygon.split("_")[2])}")
     arcpy.management.Delete(rast_out)
     arcpy.management.Delete("temp_buffer")
     del rast_out
